@@ -91,49 +91,49 @@
 :root {
   --radius: 0.625rem;
 
-  /* Core palette — YOYO deep industrial blue + orange/cyan accents */
-  --background: oklch(0.984 0.004 250);          /* #F7F8FA */
-  --foreground: oklch(0.205 0.04 256);           /* slate-900 */
+  /* Core palette — AdminPro Clean Blue · white surfaces, electric blue */
+  --background: oklch(0.985 0.003 250);          /* near-white app bg */
+  --foreground: oklch(0.21 0.03 256);            /* slate-900 */
   --card: oklch(1 0 0);                          /* #FFFFFF */
-  --card-foreground: oklch(0.205 0.04 256);
+  --card-foreground: oklch(0.21 0.03 256);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.205 0.04 256);
-  --primary: oklch(0.355 0.16 264);              /* #1E3A8A deep blue */
+  --popover-foreground: oklch(0.21 0.03 256);
+  --primary: oklch(0.55 0.20 261);               /* #2563EB electric blue */
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.70 0.18 47);              /* #F97316 industrial orange */
+  --secondary: oklch(0.70 0.18 47);              /* #F97316 industrial orange CTA */
   --secondary-foreground: oklch(1 0 0);
-  --muted: oklch(0.965 0.005 250);               /* slate-50 */
-  --muted-foreground: oklch(0.52 0.03 256);      /* slate-500 */
+  --muted: oklch(0.97 0.005 250);                /* slate-50 */
+  --muted-foreground: oklch(0.52 0.025 256);     /* slate-500 */
   --accent: oklch(0.78 0.13 230);                /* #38BDF8 sky cyan */
-  --accent-foreground: oklch(0.205 0.04 256);
-  --destructive: oklch(0.58 0.22 27);            /* red-600 */
+  --accent-foreground: oklch(0.21 0.03 256);
+  --destructive: oklch(0.58 0.22 27);
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.92 0.01 250);                /* slate-200 */
-  --input: oklch(0.92 0.01 250);
-  --ring: oklch(0.355 0.16 264);
+  --border: oklch(0.93 0.008 250);               /* slate-200 hairline */
+  --input: oklch(0.93 0.008 250);
+  --ring: oklch(0.55 0.20 261);
 
-  /* Charts — blue-led ramp with orange + cyan secondaries */
-  --chart-1: oklch(0.355 0.16 264);
-  --chart-2: oklch(0.70 0.18 47);
-  --chart-3: oklch(0.78 0.13 230);
-  --chart-4: oklch(0.58 0.17 152);
-  --chart-5: oklch(0.52 0.03 256);
+  /* Charts — blue-led ramp with cyan, orange, emerald, slate */
+  --chart-1: oklch(0.55 0.20 261);
+  --chart-2: oklch(0.78 0.13 230);
+  --chart-3: oklch(0.70 0.18 47);
+  --chart-4: oklch(0.62 0.17 152);
+  --chart-5: oklch(0.65 0.025 256);
 
-  /* Sidebar — deep navy industrial */
-  --sidebar: oklch(0.20 0.05 262);               /* #0B1733 */
-  --sidebar-foreground: oklch(0.88 0.01 250);
-  --sidebar-primary: oklch(0.70 0.18 47);        /* orange accent */
+  /* Sidebar — clean white surface with subtle border (AdminPro style) */
+  --sidebar: oklch(1 0 0);                       /* white sidebar */
+  --sidebar-foreground: oklch(0.30 0.03 256);
+  --sidebar-primary: oklch(0.55 0.20 261);       /* blue active */
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.27 0.06 262);
-  --sidebar-accent-foreground: oklch(0.96 0.005 250);
-  --sidebar-border: oklch(0.27 0.05 262);
-  --sidebar-ring: oklch(0.70 0.18 47);
+  --sidebar-accent: oklch(0.965 0.012 250);      /* slate-50 hover */
+  --sidebar-accent-foreground: oklch(0.21 0.03 256);
+  --sidebar-border: oklch(0.93 0.008 250);
+  --sidebar-ring: oklch(0.55 0.20 261);
 
   /* Metric tints */
-  --metric-healthy-bg: oklch(0.965 0.04 152);
-  --metric-warning-bg: oklch(0.965 0.04 75);
-  --metric-danger-bg: oklch(0.965 0.04 25);
-  --metric-neutral-bg: oklch(0.965 0.04 264);
+  --metric-healthy-bg: oklch(0.965 0.045 152);
+  --metric-warning-bg: oklch(0.97 0.05 75);
+  --metric-danger-bg: oklch(0.965 0.05 25);
+  --metric-neutral-bg: oklch(0.965 0.045 261);
 
   /* Stock status tokens */
   --stock-healthy: oklch(0.58 0.17 152);

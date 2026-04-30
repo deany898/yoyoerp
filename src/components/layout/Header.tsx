@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Menu, Wifi, WifiOff } from "lucide-react";
+import { Search, Menu, Wifi, WifiOff, Plus } from "lucide-react";
 import { Breadcrumbs } from "@/components/shell/Breadcrumbs";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { NotificationPreferences } from "@/components/notifications/NotificationPreferences";
@@ -73,20 +73,34 @@ export function Header() {
   }, []);
 
   return (
-    <header className="flex flex-col border-b border-border bg-card shadow-sm">
-      <div className="flex h-14 items-center gap-2 px-3 md:h-16 md:gap-3 md:px-8">
+    <header className="flex flex-col border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+      <div className="flex h-14 items-center gap-2 px-3 md:h-[68px] md:gap-3 md:px-8">
       <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileOpen(true)} aria-label="Open menu">
         <Menu className="h-5 w-5" />
       </Button>
 
-      <button data-tour="search" type="button" onClick={() => setPaletteOpen(true)} className="flex h-9 flex-1 items-center gap-2 rounded-md border border-input bg-white px-3 text-sm text-muted-foreground transition-colors hover:border-primary/40 md:max-w-sm">
+      <button
+        data-tour="search"
+        type="button"
+        onClick={() => setPaletteOpen(true)}
+        className="flex h-10 flex-1 items-center gap-2.5 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-muted-foreground transition-all hover:border-primary/40 hover:bg-background hover:shadow-sm md:max-w-md"
+      >
         <Search className="h-4 w-4 shrink-0" />
-        <span>Search…</span>
-        <kbd className="ml-auto hidden rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-xs md:inline-block">⌘K</kbd>
+        <span>Search products, orders, suppliers…</span>
+        <kbd className="ml-auto hidden rounded-md border border-border bg-card px-1.5 py-0.5 font-mono text-[10px] font-medium md:inline-block">⌘K</kbd>
       </button>
 
+      <Button
+        size="sm"
+        onClick={() => setQuickEntryOpen(true)}
+        className="hidden h-10 gap-1.5 rounded-xl bg-secondary px-3.5 text-secondary-foreground shadow-sm hover:bg-secondary/90 md:inline-flex"
+      >
+        <Plus className="h-4 w-4" />
+        Quick entry
+      </Button>
+
       <span
-        className={`hidden items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium md:inline-flex ${
+        className={`hidden items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide md:inline-flex ${
           online
             ? "border-emerald-500/30 bg-emerald-50 text-emerald-700"
             : "border-amber-500/30 bg-amber-50 text-amber-700"
@@ -95,12 +109,12 @@ export function Header() {
         title={online ? "Synced" : "Offline · changes will retry"}
       >
         {online ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
-        {online ? "Synced" : "Offline"}
+        {online ? "Live" : "Offline"}
       </span>
 
       <Badge
         variant="outline"
-        className={`hidden text-[10px] font-semibold uppercase md:inline-flex ${ROLE_BADGE_STYLES[role] ?? "border-border"}`}
+        className={`hidden h-7 rounded-full px-2.5 text-[10px] font-semibold uppercase tracking-wide md:inline-flex ${ROLE_BADGE_STYLES[role] ?? "border-border"}`}
       >
         {ROLE_LABELS[role] ?? role}
       </Badge>
@@ -120,7 +134,7 @@ export function Header() {
       <NotificationPreferences open={prefsOpen} onOpenChange={setPrefsOpen} />
       </div>
 
-      <div className="hidden h-8 items-center gap-2 border-t border-border/60 bg-background/60 px-8 md:flex">
+      <div className="hidden h-9 items-center gap-2 border-t border-border/60 bg-muted/30 px-8 md:flex">
         <Breadcrumbs />
       </div>
     </header>

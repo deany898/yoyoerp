@@ -151,28 +151,30 @@ export function Sidebar({ onNavigate }: SidebarProps) {
 
   return (
     <nav data-tour="sidebar" className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      <div className="flex flex-col gap-3 border-b border-sidebar-border px-4 py-4">
+      <div className="flex flex-col gap-4 border-b border-sidebar-border px-5 py-5">
         <div className="flex items-center gap-3">
-          <Logo size={36} variant="light" showWordmark={false} />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/15">
+            <Logo size={28} showWordmark={false} />
+          </div>
           <div className="flex flex-col leading-tight">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-sidebar-primary">
+            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
               YOYO
             </span>
-            <span className="text-sm font-semibold text-sidebar-foreground">
+            <span className="text-[15px] font-semibold text-foreground">
               ERP Platform
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 rounded-lg border border-sidebar-border bg-sidebar-accent/60 px-2 py-2">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-xs font-semibold text-sidebar-primary-foreground">
+        <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-3 py-2.5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-semibold text-primary-foreground shadow-sm">
             {initial}
           </div>
           <div className="flex min-w-0 flex-1 flex-col leading-tight">
-            <span className="truncate text-sm font-medium text-sidebar-foreground">
+            <span className="truncate text-[13px] font-semibold text-foreground">
               {displayName}
             </span>
-            <span className="truncate text-[11px] text-sidebar-foreground/60">
+            <span className="truncate text-[11px] text-muted-foreground">
               {roleLabel}
             </span>
           </div>
@@ -181,30 +183,30 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             onClick={handleSignOut}
             aria-label={isDemo ? "Exit demo" : "Sign out"}
             title={isDemo ? "Exit demo" : "Sign out"}
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
           >
             <LogOut className="h-4 w-4" />
           </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 py-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex-1 overflow-y-auto px-3 py-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {visibleGroups.map((group, idx) => {
           const isCollapsed = collapsed[group.label] ?? false;
           return (
             <div key={group.label}>
-              {idx > 0 && <div className="mx-2 my-2 border-t border-sidebar-border" />}
+              {idx > 0 && <div className="mx-3 my-3 border-t border-sidebar-border" />}
               <button
                 type="button"
                 onClick={() => toggleGroup(group.label)}
-                className="flex w-full items-center gap-1 px-2 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-sidebar-foreground/50 hover:text-sidebar-foreground/80 transition-colors"
+                className="flex w-full items-center gap-1 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
               >
                 <ChevronRight className={cn("h-3 w-3 transition-transform duration-150", !isCollapsed && "rotate-90")} />
                 {group.label}
               </button>
 
               {!isCollapsed && (
-                <div className="mt-0.5 space-y-0.5">
+                <div className="mt-1 space-y-1">
                   {group.items.map((item) => (
                     <Link
                       key={item.href}
@@ -212,14 +214,21 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                       preload="intent"
                       onClick={onNavigate}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                        "group/nav relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13.5px] font-medium transition-all",
                         isActive(item.href)
-                          ? "bg-sidebar-accent font-medium text-sidebar-primary-foreground shadow-sm"
-                          : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
+                          ? "bg-primary text-primary-foreground shadow-[0_4px_12px_-2px_oklch(0.55_0.20_261/0.35)]"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground",
                       )}
                     >
-                      <item.icon className="h-4 w-4 shrink-0" />
-                      {item.label}
+                      <span className={cn(
+                        "flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors",
+                        isActive(item.href)
+                          ? "bg-white/15 text-primary-foreground"
+                          : "bg-muted/60 text-muted-foreground group-hover/nav:bg-primary/10 group-hover/nav:text-primary",
+                      )}>
+                        <item.icon className="h-4 w-4" />
+                      </span>
+                      <span className="truncate">{item.label}</span>
                     </Link>
                   ))}
                 </div>

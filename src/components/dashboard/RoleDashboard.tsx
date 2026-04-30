@@ -1,4 +1,6 @@
 import { Package, CheckCircle2, AlertTriangle, XCircle, Truck, ClipboardList, Inbox, ArrowLeftRight } from "lucide-react";
+import { OperationsOverviewChart } from "@/components/dashboard/OperationsOverviewChart";
+import { StockMixDonut } from "@/components/dashboard/StockMixDonut";
 import { Link } from "@tanstack/react-router";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { NeedsAttention } from "@/components/dashboard/NeedsAttention";
@@ -47,14 +49,18 @@ function FullOpsDashboard({ withInsights }: { withInsights: boolean }) {
 
   return (
     <>
-      <div data-tour="metrics" className="rounded-xl border border-border bg-card p-3 shadow-xs">
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-          <MetricCard label="Total SKUs" value={summary.total} accentColor="neutral" icon={Package} />
-          <MetricCard label="In stock" value={summary.inStock} accentColor="healthy" icon={CheckCircle2} />
-          <MetricCard label="Low stock" value={summary.lowStock} accentColor="warning" icon={AlertTriangle} />
-          <MetricCard label="Out of stock" value={summary.outOfStock} accentColor="danger" icon={XCircle} />
-        </div>
+      <div data-tour="metrics" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <MetricCard label="Total SKUs" value={summary.total} accentColor="neutral" icon={Package} trend={{ direction: "up", percentage: 4 }} />
+        <MetricCard label="In stock" value={summary.inStock} accentColor="healthy" icon={CheckCircle2} trend={{ direction: "up", percentage: 2 }} />
+        <MetricCard label="Low stock" value={summary.lowStock} accentColor="warning" icon={AlertTriangle} trend={{ direction: "down", percentage: 6 }} />
+        <MetricCard label="Out of stock" value={summary.outOfStock} accentColor="danger" icon={XCircle} />
       </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
+        <OperationsOverviewChart movements={movements} />
+        <StockMixDonut summary={summary} />
+      </div>
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
         <div data-tour="needs-attention" className="min-h-0"><NeedsAttention /></div>
         <div className="min-h-0"><RecentActivity /></div>
@@ -93,12 +99,10 @@ function SalesDashboard() {
   const { data: summary } = useStockSummary();
   return (
     <>
-      <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
-          <MetricCard label="Catalog SKUs" value={summary.total} accentColor="neutral" icon={Package} />
-          <MetricCard label="Available" value={summary.inStock} accentColor="healthy" icon={CheckCircle2} />
-          <MetricCard label="Low stock" value={summary.lowStock} accentColor="warning" icon={AlertTriangle} />
-        </div>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+        <MetricCard label="Catalog SKUs" value={summary.total} accentColor="neutral" icon={Package} />
+        <MetricCard label="Available" value={summary.inStock} accentColor="healthy" icon={CheckCircle2} />
+        <MetricCard label="Low stock" value={summary.lowStock} accentColor="warning" icon={AlertTriangle} />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <QuickTile to="/app/products" icon={Package} title="Products" hint="Browse the catalog" />
@@ -122,13 +126,13 @@ function QuickTile({ to, icon: Icon, title, hint }: { to: string; icon: React.Co
     <Link
       to={to}
       preload="intent"
-      className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 shadow-xs transition-colors hover:border-primary/40 hover:bg-muted/30"
+      className="group flex items-start gap-4 rounded-2xl border border-border bg-card p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_8px_24px_-12px_rgba(15,23,42,0.18)]"
     >
-      <div className="rounded-lg bg-primary/10 p-2 text-primary">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 transition-colors group-hover:bg-primary group-hover:text-primary-foreground group-hover:ring-primary">
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0">
-        <div className="font-medium text-foreground">{title}</div>
+        <div className="text-[15px] font-semibold text-foreground">{title}</div>
         <div className="text-xs text-muted-foreground">{hint}</div>
       </div>
     </Link>
