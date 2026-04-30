@@ -10,12 +10,14 @@ import { QuickOrderHeader, type CustomerLite } from "@/components/quick-order/Qu
 import { QuickActionsBar } from "@/components/quick-order/QuickActionsBar";
 import { ProductGridRow } from "@/components/quick-order/ProductGridRow";
 import { MobileLineCard } from "@/components/quick-order/MobileLineCard";
-import { ProductPickerSheet } from "@/components/quick-order/ProductPickerSheet";
+import { QuickOrderCustomerCard } from "@/components/quick-order/QuickOrderCustomerCard";
+import { ProductSearchBox } from "@/components/quick-order/ProductSearchBox";
 import { StickyTotals } from "@/components/quick-order/StickyTotals";
 import { uomFactor, type PickerVariant } from "@/components/quick-order/types";
 import { lineMath, loadTierPrices, resolvePrice, type TierPriceMap } from "@/lib/quick-order-pricing";
 import {
   saveDraft, loadDraft, clearDraft, trackPick, getRecent, getFrequent,
+  saveLastCustomer, loadLastCustomer,
   type DraftLine,
 } from "@/lib/quick-order-store";
 
@@ -44,6 +46,11 @@ function QuickOrderPage() {
   const [customers, setCustomers] = useState<CustomerLite[]>([]);
   const [customerId, setCustomerId] = useState("");
   const [warehouseId, setWarehouseId] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [transporter, setTransporter] = useState("");
+  const [city, setCity] = useState("");
+  const [note, setNote] = useState("");
   const [orderNumber, setOrderNumber] = useState("");
   const [shippingAddress, setShippingAddress] = useState("");
   const [paymentTerms, setPaymentTerms] = useState("");
@@ -54,14 +61,13 @@ function QuickOrderPage() {
   const [recentIds, setRecentIds] = useState<string[]>(() => getRecent());
   const [frequentIds, setFrequentIds] = useState<string[]>(() => getFrequent());
   const [saving, setSaving] = useState(false);
-  const [pickerOpen, setPickerOpen] = useState(false);
 
   // Bootstrap
   useEffect(() => {
     (async () => {
       const [custRes, numRes, tiers, imgs, stocks] = await Promise.all([
         supabase.from("customers")
-          .select("id,code,name,contact_name,phone,delivery_address,billing_address,payment_terms,pricing_tier")
+          .select("id,code,name,contact_name,phone,city,delivery_address,billing_address,payment_terms,pricing_tier")
           .eq("is_active", true).order("name"),
         supabase.rpc("next_doc_number", { _doc_type: "DO" }),
         loadTierPrices(),
@@ -97,15 +103,30 @@ function QuickOrderPage() {
           toast.info("Restored draft", { description: "Continuing your last unsaved order" });
         }
       }
+
+      // Prefill last-used customer details (for repeat orders)
+      const last = loadLastCustomer();
+      if (last) {
+        setCustomerId((prev) => prev || last.customer_id || "");
+        setCustomerName((prev) => prev || last.name || "");
+        setPhone((prev) => prev || last.phone || "");
+        setTransporter((prev) => prev || last.transporter || "");
+        setCity((prev) => prev || last.city || "");
+        setNote((prev) => prev || last.note || "");
+        setShippingAddress((prev) => prev || last.shipping_address || "");
+        setPaymentTerms((prev) => prev || last.payment_terms || "");
+      }
     })();
   }, []);
 
   const customer = useMemo(() => customers.find((c) => c.id === customerId) ?? null, [customers, customerId]);
   const tier = customer?.pricing_tier ?? "standard";
 
-  // When customer changes, prefill shipping + terms
+  // When customer changes, prefill shipping/terms/name/phone/etc.
   useEffect(() => {
     if (!customer) return;
+    setCustomerName(customer.name);
+    if (customer.phone) setPhone(customer.phone);
     if (!shippingAddress) setShippingAddress(customer.delivery_address ?? "");
     if (!paymentTerms && customer.payment_terms) setPaymentTerms(customer.payment_terms);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -244,9 +265,36 @@ function QuickOrderPage() {
 
   async function submit(asDraft: boolean) {
     if (!canEdit) { toast.error("You don't have permission"); return; }
-    if (!customerId) { toast.error("Pick a customer first"); return; }
+    if (!customerId && !customerName.trim()) { toast.error("Enter a customer name"); return; }
     if (filled.length === 0) { toast.error("Add at least one product"); return; }
     setSaving(true);
+
+    // If no saved customer chosen, create a new one with the entered details
+    let effectiveCustomerId = customerId;
+    if (!effectiveCustomerId) {
+      const code = "C" + Date.now().toString(36).toUpperCase().slice(-6);
+      const { data: newCust, error: custErr } = await supabase
+        .from("customers")
+        .insert({
+          code,
+          name: customerName.trim(),
+          phone: phone.trim() || null,
+          city: city.trim() || null,
+          transporter: transporter.trim() || null,
+          notes: note.trim() || null,
+          delivery_address: shippingAddress.trim() || null,
+          payment_terms: paymentTerms.trim() || null,
+        })
+        .select("id")
+        .single();
+      if (custErr || !newCust) {
+        setSaving(false);
+        toast.error("Could not save customer", { description: custErr?.message });
+        return;
+      }
+      effectiveCustomerId = newCust.id;
+    }
+
     let doNumber = orderNumber;
     if (!doNumber) {
       const { data, error } = await supabase.rpc("next_doc_number", { _doc_type: "DO" });
@@ -254,7 +302,7 @@ function QuickOrderPage() {
       doNumber = data as string;
     }
     const header = {
-      do_number: doNumber, customer_id: customerId,
+      do_number: doNumber, customer_id: effectiveCustomerId,
       warehouse_id: warehouseId || null,
       status: asDraft ? "draft" as const : "pending_approval" as const,
       delivery_address: shippingAddress || null,
@@ -284,6 +332,17 @@ function QuickOrderPage() {
     setSaving(false);
     if (linesErr) { toast.error("Failed to save lines", { description: linesErr.message }); return; }
     clearDraft();
+    // Persist last-used customer details for next visit
+    saveLastCustomer({
+      customer_id: effectiveCustomerId,
+      name: customerName.trim(),
+      phone: phone.trim(),
+      transporter: transporter.trim(),
+      city: city.trim(),
+      note: note.trim(),
+      shipping_address: shippingAddress.trim(),
+      payment_terms: paymentTerms.trim(),
+    });
     toast.success(asDraft ? "Draft saved" : "Order submitted");
     navigate({ to: "/app/dispatch-orders" });
   }
@@ -293,6 +352,8 @@ function QuickOrderPage() {
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-[1600px] flex-col gap-3 pb-24">
+      {/* Desktop: existing dense header */}
+      <div className="hidden md:block">
       <QuickOrderHeader
         customers={customers}
         warehouses={warehouses.map((w) => ({ id: w.id, name: w.name }))}
@@ -302,6 +363,37 @@ function QuickOrderPage() {
         onCustomer={setCustomerId} onWarehouse={setWarehouseId}
         onShipping={setShippingAddress} onPaymentTerms={setPaymentTerms}
       />
+      </div>
+
+      {/* Mobile: customer card with free-text + autocomplete */}
+      <div className="md:hidden">
+        <QuickOrderCustomerCard
+          customers={customers}
+          customerId={customerId}
+          customerName={customerName}
+          phone={phone}
+          transporter={transporter}
+          city={city}
+          note={note}
+          shippingAddress={shippingAddress}
+          orderNumber={orderNumber}
+          onPickCustomer={(c) => {
+            setCustomerId(c?.id ?? "");
+            if (c) {
+              setCustomerName(c.name);
+              if (c.phone) setPhone(c.phone);
+              if (c.city) setCity(c.city);
+              if (c.delivery_address) setShippingAddress(c.delivery_address);
+            }
+          }}
+          onName={setCustomerName}
+          onPhone={setPhone}
+          onTransporter={setTransporter}
+          onCity={setCity}
+          onNote={setNote}
+          onShipping={setShippingAddress}
+        />
+      </div>
 
       <QuickActionsBar
         recent={recentVariants} frequent={frequentVariants}
@@ -375,22 +467,12 @@ function QuickOrderPage() {
             onRemove={() => removeLine(line.uid)}
           />
         ))}
-        {filled.length === 0 && (
-          <div className="rounded-lg border border-dashed border-border bg-muted/20 p-6 text-center text-sm text-muted-foreground">
-            Tap the + button to add your first product
-          </div>
-        )}
-        <button
-          type="button" onClick={() => setPickerOpen(true)}
-          className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 active:scale-95"
-          aria-label="Add product"
-        >
-          <Plus className="h-6 w-6" />
-        </button>
-        <ProductPickerSheet
-          open={pickerOpen} onOpenChange={setPickerOpen}
-          variants={variants} recentIds={recentIds} frequentIds={frequentIds}
+        {/* Always-visible inline product search to add the next product */}
+        <ProductSearchBox
+          variants={variants}
+          recentIds={recentIds}
           onPick={appendVariant}
+          placeholder={filled.length === 0 ? "Search & add first product…" : "Add another product…"}
         />
       </section>
 

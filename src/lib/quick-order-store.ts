@@ -1,6 +1,7 @@
 const DRAFT_KEY = "yoyo:quick-order:draft";
 const RECENT_KEY = "yoyo:quick-order:recent";
 const FREQ_KEY = "yoyo:quick-order:frequency";
+const CUSTOMER_KEY = "yoyo:quick-order:last-customer";
 
 export interface DraftLine {
   uid: string;
@@ -56,4 +57,25 @@ export function getFrequent(): string[] {
     const freq = JSON.parse(localStorage.getItem(FREQ_KEY) ?? "{}") as Record<string, number>;
     return Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([k]) => k);
   } catch { return []; }
+}
+
+export interface LastCustomer {
+  customer_id: string;
+  name: string;
+  phone: string;
+  transporter: string;
+  city: string;
+  note: string;
+  shipping_address: string;
+  payment_terms: string;
+}
+export function saveLastCustomer(c: LastCustomer) {
+  try { localStorage.setItem(CUSTOMER_KEY, JSON.stringify(c)); } catch {}
+}
+export function loadLastCustomer(): LastCustomer | null {
+  try {
+    const raw = localStorage.getItem(CUSTOMER_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as LastCustomer;
+  } catch { return null; }
 }

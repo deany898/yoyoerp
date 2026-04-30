@@ -15,6 +15,7 @@ export interface CustomerLite {
   name: string;
   contact_name: string | null;
   phone: string | null;
+  city: string | null;
   delivery_address: string | null;
   billing_address: string | null;
   payment_terms: string | null;
