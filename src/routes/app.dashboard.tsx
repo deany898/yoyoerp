@@ -55,9 +55,14 @@ function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-[1400px] space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">{greeting}</p>
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary via-primary to-[oklch(0.42_0.22_265)] px-6 py-6 text-primary-foreground shadow-[0_8px_32px_-12px_rgba(37,99,235,0.4)] md:px-8 md:py-7">
+        <div className="pointer-events-none absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-20 -right-8 h-40 w-40 rounded-full bg-accent/30 blur-3xl" />
+        <div className="relative">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">YOYO ERP · Control panel</p>
+          <h1 className="mt-1.5 text-2xl font-semibold tracking-tight md:text-[28px]">Hi, welcome back!</h1>
+          <p className="mt-1 max-w-2xl text-sm text-white/80">{greeting}</p>
+        </div>
       </div>
 
       <RoleDashboard role={role} />
