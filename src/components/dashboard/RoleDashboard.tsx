@@ -128,13 +128,13 @@ function QuickTile({ to, icon: Icon, title, hint }: { to: string; icon: React.Co
     <Link
       to={to}
       preload="intent"
-      className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 shadow-xs transition-colors hover:border-primary/40 hover:bg-muted/30"
+      className="group flex items-start gap-4 rounded-2xl border border-border bg-card p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_8px_24px_-12px_rgba(15,23,42,0.18)]"
     >
-      <div className="rounded-lg bg-primary/10 p-2 text-primary">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 transition-colors group-hover:bg-primary group-hover:text-primary-foreground group-hover:ring-primary">
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0">
-        <div className="font-medium text-foreground">{title}</div>
+        <div className="text-[15px] font-semibold text-foreground">{title}</div>
         <div className="text-xs text-muted-foreground">{hint}</div>
       </div>
     </Link>
