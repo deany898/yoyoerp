@@ -100,11 +100,8 @@ function ProductsPage() {
             icon={Package}
             title={products.length === 0 ? "No products yet" : "No matching products"}
             description={products.length === 0 ? "Create your first product to begin tracking inventory and costs." : "Try a different search or filter."}
-            action={
-              products.length === 0 && can("create_item")
-                ? { label: "New product", onClick: openCreate }
-                : undefined
-            }
+            actionLabel={products.length === 0 && can("create_item") ? "New product" : undefined}
+            onAction={products.length === 0 && can("create_item") ? openCreate : undefined}
           />
         ) : (
           <Table>
