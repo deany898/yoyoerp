@@ -177,9 +177,8 @@ function StickyNav({ onTryDemo }: { onTryDemo: () => void }) {
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
         {/* Logo */}
-        <a href="#" className="flex items-center gap-2">
-          <Package className="h-6 w-6 text-primary" />
-          <span className="text-lg font-semibold tracking-tight">YOYO ERP</span>
+        <a href="#" className="flex items-center">
+          <Logo size={36} />
         </a>
 
         {/* Desktop nav links */}
