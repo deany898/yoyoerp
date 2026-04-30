@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Undo2, Pencil, Trash2, X, CheckCircle2 } from "lucide-react";
+import { Plus, Undo2, Pencil, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useProducts, useWarehouses } from "@/hooks/useErpData";
@@ -12,6 +12,9 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SmartSelect } from "@/components/forms/SmartSelect";
+import { GRStatusStepper, type GRStatus } from "@/components/goods-returns/GRStatusStepper";
+import { GRLifecycleActions, type GRTransition } from "@/components/goods-returns/GRLifecycleActions";
+import { GRMovementsTimeline } from "@/components/goods-returns/GRMovementsTimeline";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
@@ -31,7 +34,6 @@ export const Route = createFileRoute("/app/goods-returns")({
   head: () => ({ meta: [{ title: "Goods returns · YOYO ERP" }] }),
 });
 
-type GRStatus = "draft" | "pending_approval" | "approved" | "received" | "cancelled";
 type GRReason = "damaged" | "wrong_item" | "excess" | "quality_issue" | "expired" | "other";
 type GRCondition = "resaleable" | "repairable" | "scrap";
 
