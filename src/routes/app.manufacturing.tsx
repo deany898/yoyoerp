@@ -14,8 +14,8 @@ import { useNavigate } from "@tanstack/react-router";
 export const Route = createFileRoute("/app/manufacturing")({
   head: () => ({
     meta: [
-      { title: "Manufacturing · YOYO ERP" },
-      { name: "description", content: "Plan, release and track manufacturing orders." },
+      { title: "Production logs · YOYO ERP" },
+      { name: "description", content: "Plan, release and track production logs." },
     ],
   }),
   component: ManufacturingPage,
@@ -67,14 +67,14 @@ function ManufacturingPage() {
     <div className="space-y-6">
       <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Manufacturing</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-3xl">Manufacturing orders</h1>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Production</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-3xl">Production logs</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {loading ? "Loading…" : `${orders.length} order${orders.length === 1 ? "" : "s"} · plan, issue materials and receive output.`}
+            {loading ? "Loading…" : `${orders.length} log${orders.length === 1 ? "" : "s"} · plan, issue materials and receive output.`}
           </p>
         </div>
         <PermissionGate permission="create_item">
-          <Button onClick={() => setCreateOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> New MO</Button>
+          <Button onClick={() => setCreateOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> New log</Button>
         </PermissionGate>
       </header>
 
@@ -94,7 +94,7 @@ function ManufacturingPage() {
 
       <div className="relative max-w-md">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search MO number or SKU…" className="pl-9" />
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search log number or SKU…" className="pl-9" />
       </div>
 
       {loading ? (
@@ -103,9 +103,9 @@ function ManufacturingPage() {
         <div className="rounded-xl border border-border bg-card">
           <EmptyState
             icon={Factory}
-            title={orders.length === 0 ? "No manufacturing orders" : "No matches"}
-            description={orders.length === 0 ? "Create your first MO to plan a production run." : "Try a different filter or search."}
-            actionLabel={orders.length === 0 ? "New MO" : undefined}
+            title={orders.length === 0 ? "No production logs" : "No matches"}
+            description={orders.length === 0 ? "Create your first production log to plan a run." : "Try a different filter or search."}
+            actionLabel={orders.length === 0 ? "New log" : undefined}
             onAction={orders.length === 0 ? () => setCreateOpen(true) : undefined}
           />
         </div>
@@ -115,7 +115,7 @@ function ManufacturingPage() {
             <table className="w-full text-sm">
               <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium">MO #</th>
+                  <th className="px-4 py-3 text-left font-medium">Log #</th>
                   <th className="px-4 py-3 text-left font-medium">Product</th>
                   <th className="px-4 py-3 text-right font-medium">Planned</th>
                   <th className="px-4 py-3 text-right font-medium">Produced</th>

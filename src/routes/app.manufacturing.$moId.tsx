@@ -11,7 +11,7 @@ import { OutputReceiveDialog } from "@/components/manufacturing/OutputReceiveDia
 import { useConfirm } from "@/components/forms/ConfirmDialog";
 
 export const Route = createFileRoute("/app/manufacturing/$moId")({
-  head: () => ({ meta: [{ title: "Manufacturing order · YOYO ERP" }] }),
+  head: () => ({ meta: [{ title: "Production log · YOYO ERP" }] }),
   component: MoDetailPage,
 });
 
@@ -65,7 +65,7 @@ function MoDetailPage() {
       .eq("id", moId)
       .maybeSingle();
     if (moRes.error || !moRes.data) {
-      notify.error("Could not load manufacturing order", { description: moRes.error?.message });
+      notify.error("Could not load production log", { description: moRes.error?.message });
       setLoading(false);
       return;
     }
@@ -118,7 +118,7 @@ function MoDetailPage() {
 
   const tryCancel = async () => {
     const ok = await confirm({
-      title: "Cancel this manufacturing order?",
+      title: "Cancel this production log?",
       description: "This will mark the order as cancelled. Material issues and outputs already posted are kept for audit.",
       confirmLabel: "Cancel order",
       destructive: true,
@@ -139,13 +139,13 @@ function MoDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-2 text-sm">
         <Link to="/app/manufacturing" className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Back to manufacturing
+          <ArrowLeft className="h-4 w-4" /> Back to production logs
         </Link>
       </div>
 
       <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Manufacturing order</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Production log</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-3xl font-mono">{mo.mo_number}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <Badge className={STATUS_TONE[mo.status]}>{mo.status.replace("_"," ")}</Badge>
