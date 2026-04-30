@@ -1,4 +1,13 @@
-export type UserRoleType = "admin" | "manager" | "requestor";
+export type UserRoleType =
+  | "admin"
+  | "manager"
+  | "supervisor"
+  | "sales"
+  | "dispatch"
+  | "worker"
+  | "customer"
+  // Legacy — kept until all screens migrate to the new role set.
+  | "requestor";
 
 export interface RolePermissions {
   canManageItems: boolean;
@@ -29,6 +38,56 @@ const ROLE_PERMISSIONS: Record<UserRoleType, RolePermissions> = {
     canManageSuppliers: true,
     canApproveRequests: true,
     canViewAnalytics: true,
+    canAccessSettings: false,
+    canManageUsers: false,
+  },
+  supervisor: {
+    canManageItems: false,
+    canLogMovements: true,
+    canManagePOs: false,
+    canManageSuppliers: false,
+    canApproveRequests: true,
+    canViewAnalytics: true,
+    canAccessSettings: false,
+    canManageUsers: false,
+  },
+  sales: {
+    canManageItems: false,
+    canLogMovements: false,
+    canManagePOs: false,
+    canManageSuppliers: false,
+    canApproveRequests: false,
+    canViewAnalytics: true,
+    canAccessSettings: false,
+    canManageUsers: false,
+  },
+  dispatch: {
+    canManageItems: false,
+    canLogMovements: true,
+    canManagePOs: false,
+    canManageSuppliers: false,
+    canApproveRequests: false,
+    canViewAnalytics: false,
+    canAccessSettings: false,
+    canManageUsers: false,
+  },
+  worker: {
+    canManageItems: false,
+    canLogMovements: true,
+    canManagePOs: false,
+    canManageSuppliers: false,
+    canApproveRequests: false,
+    canViewAnalytics: false,
+    canAccessSettings: false,
+    canManageUsers: false,
+  },
+  customer: {
+    canManageItems: false,
+    canLogMovements: false,
+    canManagePOs: false,
+    canManageSuppliers: false,
+    canApproveRequests: false,
+    canViewAnalytics: false,
     canAccessSettings: false,
     canManageUsers: false,
   },
