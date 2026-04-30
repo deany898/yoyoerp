@@ -61,7 +61,7 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Procurement",
+    label: "Suppliers",
     items: [
       { label: "Suppliers", href: "/app/suppliers", icon: Truck },
       { label: "Purchase orders", href: "/app/purchase-orders", icon: ClipboardList },
