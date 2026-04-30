@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Undo2,
   LogOut,
+  Settings,
 } from "lucide-react";
 import { Factory, Cpu, Hammer, HardHat, Wrench, Zap } from "lucide-react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
@@ -104,6 +105,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Support",
     items: [
+      { label: "Settings", href: "/app/settings", icon: Settings },
       { label: "Help", href: "/app/help", icon: HelpCircle },
     ],
   },
