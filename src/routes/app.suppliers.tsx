@@ -7,20 +7,13 @@ import { useSuppliers, type SupplierRow } from "@/hooks/useErpData";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { Vendor360Sheet } from "@/components/vendors/Vendor360Sheet";
+import { SupplierFormSheet } from "@/components/vendors/SupplierFormSheet";
 import {
   VENDOR_CATEGORIES, categoryLabel, type VendorCategory,
 } from "@/components/vendors/vendor-constants";
-import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
-} from "@/components/ui/sheet";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -197,70 +190,14 @@ function SuppliersPage() {
         </div>
       )}
 
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>{editing?.id ? "Edit supplier" : "New supplier"}</SheetTitle>
-            <SheetDescription>Vendor master record.</SheetDescription>
-          </SheetHeader>
-          {editing && (
-            <div className="mt-6 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Code *</Label><Input value={editing.code ?? ""} onChange={(e) => setEditing({ ...editing, code: e.target.value })} placeholder="SUP-001" /></div>
-                <div><Label>Lead time (days)</Label><Input type="number" min={0} value={editing.lead_time_days ?? 7} onChange={(e) => setEditing({ ...editing, lead_time_days: Number(e.target.value) })} /></div>
-              </div>
-              <div><Label>Name *</Label><Input value={editing.name ?? ""} onChange={(e) => setEditing({ ...editing, name: e.target.value })} placeholder="Acme Industries Pvt Ltd" /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Category</Label>
-                  <Select
-                    value={((editing as SupplierRow).category as VendorCategory) || "other"}
-                    onValueChange={(v) => setEditing({ ...editing, category: v as VendorCategory } as Partial<SupplierRow>)}
-                  >
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {VENDOR_CATEGORIES.map((c) => (
-                        <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Credit days</Label>
-                  <Input type="number" min={0}
-                    value={(editing as SupplierRow & { credit_days?: number }).credit_days ?? 0}
-                    onChange={(e) => setEditing({ ...editing, credit_days: Number(e.target.value) } as Partial<SupplierRow>)} />
-                </div>
-              </div>
-              <div>
-                <Label>Opening balance (INR)</Label>
-                <Input type="number" min={0} step="0.01"
-                  value={(editing as SupplierRow & { opening_balance?: number }).opening_balance ?? 0}
-                  onChange={(e) => setEditing({ ...editing, opening_balance: Number(e.target.value) } as Partial<SupplierRow>)} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Contact name</Label><Input value={editing.contact_name ?? ""} onChange={(e) => setEditing({ ...editing, contact_name: e.target.value })} /></div>
-                <div><Label>Phone</Label><Input value={editing.phone ?? ""} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} /></div>
-              </div>
-              <div><Label>Email</Label><Input type="email" value={editing.email ?? ""} onChange={(e) => setEditing({ ...editing, email: e.target.value })} /></div>
-              <div><Label>Address</Label><Textarea rows={2} value={editing.address ?? ""} onChange={(e) => setEditing({ ...editing, address: e.target.value })} /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>City</Label><Input value={editing.city ?? ""} onChange={(e) => setEditing({ ...editing, city: e.target.value })} /></div>
-                <div><Label>State</Label><Input value={editing.state ?? ""} onChange={(e) => setEditing({ ...editing, state: e.target.value })} /></div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>GST number</Label><Input value={editing.gst_number ?? ""} onChange={(e) => setEditing({ ...editing, gst_number: e.target.value })} /></div>
-                <div><Label>Payment terms</Label><Input value={editing.payment_terms ?? ""} onChange={(e) => setEditing({ ...editing, payment_terms: e.target.value })} placeholder="Net 30" /></div>
-              </div>
-              <div><Label>Notes</Label><Textarea rows={2} value={editing.notes ?? ""} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} /></div>
-              <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                <Button onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save supplier"}</Button>
-              </div>
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
+      <SupplierFormSheet
+        open={open}
+        onOpenChange={setOpen}
+        editing={editing}
+        setEditing={setEditing}
+        onSave={handleSave}
+        saving={saving}
+      />
 
       <Vendor360Sheet
         supplier={viewing}
