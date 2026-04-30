@@ -28,6 +28,7 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     "/app/analytics",
     "/app/ai-insights",
     "/app/users",
+    "/app/settings",
     "/app/help",
   ],
   manager: [
@@ -51,6 +52,7 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     "/app/workers",
     "/app/analytics",
     "/app/ai-insights",
+    "/app/settings",
     "/app/help",
   ],
   supervisor: [
