@@ -19,7 +19,7 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     "/app/customers",
     "/app/analytics",
     "/app/ai-insights",
-    "/app/settings",
+    "/app/users",
     "/app/help",
   ],
   manager: [

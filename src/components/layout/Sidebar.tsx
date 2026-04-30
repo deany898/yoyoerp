@@ -7,7 +7,6 @@ import {
   Inbox,
   BarChart3,
   Sparkles,
-  Settings,
   ChevronRight,
   HelpCircle,
   Boxes,
@@ -15,6 +14,7 @@ import {
   Layers,
   Send,
   Users,
+  ShieldCheck,
   LogOut,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
@@ -83,7 +83,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Admin",
     items: [
-      { label: "Settings", href: "/app/settings", icon: Settings },
+      { label: "User management", href: "/app/users", icon: ShieldCheck },
     ],
   },
   {
@@ -215,16 +215,6 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         })}
       </div>
 
-      <div className="border-t border-sidebar-border px-3 py-3">
-        <Link
-          to="/app/settings"
-          onClick={onNavigate}
-          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground transition-colors"
-        >
-          <Settings className="h-4 w-4" />
-          Settings
-        </Link>
-      </div>
     </nav>
   );
 }
