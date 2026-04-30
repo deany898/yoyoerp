@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Search, Plus, Menu, User, LogOut, Settings, ChevronDown, ScanBarcode, Wifi, WifiOff } from "lucide-react";
+import { Search, Menu, Wifi, WifiOff } from "lucide-react";
 import { Breadcrumbs } from "@/components/shell/Breadcrumbs";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { NotificationPreferences } from "@/components/notifications/NotificationPreferences";
@@ -11,22 +11,11 @@ import {
   SheetContent,
   SheetTitle,
 } from "@/components/ui/sheet";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Sidebar } from "./Sidebar";
 import { QuickEntryMode } from "@/components/data/QuickEntryMode";
 import { CommandPalette } from "@/components/command/CommandPalette";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
-import { useDemo } from "@/hooks/useDemo";
 import { useRole } from "@/hooks/useRole";
-import { useAuth } from "@/hooks/useAuth";
-import { PermissionGate } from "@/hooks/usePermissions";
 
 const ROLE_BADGE_STYLES: Record<string, string> = {
   admin: "bg-primary/15 text-primary border-primary/20",
@@ -57,25 +46,8 @@ export function Header() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
-  
-  const { exitDemoMode, isDemo } = useDemo();
+
   const { role } = useRole();
-  const { user, displayName: authDisplayName, signOut } = useAuth();
-  const navigate = useNavigate();
-
-  const displayName = isDemo
-    ? "Demo Admin"
-    : (authDisplayName ?? user?.email ?? "Account");
-
-  const handleExit = async () => {
-    if (isDemo) {
-      await navigate({ to: "/" });
-      exitDemoMode();
-      return;
-    }
-    await signOut();
-    await navigate({ to: "/auth" });
-  };
 
   // CMD+K / Ctrl+K shortcut
   useEffect(() => {
@@ -114,18 +86,6 @@ export function Header() {
         <kbd className="ml-auto hidden rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-xs md:inline-block">⌘K</kbd>
       </button>
 
-      <PermissionGate permission="log_movement">
-        <Button size="icon" variant="outline" className="shrink-0" aria-label="Quick entry" onClick={() => setQuickEntryOpen(true)}>
-          <ScanBarcode className="h-4 w-4" />
-        </Button>
-      </PermissionGate>
-
-      <PermissionGate permission="create_item">
-        <Button size="icon" variant="outline" className="shrink-0" aria-label="New item" onClick={() => navigate({ to: "/app/products", search: { newItem: "true" } })}>
-          <Plus className="h-4 w-4" />
-        </Button>
-      </PermissionGate>
-
       <span
         className={`hidden items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium md:inline-flex ${
           online
@@ -147,46 +107,6 @@ export function Header() {
       </Badge>
 
       <NotificationBell onClick={() => setNotifOpen(true)} />
-
-      <Button
-        size="icon"
-        variant="ghost"
-        className="shrink-0"
-        aria-label={isDemo ? "Exit demo" : "Sign out"}
-        title={isDemo ? "Exit demo" : "Sign out"}
-        onClick={handleExit}
-      >
-        <LogOut className="h-4 w-4" />
-      </Button>
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button type="button" className="flex items-center gap-1.5 rounded-full pl-1 pr-2 py-1 hover:bg-muted transition-colors" aria-label="User menu">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted">
-              <User className="h-3.5 w-3.5 text-muted-foreground" />
-            </div>
-            <span className="hidden text-sm font-medium md:inline-block">{displayName}</span>
-            <ChevronDown className="hidden h-3.5 w-3.5 text-muted-foreground md:inline-block" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuLabel className="flex items-center justify-between font-normal text-xs text-muted-foreground">
-            {displayName}
-            <Badge variant="outline" className={`ml-2 text-[10px] font-semibold uppercase ${ROLE_BADGE_STYLES[role] ?? "border-border"}`}>
-              {ROLE_LABELS[role] ?? role}
-            </Badge>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => navigate({ to: "/app/settings" })}>
-            <Settings className="mr-2 h-4 w-4" />
-            Settings
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleExit}>
-            <LogOut className="mr-2 h-4 w-4" />
-            {isDemo ? "Exit demo" : "Sign out"}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
 
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="w-[260px] p-0">
