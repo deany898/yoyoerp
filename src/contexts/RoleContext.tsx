@@ -20,12 +20,20 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const { roles: authRoles } = useAuth();
   const [demoRole, setDemoRole] = useState<UserRoleType>("admin");
 
-  // Real-auth: pick the highest privilege role the user holds (admin > manager > requestor)
-  const realRole: UserRoleType = authRoles.includes("admin")
-    ? "admin"
-    : authRoles.includes("manager")
-      ? "manager"
-      : "requestor";
+  // Real-auth: pick the highest privilege role the user holds.
+  // Order: admin > manager > supervisor > sales > dispatch > worker > customer > requestor (legacy).
+  const ROLE_PRIORITY: UserRoleType[] = [
+    "admin",
+    "manager",
+    "supervisor",
+    "sales",
+    "dispatch",
+    "worker",
+    "customer",
+    "requestor",
+  ];
+  const realRole: UserRoleType =
+    ROLE_PRIORITY.find((r) => authRoles.includes(r)) ?? "worker";
 
   const role: UserRoleType = isDemo ? demoRole : realRole;
 
