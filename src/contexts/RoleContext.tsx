@@ -1,5 +1,6 @@
 import { createContext, useMemo, useState, type ReactNode } from "react";
 import { useDemo } from "@/hooks/useDemo";
+import { useAuth } from "@/hooks/useAuth";
 import { getPermissionsForRole, type RolePermissions, type UserRoleType } from "@/lib/roles";
 
 export interface RoleContextValue {
@@ -16,9 +17,17 @@ export const RoleContext = createContext<RoleContextValue | null>(null);
 
 export function RoleProvider({ children }: { children: ReactNode }) {
   const { isDemo } = useDemo();
+  const { roles: authRoles } = useAuth();
   const [demoRole, setDemoRole] = useState<UserRoleType>("admin");
 
-  const role: UserRoleType = isDemo ? demoRole : "requestor"; // stub: non-demo defaults to requestor
+  // Real-auth: pick the highest privilege role the user holds (admin > manager > requestor)
+  const realRole: UserRoleType = authRoles.includes("admin")
+    ? "admin"
+    : authRoles.includes("manager")
+      ? "manager"
+      : "requestor";
+
+  const role: UserRoleType = isDemo ? demoRole : realRole;
 
   const value = useMemo<RoleContextValue>(() => {
     const permissions = getPermissionsForRole(role);
