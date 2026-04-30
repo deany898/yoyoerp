@@ -121,7 +121,7 @@ function MoDetailPage() {
       title: "Cancel this manufacturing order?",
       description: "This will mark the order as cancelled. Material issues and outputs already posted are kept for audit.",
       confirmLabel: "Cancel order",
-      variant: "destructive",
+      destructive: true,
     });
     if (ok) setStatus("cancelled");
   };
