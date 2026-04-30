@@ -34,7 +34,7 @@ export function PODocumentsPanel({ poId, canManage }: Props) {
   async function refresh() {
     if (!poId) { setDocs([]); return; }
     const { data, error } = await supabase
-      .from("po_documents").select("*").eq("po_id", poId)
+      .from("po_documents" as never).select("*").eq("po_id" as never, poId)
       .order("created_at", { ascending: false });
     if (error) toast.error("Failed to load documents", { description: error.message });
     setDocs((data ?? []) as DocRow[]);
@@ -50,11 +50,11 @@ export function PODocumentsPanel({ poId, canManage }: Props) {
     const up = await supabase.storage.from("po-documents").upload(path, file, { upsert: false });
     if (up.error) { setUploading(false); toast.error("Upload failed", { description: up.error.message }); return; }
     const { data: userRes } = await supabase.auth.getUser();
-    const ins = await supabase.from("po_documents").insert({
-      po_id: poId, kind: kind as DocRow["kind"], storage_path: path,
+    const ins = await supabase.from("po_documents" as never).insert({
+      po_id: poId, kind, storage_path: path,
       file_name: file.name, mime_type: file.type, size_bytes: file.size,
       uploaded_by: userRes.user?.id ?? null,
-    });
+    } as never);
     setUploading(false);
     if (ins.error) { toast.error("Save failed", { description: ins.error.message }); return; }
     toast.success("Document uploaded");
@@ -70,7 +70,7 @@ export function PODocumentsPanel({ poId, canManage }: Props) {
   async function remove(d: DocRow) {
     if (!confirm(`Delete ${d.file_name}?`)) return;
     await supabase.storage.from("po-documents").remove([d.storage_path]);
-    const { error } = await supabase.from("po_documents").delete().eq("id", d.id);
+    const { error } = await supabase.from("po_documents" as never).delete().eq("id" as never, d.id);
     if (error) { toast.error("Delete failed", { description: error.message }); return; }
     toast.success("Document deleted");
     void refresh();
