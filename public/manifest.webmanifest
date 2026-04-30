@@ -42,8 +42,8 @@
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Catalog",
-      "url": "/app/catalog",
+      "name": "Inventory",
+      "url": "/app/inventory",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
