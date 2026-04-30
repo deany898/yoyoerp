@@ -27,14 +27,14 @@ export function MovementStats({ movements }: MovementStatsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-2 lg:grid-cols-4" data-testid="movement-stats">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4" data-testid="movement-stats">
       {pills.map((p) => (
         <div
           key={p.label}
-          className="rounded-md border border-border bg-muted/50 px-3 py-2 text-center"
+          className="min-w-0 rounded-xl border border-border bg-card px-4 py-3 text-center"
         >
-          <p className="text-xs text-muted-foreground">{p.label}</p>
-          <p className="text-lg font-semibold font-mono text-foreground">{p.value}</p>
+          <p className="truncate text-xs font-medium text-muted-foreground">{p.label}</p>
+          <p className="mt-1 font-mono text-xl font-semibold text-foreground">{p.value}</p>
         </div>
       ))}
     </div>

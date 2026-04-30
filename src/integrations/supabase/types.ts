@@ -482,6 +482,24 @@ export type Database = {
           },
         ]
       }
+      doc_number_counters: {
+        Row: {
+          doc_date: string
+          doc_type: string
+          last_seq: number
+        }
+        Insert: {
+          doc_date: string
+          doc_type: string
+          last_seq?: number
+        }
+        Update: {
+          doc_date?: string
+          doc_type?: string
+          last_seq?: number
+        }
+        Relationships: []
+      }
       inventory_request_lines: {
         Row: {
           created_at: string
@@ -1736,6 +1754,7 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      next_doc_number: { Args: { _doc_type: string }; Returns: string }
       recalc_variant_cost: {
         Args: { _depth?: number; _variant_id: string }
         Returns: undefined

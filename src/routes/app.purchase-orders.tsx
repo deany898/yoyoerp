@@ -67,9 +67,8 @@ interface DraftPO {
 }
 
 function emptyDraft(): DraftPO {
-  const yymm = new Date().toISOString().slice(2, 7).replace("-", "");
   return {
-    po_number: `PO-${yymm}-${Math.floor(Math.random() * 9000 + 1000)}`,
+    po_number: "",
     supplier_id: "", status: "draft", expected_date: "", notes: "",
     lines: [],
     lr_number: "", transporter: "", vehicle_number: "",
@@ -95,7 +94,17 @@ function POPage() {
   const [deleting, setDeleting] = useState<POWithLines | null>(null);
   const [saving, setSaving] = useState(false);
 
-  function openCreate() { setDraft(emptyDraft()); setOpen(true); }
+  async function openCreate() {
+    const draft = emptyDraft();
+    const { data, error } = await supabase.rpc("next_doc_number", { _doc_type: "PO" });
+    if (error || !data) {
+      toast.error("Could not generate PO number", { description: error?.message });
+      return;
+    }
+    draft.po_number = data as string;
+    setDraft(draft);
+    setOpen(true);
+  }
   function openEdit(po: POWithLines) {
     setDraft({
       id: po.id, po_number: po.po_number, supplier_id: po.supplier_id,
@@ -144,9 +153,15 @@ function POPage() {
       toast.error("Each line needs a variant and qty > 0"); return;
     }
     setSaving(true);
+    let poNumber = draft.po_number;
+    if (!poNumber) {
+      const { data, error } = await supabase.rpc("next_doc_number", { _doc_type: "PO" });
+      if (error || !data) { setSaving(false); toast.error("Could not generate PO number", { description: error?.message }); return; }
+      poNumber = data as string;
+    }
     const subtotal = draft.lines.reduce((s, l) => s + l.qty_ordered * l.unit_cost, 0);
     const headerPayload = {
-      po_number: draft.po_number, supplier_id: draft.supplier_id, status: draft.status,
+      po_number: poNumber, supplier_id: draft.supplier_id, status: draft.status,
       expected_date: draft.expected_date || null, notes: draft.notes || null,
       subtotal, total: subtotal,
       lr_number: draft.lr_number || null,

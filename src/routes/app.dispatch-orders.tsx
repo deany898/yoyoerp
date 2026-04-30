@@ -68,9 +68,8 @@ interface DraftDO {
 }
 
 function emptyDraft(): DraftDO {
-  const yymm = new Date().toISOString().slice(2, 7).replace("-", "");
   return {
-    do_number: `DO-${yymm}-${Math.floor(Math.random() * 9000 + 1000)}`,
+    do_number: "",
     customer_id: "", warehouse_id: "", status: "draft",
     expected_dispatch_date: "", delivery_address: "", transporter: "",
     vehicle_number: "", lr_number: "",
@@ -130,7 +129,17 @@ function DispatchOrdersPage() {
     customers.map((c) => ({ value: c.id, label: c.name, hint: c.code })),
   [customers]);
 
-  function openCreate() { setDraft(emptyDraft()); setOpen(true); }
+  async function openCreate() {
+    const draft = emptyDraft();
+    const { data, error } = await supabase.rpc("next_doc_number", { _doc_type: "DO" });
+    if (error || !data) {
+      toast.error("Could not generate DO number", { description: error?.message });
+      return;
+    }
+    draft.do_number = data as string;
+    setDraft(draft);
+    setOpen(true);
+  }
 
   async function openEdit(row: DORow) {
     const { data, error } = await supabase
@@ -190,8 +199,14 @@ function DispatchOrdersPage() {
     if (draft.lines.length === 0) { toast.error("Add at least one line"); return; }
     if (draft.lines.some((l) => !l.variant_id || l.qty <= 0)) { toast.error("Each line needs a product and qty > 0"); return; }
     setSaving(true);
+    let doNumber = draft.do_number;
+    if (!doNumber) {
+      const { data, error } = await supabase.rpc("next_doc_number", { _doc_type: "DO" });
+      if (error || !data) { setSaving(false); toast.error("Could not generate DO number", { description: error?.message }); return; }
+      doNumber = data as string;
+    }
     const header = {
-      do_number: draft.do_number, customer_id: draft.customer_id,
+      do_number: doNumber, customer_id: draft.customer_id,
       warehouse_id: draft.warehouse_id || null, status: draft.status,
       expected_dispatch_date: draft.expected_dispatch_date || null,
       delivery_address: draft.delivery_address || null,

@@ -155,9 +155,9 @@ export function MovementsFilters(props: MovementsFiltersProps) {
 
   return (
     <div className="rounded-lg border border-border bg-card p-4">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {/* Type */}
-        <div>
+        <div className="min-w-0">
           <Label className="mb-1.5 block text-xs text-muted-foreground">Type</Label>
           <div className="flex flex-wrap gap-2">
             {TYPE_OPTIONS.map((o) => (
@@ -178,13 +178,13 @@ export function MovementsFilters(props: MovementsFiltersProps) {
         </div>
 
         {/* Item */}
-        <div>
+        <div className="min-w-0">
           <Label className="mb-1.5 block text-xs text-muted-foreground">Item</Label>
           <Select
             value={props.filters.itemId ?? "__all__"}
             onValueChange={(v) => props.onChange({ ...props.filters, itemId: v === "__all__" ? null : v })}
           >
-            <SelectTrigger className="h-8 text-xs">
+            <SelectTrigger className="h-9 text-xs">
               <SelectValue placeholder="All items" />
             </SelectTrigger>
             <SelectContent>
@@ -197,18 +197,18 @@ export function MovementsFilters(props: MovementsFiltersProps) {
         </div>
 
         {/* Date range */}
-        <div>
+        <div className="min-w-0">
           <Label className="mb-1.5 block text-xs text-muted-foreground">Date Range</Label>
-          <div className="flex gap-1">
+          <div className="flex gap-2">
             <Input
               type="date"
-              className="h-8 text-xs"
+              className="h-9 min-w-0 flex-1 text-xs"
               value={props.filters.dateFrom ?? ""}
               onChange={(e) => props.onChange({ ...props.filters, dateFrom: e.target.value || null })}
             />
             <Input
               type="date"
-              className="h-8 text-xs"
+              className="h-9 min-w-0 flex-1 text-xs"
               value={props.filters.dateTo ?? ""}
               onChange={(e) => props.onChange({ ...props.filters, dateTo: e.target.value || null })}
             />
@@ -216,14 +216,14 @@ export function MovementsFilters(props: MovementsFiltersProps) {
         </div>
 
         {/* Performer */}
-        <div className="flex items-end gap-2">
+        <div className="flex min-w-0 items-end gap-2">
           <div className="flex-1">
             <Label className="mb-1.5 block text-xs text-muted-foreground">Performed By</Label>
             <Select
               value={props.filters.performedBy ?? "__all__"}
               onValueChange={(v) => props.onChange({ ...props.filters, performedBy: v === "__all__" ? null : v })}
             >
-              <SelectTrigger className="h-8 text-xs">
+              <SelectTrigger className="h-9 text-xs">
                 <SelectValue placeholder="All" />
               </SelectTrigger>
               <SelectContent>
@@ -235,7 +235,7 @@ export function MovementsFilters(props: MovementsFiltersProps) {
             </Select>
           </div>
           {isFiltersActive(props.filters) && (
-            <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs" onClick={() => props.onChange(EMPTY_MOVEMENT_FILTERS)}>
+            <Button variant="ghost" size="sm" className="h-9 gap-1 text-xs" onClick={() => props.onChange(EMPTY_MOVEMENT_FILTERS)}>
               <X className="h-3 w-3" />Clear
             </Button>
           )}
