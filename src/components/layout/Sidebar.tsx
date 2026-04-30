@@ -108,7 +108,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         <Logo size={36} variant="light" showWordmark={false} />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 py-2">
+      <div className="flex-1 overflow-y-auto px-3 py-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {visibleGroups.map((group, idx) => {
           const isCollapsed = collapsed[group.label] ?? false;
           return (
