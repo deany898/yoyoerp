@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 interface Movement {
-  occurredAt: string;
+  createdAt: string;
   type: string;
   quantity: number;
 }
@@ -40,7 +40,7 @@ export function OperationsOverviewChart({ movements }: Props) {
       });
     }
     for (const m of movements) {
-      const key = (m.occurredAt ?? "").slice(0, 10);
+      const key = (m.createdAt ?? "").slice(0, 10);
       const b = buckets.get(key);
       if (!b) continue;
       const qty = Math.abs(Number(m.quantity) || 0);
