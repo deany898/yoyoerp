@@ -1078,10 +1078,13 @@ export type Database = {
       }
       mo_stage_runs: {
         Row: {
+          cavity_used: number | null
           created_at: string
           ended_at: string | null
           id: string
           machine_id: string | null
+          material_grams: number
+          material_variant_id: string | null
           mo_id: string
           mould_id: string | null
           notes: string | null
@@ -1089,15 +1092,22 @@ export type Database = {
           qty_out: number
           qty_rework: number
           qty_scrap: number
+          shots_good: number
+          shots_scrap: number
           stage_id: string | null
+          stage_kind: Database["public"]["Enums"]["stage_kind"]
           started_at: string | null
+          units_produced: number
           worker_id: string | null
         }
         Insert: {
+          cavity_used?: number | null
           created_at?: string
           ended_at?: string | null
           id?: string
           machine_id?: string | null
+          material_grams?: number
+          material_variant_id?: string | null
           mo_id: string
           mould_id?: string | null
           notes?: string | null
@@ -1105,15 +1115,22 @@ export type Database = {
           qty_out?: number
           qty_rework?: number
           qty_scrap?: number
+          shots_good?: number
+          shots_scrap?: number
           stage_id?: string | null
+          stage_kind?: Database["public"]["Enums"]["stage_kind"]
           started_at?: string | null
+          units_produced?: number
           worker_id?: string | null
         }
         Update: {
+          cavity_used?: number | null
           created_at?: string
           ended_at?: string | null
           id?: string
           machine_id?: string | null
+          material_grams?: number
+          material_variant_id?: string | null
           mo_id?: string
           mould_id?: string | null
           notes?: string | null
@@ -1121,8 +1138,12 @@ export type Database = {
           qty_out?: number
           qty_rework?: number
           qty_scrap?: number
+          shots_good?: number
+          shots_scrap?: number
           stage_id?: string | null
+          stage_kind?: Database["public"]["Enums"]["stage_kind"]
           started_at?: string | null
+          units_produced?: number
           worker_id?: string | null
         }
         Relationships: [
@@ -1131,6 +1152,13 @@ export type Database = {
             columns: ["machine_id"]
             isOneToOne: false
             referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mo_stage_runs_material_variant_id_fkey"
+            columns: ["material_variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
           {
@@ -1159,6 +1187,39 @@ export type Database = {
             columns: ["worker_id"]
             isOneToOne: false
             referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mould_machine_compat: {
+        Row: {
+          created_at: string
+          machine_id: string
+          mould_id: string
+        }
+        Insert: {
+          created_at?: string
+          machine_id: string
+          mould_id: string
+        }
+        Update: {
+          created_at?: string
+          machine_id?: string
+          mould_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mould_machine_compat_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mould_machine_compat_mould_id_fkey"
+            columns: ["mould_id"]
+            isOneToOne: false
+            referencedRelation: "moulds"
             referencedColumns: ["id"]
           },
         ]
@@ -1467,6 +1528,7 @@ export type Database = {
           attributes: Json
           avg_cost: number
           barcode: string | null
+          base_variant_id: string | null
           cost_currency: string
           cost_updated_at: string
           created_at: string
@@ -1475,13 +1537,18 @@ export type Database = {
           is_active: boolean
           last_cost: number
           manufacture_cost: number
+          pack_labour_cost: number
+          pack_material_cost: number
+          pack_overhead_cost: number
           product_id: string
           purchase_cost: number
           reorder_point: number
           reorder_qty: number
           safety_stock: number
           sku: string
+          units_per_pack: number
           updated_at: string
+          variant_kind: Database["public"]["Enums"]["variant_kind"]
           variant_name: string
           weight_grams: number | null
         }
@@ -1489,6 +1556,7 @@ export type Database = {
           attributes?: Json
           avg_cost?: number
           barcode?: string | null
+          base_variant_id?: string | null
           cost_currency?: string
           cost_updated_at?: string
           created_at?: string
@@ -1497,13 +1565,18 @@ export type Database = {
           is_active?: boolean
           last_cost?: number
           manufacture_cost?: number
+          pack_labour_cost?: number
+          pack_material_cost?: number
+          pack_overhead_cost?: number
           product_id: string
           purchase_cost?: number
           reorder_point?: number
           reorder_qty?: number
           safety_stock?: number
           sku: string
+          units_per_pack?: number
           updated_at?: string
+          variant_kind?: Database["public"]["Enums"]["variant_kind"]
           variant_name: string
           weight_grams?: number | null
         }
@@ -1511,6 +1584,7 @@ export type Database = {
           attributes?: Json
           avg_cost?: number
           barcode?: string | null
+          base_variant_id?: string | null
           cost_currency?: string
           cost_updated_at?: string
           created_at?: string
@@ -1519,17 +1593,29 @@ export type Database = {
           is_active?: boolean
           last_cost?: number
           manufacture_cost?: number
+          pack_labour_cost?: number
+          pack_material_cost?: number
+          pack_overhead_cost?: number
           product_id?: string
           purchase_cost?: number
           reorder_point?: number
           reorder_qty?: number
           safety_stock?: number
           sku?: string
+          units_per_pack?: number
           updated_at?: string
+          variant_kind?: Database["public"]["Enums"]["variant_kind"]
           variant_name?: string
           weight_grams?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "product_variants_base_variant_id_fkey"
+            columns: ["base_variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "product_variants_product_id_fkey"
             columns: ["product_id"]
@@ -1551,6 +1637,7 @@ export type Database = {
           qc_cost: number
           rejection_pct: number
           sequence: number
+          stage_kind: Database["public"]["Enums"]["stage_kind"]
           stage_name: string
           utility_cost: number
           variant_id: string
@@ -1566,6 +1653,7 @@ export type Database = {
           qc_cost?: number
           rejection_pct?: number
           sequence?: number
+          stage_kind?: Database["public"]["Enums"]["stage_kind"]
           stage_name: string
           utility_cost?: number
           variant_id: string
@@ -1581,6 +1669,7 @@ export type Database = {
           qc_cost?: number
           rejection_pct?: number
           sequence?: number
+          stage_kind?: Database["public"]["Enums"]["stage_kind"]
           stage_name?: string
           utility_cost?: number
           variant_id?: string
@@ -1927,6 +2016,7 @@ export type Database = {
           qc_cost: number
           rejection_pct: number
           sequence: number
+          stage_kind: Database["public"]["Enums"]["stage_kind"]
           stage_name: string
           utility_cost: number
         }
@@ -1942,6 +2032,7 @@ export type Database = {
           qc_cost?: number
           rejection_pct?: number
           sequence?: number
+          stage_kind?: Database["public"]["Enums"]["stage_kind"]
           stage_name: string
           utility_cost?: number
         }
@@ -1957,6 +2048,7 @@ export type Database = {
           qc_cost?: number
           rejection_pct?: number
           sequence?: number
+          stage_kind?: Database["public"]["Enums"]["stage_kind"]
           stage_name?: string
           utility_cost?: number
         }
@@ -2500,6 +2592,8 @@ export type Database = {
         | "fulfilled"
         | "cancelled"
       sourcing_type: "purchased" | "manufactured" | "hybrid"
+      stage_kind: "moulding" | "assembly" | "packing" | "qc" | "other"
+      variant_kind: "base" | "variation" | "component"
       zone_kind:
         | "raw_material"
         | "wip"
@@ -2729,6 +2823,8 @@ export const Constants = {
         "cancelled",
       ],
       sourcing_type: ["purchased", "manufactured", "hybrid"],
+      stage_kind: ["moulding", "assembly", "packing", "qc", "other"],
+      variant_kind: ["base", "variation", "component"],
       zone_kind: [
         "raw_material",
         "wip",
