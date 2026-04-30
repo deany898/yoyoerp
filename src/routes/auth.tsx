@@ -130,52 +130,19 @@ function AuthPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-sidebar text-sidebar-foreground">
-      {/* Top header — matches app header style */}
-      <header className="flex h-16 items-center gap-3 border-b border-sidebar-border bg-sidebar px-4 sm:px-6">
-        <Logo size={36} variant="light" showWordmark={false} />
-        <div className="flex flex-col leading-tight">
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-sidebar-primary">
-            YOYO
-          </span>
-          <span className="text-sm font-semibold text-sidebar-foreground">
-            ERP Platform
-          </span>
+    <div className="relative flex min-h-screen flex-col items-center justify-between overflow-hidden bg-gradient-to-br from-sky-50 via-background to-cyan-50/60 px-4 py-10 text-foreground">
+      {/* soft ambient blobs */}
+      <div aria-hidden className="pointer-events-none absolute -left-32 top-10 h-80 w-80 rounded-full bg-sky-200/40 blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute -right-32 bottom-20 h-80 w-80 rounded-full bg-cyan-200/40 blur-3xl" />
+
+      <main className="relative z-10 flex w-full max-w-md flex-1 flex-col items-center justify-center">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <Logo size={88} showWordmark={false} />
+          <h1 className="mt-5 text-3xl font-bold tracking-tight text-foreground">YOYO ERP</h1>
+          <p className="mt-1 text-sm font-medium text-muted-foreground">YOYO Internal Operations Platform</p>
         </div>
-      </header>
 
-      {/* Main split: sidebar-style brand panel + auth card */}
-      <div className="flex flex-1 flex-col lg:flex-row">
-        {/* Left brand panel — mimics sidebar */}
-        <aside className="hidden lg:flex lg:w-[420px] flex-col justify-between border-r border-sidebar-border px-10 py-12">
-          <div>
-            <span className="inline-flex items-center rounded-md bg-sidebar-accent px-2.5 py-1 text-[11px] font-semibold uppercase tracking-widest text-sidebar-primary">
-              Internal access
-            </span>
-            <h1 className="mt-6 text-3xl font-semibold leading-tight text-sidebar-foreground">
-              Welcome to the YOYO operations platform
-            </h1>
-            <p className="mt-4 text-sm leading-relaxed text-sidebar-foreground/70">
-              Sign in to manage products, inventory, dispatch, procurement and the full wholesale workflow.
-            </p>
-          </div>
-          <div className="space-y-2 text-xs text-sidebar-foreground/50">
-            <div className="h-px bg-sidebar-border" />
-            <p>Authorized personnel only · Accounts are managed by administrators.</p>
-            <p>© {new Date().getFullYear()} YOYO · All rights reserved.</p>
-          </div>
-        </aside>
-
-        {/* Right auth card on light surface */}
-        <main className="flex flex-1 items-center justify-center bg-background px-4 py-10 text-foreground">
-          <div className="w-full max-w-md">
-            <div className="mb-8 flex flex-col items-center text-center lg:hidden">
-              <Logo size={64} showWordmark={false} />
-              <h1 className="mt-4 text-2xl font-bold tracking-tight">YOYO ERP</h1>
-              <p className="mt-1 text-sm text-muted-foreground">Internal operations platform</p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-6 shadow-[0_8px_30px_-12px_rgba(15,23,42,0.18)] md:p-8">
+        <div className="w-full rounded-2xl border border-border bg-card p-6 shadow-[0_10px_40px_-12px_rgba(15,23,42,0.15)] md:p-8">
               <Tabs value={tab} onValueChange={(v) => setTab(v as "signin" | "signup")} className="w-full">
                 <div className="mb-5 text-center">
                   <h2 className="text-xl font-semibold text-foreground">
@@ -348,10 +315,12 @@ function AuthPage() {
                   Authorized personnel only · Accounts are managed by administrators.
                 </p>
               </Tabs>
-            </div>
-          </div>
-        </main>
-      </div>
+        </div>
+      </main>
+
+      <footer className="relative z-10 mt-8 text-center text-xs text-muted-foreground">
+        © {new Date().getFullYear()} YOYO · All rights reserved.
+      </footer>
     </div>
   );
 }
