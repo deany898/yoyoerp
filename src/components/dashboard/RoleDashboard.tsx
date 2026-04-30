@@ -99,12 +99,10 @@ function SalesDashboard() {
   const { data: summary } = useStockSummary();
   return (
     <>
-      <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
-          <MetricCard label="Catalog SKUs" value={summary.total} accentColor="neutral" icon={Package} />
-          <MetricCard label="Available" value={summary.inStock} accentColor="healthy" icon={CheckCircle2} />
-          <MetricCard label="Low stock" value={summary.lowStock} accentColor="warning" icon={AlertTriangle} />
-        </div>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+        <MetricCard label="Catalog SKUs" value={summary.total} accentColor="neutral" icon={Package} />
+        <MetricCard label="Available" value={summary.inStock} accentColor="healthy" icon={CheckCircle2} />
+        <MetricCard label="Low stock" value={summary.lowStock} accentColor="warning" icon={AlertTriangle} />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <QuickTile to="/app/products" icon={Package} title="Products" hint="Browse the catalog" />
