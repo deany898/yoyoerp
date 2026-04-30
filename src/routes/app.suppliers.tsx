@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Truck, Pencil, Trash2 } from "lucide-react";
+import { Plus, Truck, Pencil, Trash2, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSuppliers, type SupplierRow } from "@/hooks/useErpData";
@@ -10,6 +10,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Vendor360Sheet } from "@/components/vendors/Vendor360Sheet";
+import {
+  VENDOR_CATEGORIES, categoryLabel, type VendorCategory,
+} from "@/components/vendors/vendor-constants";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
@@ -41,6 +49,8 @@ function SuppliersPage() {
   const [editing, setEditing] = useState<Partial<SupplierRow> | null>(null);
   const [deleting, setDeleting] = useState<SupplierRow | null>(null);
   const [saving, setSaving] = useState(false);
+  const [viewing, setViewing] = useState<SupplierRow | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<VendorCategory | "all">("all");
 
   function openCreate() { setEditing({ ...EMPTY }); setOpen(true); }
   function openEdit(s: SupplierRow) { setEditing(s); setOpen(true); }
@@ -62,6 +72,9 @@ function SuppliersPage() {
       lead_time_days: Number(editing.lead_time_days) || 7,
       notes: editing.notes || null,
       is_active: editing.is_active ?? true,
+      category: ((editing as SupplierRow).category as VendorCategory) || "other",
+      credit_days: Number((editing as SupplierRow & { credit_days?: number }).credit_days) || 0,
+      opening_balance: Number((editing as SupplierRow & { opening_balance?: number }).opening_balance) || 0,
     };
     const op = editing.id
       ? supabase.from("suppliers").update(payload).eq("id", editing.id)
@@ -81,12 +94,18 @@ function SuppliersPage() {
     setDeleting(null); await refresh();
   }
 
+  const filtered = categoryFilter === "all"
+    ? suppliers
+    : suppliers.filter((s) => (s as SupplierRow & { category?: VendorCategory }).category === categoryFilter);
+
   return (
     <div className="mx-auto max-w-[1400px] space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Suppliers</h1>
-          <p className="text-sm text-muted-foreground">{suppliers.length} vendors</p>
+          <p className="text-sm text-muted-foreground">
+            {filtered.length} of {suppliers.length} vendors
+          </p>
         </div>
         {canManage && (
           <Button size="sm" onClick={openCreate}>
@@ -95,9 +114,31 @@ function SuppliersPage() {
         )}
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => setCategoryFilter("all")}
+          className={`rounded-full border px-3 py-1 text-xs transition ${
+            categoryFilter === "all"
+              ? "border-primary bg-primary text-primary-foreground"
+              : "border-border bg-white text-muted-foreground hover:border-primary/50"
+          }`}
+        >All</button>
+        {VENDOR_CATEGORIES.map((c) => (
+          <button
+            key={c.value}
+            onClick={() => setCategoryFilter(c.value)}
+            className={`rounded-full border px-3 py-1 text-xs transition ${
+              categoryFilter === c.value
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-white text-muted-foreground hover:border-primary/50"
+            }`}
+          >{c.label}</button>
+        ))}
+      </div>
+
       {loading ? (
         <div className="rounded-xl border border-border bg-white p-8 text-sm text-muted-foreground">Loading…</div>
-      ) : suppliers.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <EmptyState icon={Truck} title="No suppliers yet"
           description="Add your first vendor to start tracking POs and lead times."
           actionLabel={canManage ? "Add supplier" : undefined}
@@ -109,36 +150,48 @@ function SuppliersPage() {
               <TableRow>
                 <TableHead>Code</TableHead>
                 <TableHead>Name</TableHead>
+                <TableHead>Category</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead>Phone</TableHead>
-                <TableHead>City</TableHead>
                 <TableHead className="font-mono">Lead time</TableHead>
-                <TableHead className="w-32"></TableHead>
+                <TableHead className="font-mono">Credit</TableHead>
+                <TableHead className="w-40"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {suppliers.map((s) => (
-                <TableRow key={s.id}>
+              {filtered.map((s) => {
+                const sx = s as SupplierRow & { category?: VendorCategory; credit_days?: number };
+                return (
+                <TableRow key={s.id} className="cursor-pointer hover:bg-muted/30" onClick={() => setViewing(s)}>
                   <TableCell className="font-mono text-xs">{s.code}</TableCell>
                   <TableCell className="font-medium">{s.name}</TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className="text-xs">
+                      {sx.category ? categoryLabel(sx.category) : "Other"}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="text-muted-foreground">{s.contact_name || "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{s.phone || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{s.city || "—"}</TableCell>
                   <TableCell className="font-mono">{s.lead_time_days}d</TableCell>
-                  <TableCell>
-                    {canManage && (
-                      <div className="flex justify-end gap-1">
-                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(s)}>
+                  <TableCell className="font-mono">{sx.credit_days ?? 0}d</TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <div className="flex justify-end gap-1">
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setViewing(s)} title="Vendor 360">
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
+                      {canManage && (<>
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(s)} title="Edit">
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => setDeleting(s)}>
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => setDeleting(s)} title="Delete">
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
-                      </div>
-                    )}
+                      </>)}
+                    </div>
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         </div>
@@ -157,6 +210,34 @@ function SuppliersPage() {
                 <div><Label>Lead time (days)</Label><Input type="number" min={0} value={editing.lead_time_days ?? 7} onChange={(e) => setEditing({ ...editing, lead_time_days: Number(e.target.value) })} /></div>
               </div>
               <div><Label>Name *</Label><Input value={editing.name ?? ""} onChange={(e) => setEditing({ ...editing, name: e.target.value })} placeholder="Acme Industries Pvt Ltd" /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Category</Label>
+                  <Select
+                    value={((editing as SupplierRow).category as VendorCategory) || "other"}
+                    onValueChange={(v) => setEditing({ ...editing, category: v as VendorCategory } as Partial<SupplierRow>)}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {VENDOR_CATEGORIES.map((c) => (
+                        <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Credit days</Label>
+                  <Input type="number" min={0}
+                    value={(editing as SupplierRow & { credit_days?: number }).credit_days ?? 0}
+                    onChange={(e) => setEditing({ ...editing, credit_days: Number(e.target.value) } as Partial<SupplierRow>)} />
+                </div>
+              </div>
+              <div>
+                <Label>Opening balance (INR)</Label>
+                <Input type="number" min={0} step="0.01"
+                  value={(editing as SupplierRow & { opening_balance?: number }).opening_balance ?? 0}
+                  onChange={(e) => setEditing({ ...editing, opening_balance: Number(e.target.value) } as Partial<SupplierRow>)} />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Contact name</Label><Input value={editing.contact_name ?? ""} onChange={(e) => setEditing({ ...editing, contact_name: e.target.value })} /></div>
                 <div><Label>Phone</Label><Input value={editing.phone ?? ""} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} /></div>
@@ -180,6 +261,14 @@ function SuppliersPage() {
           )}
         </SheetContent>
       </Sheet>
+
+      <Vendor360Sheet
+        supplier={viewing}
+        open={!!viewing}
+        onOpenChange={(o) => !o && setViewing(null)}
+        canManage={canManage}
+        onChanged={refresh}
+      />
 
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
