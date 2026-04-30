@@ -102,7 +102,7 @@ function GoodsReturnsPage() {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<DraftGR | null>(null);
   const [saving, setSaving] = useState(false);
-  const [receiving, setReceiving] = useState(false);
+  const [busyTransition, setBusyTransition] = useState<GRTransition | null>(null);
   const [deleting, setDeleting] = useState<GRRow | null>(null);
 
   async function refresh() {
@@ -250,43 +250,49 @@ function GoodsReturnsPage() {
     setOpen(false); setDraft(null); void refresh();
   }
 
+  const NEXT_STATUS: Record<GRTransition, GRStatus> = {
+    submit: "pending_approval",
+    approve: "approved",
+    receive: "received",
+    cancel: "cancelled",
+    reopen: "draft",
+  };
+
   /**
-   * Receive the return: mark received and post stock movements.
-   * - resaleable lines → movement reason "return" into selected restock zone
-   * - repairable / scrap → movement reason "scrap" (no stock added) for audit
-   * Requires every resaleable line to have a restock zone.
+   * Move the return to its next status. The "receive" transition also posts
+   * stock movements (reason=return for resaleable, reason=scrap for the rest)
+   * and bumps inventory_stock.on_hand for restocked zones.
    */
-  async function saveAndReceive() {
+  async function transitionTo(t: GRTransition) {
     if (!draft) return;
-    const missing = draft.lines.find((l) => l.condition === "resaleable" && !l.restock_zone_id);
-    if (missing) { toast.error("Pick a restock zone for every resaleable line"); return; }
-    setReceiving(true);
-    const before = { ...draft, status: "received" as GRStatus };
-    setDraft(before);
-    const id = await persist();
-    if (!id) { setReceiving(false); return; }
-    const { data: { user } } = await supabase.auth.getUser();
-    const movements = draft.lines.map((l) => ({
-      variant_id: l.variant_id,
-      qty: l.condition === "resaleable" ? l.qty : 0,
-      to_zone_id: l.condition === "resaleable" ? l.restock_zone_id : null,
-      from_zone_id: null,
-      reason: (l.condition === "resaleable" ? "return" : "scrap") as "return" | "scrap",
-      reference_type: "goods_return",
-      reference_id: id,
-      unit_cost: l.unit_price,
-      performed_by: user?.id ?? null,
-      notes: `GR ${draft.gr_number} · ${l.condition}`,
-    })).filter((m) => m.qty > 0);
-    if (movements.length > 0) {
+    const nextStatus = NEXT_STATUS[t];
+    if (t === "receive") {
+      const missing = draft.lines.find((l) => l.condition === "resaleable" && !l.restock_zone_id);
+      if (missing) { toast.error("Pick a restock zone for every resaleable line"); return; }
+    }
+    setBusyTransition(t);
+    const updated = { ...draft, status: nextStatus };
+    setDraft(updated);
+    const id = await persist(updated);
+    if (!id) { setBusyTransition(null); return; }
+
+    if (t === "receive") {
+      const { data: { user } } = await supabase.auth.getUser();
+      const movements = updated.lines.map((l) => ({
+        variant_id: l.variant_id,
+        qty: l.qty,
+        to_zone_id: l.condition === "resaleable" ? l.restock_zone_id : null,
+        from_zone_id: null,
+        reason: (l.condition === "resaleable" ? "return" : "scrap") as "return" | "scrap",
+        reference_type: "goods_return",
+        reference_id: id,
+        unit_cost: l.unit_price,
+        performed_by: user?.id ?? null,
+        notes: `GR ${updated.gr_number} · ${l.condition}`,
+      })).filter((m) => m.qty > 0);
       const { error: mErr } = await supabase.from("stock_movements").insert(movements);
-      if (mErr) {
-        setReceiving(false);
-        toast.error("Stock movement failed", { description: mErr.message });
-        return;
-      }
-      // Bump on_hand
-      for (const m of movements) {
+      if (mErr) { setBusyTransition(null); toast.error("Stock movement failed", { description: mErr.message }); return; }
+      for (const m of movements.filter((x) => x.to_zone_id)) {
         const { data: stock } = await supabase
           .from("inventory_stock")
           .select("id, on_hand")
@@ -301,10 +307,12 @@ function GoodsReturnsPage() {
           });
         }
       }
+      toast.success(`Return received · ${movements.length} item(s) processed`);
+    } else {
+      toast.success(`Return ${nextStatus.replace(/_/g, " ")}`);
     }
-    setReceiving(false);
-    toast.success(`Return received · ${movements.length} item(s) restocked`);
-    setOpen(false); setDraft(null); void refresh();
+    setBusyTransition(null);
+    void refresh();
   }
 
   async function handleDelete() {
