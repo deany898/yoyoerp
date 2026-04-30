@@ -86,7 +86,7 @@ export function Vendor360Sheet({ supplier, open, onOpenChange, canManage, onChan
           <SheetHeader>
             <div className="flex items-center gap-2">
               <SheetTitle>{supplier.name}</SheetTitle>
-              {cat && <Badge variant="secondary">{categoryLabel(cat as never)}</Badge>}
+              {cat && <Badge variant="secondary">{categoryLabel(cat)}</Badge>}
             </div>
             <SheetDescription className="font-mono text-xs">
               {supplier.code} · lead {supplier.lead_time_days}d · credit {credit}d
