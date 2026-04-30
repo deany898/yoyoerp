@@ -8,14 +8,10 @@ import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  VENDOR_CATEGORIES, type VendorCategory,
-} from "./vendor-constants";
+import { VENDOR_CATEGORIES, type VendorCategory } from "./vendor-constants";
 import type { SupplierRow } from "@/hooks/useErpData";
 
-type Editable = Partial<SupplierRow> & {
-  category?: VendorCategory; credit_days?: number; opening_balance?: number;
-};
+type Editable = Partial<SupplierRow>;
 
 interface Props {
   open: boolean;
