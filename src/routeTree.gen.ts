@@ -24,6 +24,7 @@ import { Route as AppPurchaseOrdersRouteImport } from './routes/app.purchase-ord
 import { Route as AppProductsRouteImport } from './routes/app.products'
 import { Route as AppMovementsRouteImport } from './routes/app.movements'
 import { Route as AppMouldsRouteImport } from './routes/app.moulds'
+import { Route as AppManufacturingRouteImport } from './routes/app.manufacturing'
 import { Route as AppMachinesRouteImport } from './routes/app.machines'
 import { Route as AppInventoryRouteImport } from './routes/app.inventory'
 import { Route as AppHelpRouteImport } from './routes/app.help'
@@ -109,6 +110,11 @@ const AppMouldsRoute = AppMouldsRouteImport.update({
   path: '/moulds',
   getParentRoute: () => AppRoute,
 } as any)
+const AppManufacturingRoute = AppManufacturingRouteImport.update({
+  id: '/manufacturing',
+  path: '/manufacturing',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppMachinesRoute = AppMachinesRouteImport.update({
   id: '/machines',
   path: '/machines',
@@ -168,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
   '/app/machines': typeof AppMachinesRoute
+  '/app/manufacturing': typeof AppManufacturingRoute
   '/app/moulds': typeof AppMouldsRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/products': typeof AppProductsRoute
@@ -193,6 +200,7 @@ export interface FileRoutesByTo {
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
   '/app/machines': typeof AppMachinesRoute
+  '/app/manufacturing': typeof AppManufacturingRoute
   '/app/moulds': typeof AppMouldsRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/products': typeof AppProductsRoute
@@ -220,6 +228,7 @@ export interface FileRoutesById {
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
   '/app/machines': typeof AppMachinesRoute
+  '/app/manufacturing': typeof AppManufacturingRoute
   '/app/moulds': typeof AppMouldsRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/products': typeof AppProductsRoute
@@ -248,6 +257,7 @@ export interface FileRouteTypes {
     | '/app/help'
     | '/app/inventory'
     | '/app/machines'
+    | '/app/manufacturing'
     | '/app/moulds'
     | '/app/movements'
     | '/app/products'
@@ -273,6 +283,7 @@ export interface FileRouteTypes {
     | '/app/help'
     | '/app/inventory'
     | '/app/machines'
+    | '/app/manufacturing'
     | '/app/moulds'
     | '/app/movements'
     | '/app/products'
@@ -299,6 +310,7 @@ export interface FileRouteTypes {
     | '/app/help'
     | '/app/inventory'
     | '/app/machines'
+    | '/app/manufacturing'
     | '/app/moulds'
     | '/app/movements'
     | '/app/products'
@@ -426,6 +438,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMouldsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/manufacturing': {
+      id: '/app/manufacturing'
+      path: '/manufacturing'
+      fullPath: '/app/manufacturing'
+      preLoaderRoute: typeof AppManufacturingRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/machines': {
       id: '/app/machines'
       path: '/machines'
@@ -502,6 +521,7 @@ interface AppRouteChildren {
   AppHelpRoute: typeof AppHelpRoute
   AppInventoryRoute: typeof AppInventoryRoute
   AppMachinesRoute: typeof AppMachinesRoute
+  AppManufacturingRoute: typeof AppManufacturingRoute
   AppMouldsRoute: typeof AppMouldsRoute
   AppMovementsRoute: typeof AppMovementsRoute
   AppProductsRoute: typeof AppProductsRoute
@@ -526,6 +546,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppHelpRoute: AppHelpRoute,
   AppInventoryRoute: AppInventoryRoute,
   AppMachinesRoute: AppMachinesRoute,
+  AppManufacturingRoute: AppManufacturingRoute,
   AppMouldsRoute: AppMouldsRoute,
   AppMovementsRoute: AppMovementsRoute,
   AppProductsRoute: AppProductsRoute,
