@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
-import { Loader2, Mail, Lock, Eye, EyeOff, User as UserIcon } from "lucide-react";
+import { Loader2, Mail, Lock, User as UserIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand/Logo";
 import { lovable } from "@/integrations/lovable/index";
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { notify, friendlyAuthError } from "@/lib/notify";
+import { AuthIconInput } from "@/components/auth/AuthIconInput";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -38,8 +39,6 @@ function AuthPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<"signin" | "signup">("signin");
   const [submitting, setSubmitting] = useState(false);
-  const [showSigninPwd, setShowSigninPwd] = useState(false);
-  const [showSignupPwd, setShowSignupPwd] = useState(false);
 
   const [signinEmail, setSigninEmail] = useState("");
   const [signinPassword, setSigninPassword] = useState("");
@@ -184,46 +183,28 @@ function AuthPage() {
 
                 <TabsContent value="signin" className="space-y-4">
                   <form onSubmit={handleSignIn} className="space-y-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="signin-email" className="text-sm font-medium">Email</Label>
-                      <div className="relative">
-                        <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                          id="signin-email"
-                          type="email"
-                          autoComplete="email"
-                          placeholder="you@company.com"
-                          value={signinEmail}
-                          onChange={(e) => setSigninEmail(e.target.value)}
-                          required
-                          className="h-11 pl-9"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="signin-password" className="text-sm font-medium">Password</Label>
-                      <div className="relative">
-                        <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                          id="signin-password"
-                          type={showSigninPwd ? "text" : "password"}
-                          autoComplete="current-password"
-                          placeholder="••••••••"
-                          value={signinPassword}
-                          onChange={(e) => setSigninPassword(e.target.value)}
-                          required
-                          className="h-11 pl-9 pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowSigninPwd((v) => !v)}
-                          aria-label={showSigninPwd ? "Hide password" : "Show password"}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                        >
-                          {showSigninPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                    </div>
+                    <AuthIconInput
+                      id="signin-email"
+                      label="Email"
+                      icon={Mail}
+                      type="email"
+                      autoComplete="email"
+                      placeholder="you@company.com"
+                      value={signinEmail}
+                      onChange={(e) => setSigninEmail(e.target.value)}
+                      required
+                    />
+                    <AuthIconInput
+                      id="signin-password"
+                      label="Password"
+                      icon={Lock}
+                      password
+                      autoComplete="current-password"
+                      placeholder="••••••••"
+                      value={signinPassword}
+                      onChange={(e) => setSigninPassword(e.target.value)}
+                      required
+                    />
                     <Button
                       type="submit"
                       className="h-11 w-full bg-primary text-primary-foreground text-base font-semibold shadow-sm hover:bg-primary/90"
@@ -253,64 +234,40 @@ function AuthPage() {
 
                 <TabsContent value="signup" className="space-y-4">
                   <form onSubmit={handleSignUp} className="space-y-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="signup-name" className="text-sm font-medium">Name</Label>
-                      <div className="relative">
-                        <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                          id="signup-name"
-                          type="text"
-                          autoComplete="name"
-                          placeholder="Jane Doe"
-                          value={signupName}
-                          onChange={(e) => setSignupName(e.target.value)}
-                          required
-                          className="h-11 pl-9"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="signup-email" className="text-sm font-medium">Email</Label>
-                      <div className="relative">
-                        <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                          id="signup-email"
-                          type="email"
-                          autoComplete="email"
-                          placeholder="you@company.com"
-                          value={signupEmail}
-                          onChange={(e) => setSignupEmail(e.target.value)}
-                          required
-                          className="h-11 pl-9"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="signup-password" className="text-sm font-medium">Password</Label>
-                      <div className="relative">
-                        <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                          id="signup-password"
-                          type={showSignupPwd ? "text" : "password"}
-                          autoComplete="new-password"
-                          placeholder="At least 8 characters"
-                          value={signupPassword}
-                          onChange={(e) => setSignupPassword(e.target.value)}
-                          required
-                          minLength={8}
-                          className="h-11 pl-9 pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowSignupPwd((v) => !v)}
-                          aria-label={showSignupPwd ? "Hide password" : "Show password"}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                        >
-                          {showSignupPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Minimum 8 characters.</p>
-                    </div>
+                    <AuthIconInput
+                      id="signup-name"
+                      label="Name"
+                      icon={UserIcon}
+                      autoComplete="name"
+                      placeholder="Jane Doe"
+                      value={signupName}
+                      onChange={(e) => setSignupName(e.target.value)}
+                      required
+                    />
+                    <AuthIconInput
+                      id="signup-email"
+                      label="Email"
+                      icon={Mail}
+                      type="email"
+                      autoComplete="email"
+                      placeholder="you@company.com"
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
+                      required
+                    />
+                    <AuthIconInput
+                      id="signup-password"
+                      label="Password"
+                      icon={Lock}
+                      password
+                      autoComplete="new-password"
+                      placeholder="At least 8 characters"
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
+                      required
+                      minLength={8}
+                    />
+                    <p className="-mt-2 text-xs text-muted-foreground">Minimum 8 characters.</p>
                     <Button
                       type="submit"
                       className="h-11 w-full bg-primary text-primary-foreground text-base font-semibold shadow-sm hover:bg-primary/90"
