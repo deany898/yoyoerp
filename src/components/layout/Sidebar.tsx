@@ -18,7 +18,7 @@ import {
   Undo2,
   LogOut,
 } from "lucide-react";
-import { Factory, Cpu, Hammer, HardHat, Wrench } from "lucide-react";
+import { Factory, Cpu, Hammer, HardHat, Wrench, Layers } from "lucide-react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/hooks/useRole";
