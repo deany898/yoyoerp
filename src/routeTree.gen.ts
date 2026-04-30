@@ -22,6 +22,7 @@ import { Route as AppRequestsRouteImport } from './routes/app.requests'
 import { Route as AppPurchaseOrdersRouteImport } from './routes/app.purchase-orders'
 import { Route as AppProductsRouteImport } from './routes/app.products'
 import { Route as AppMovementsRouteImport } from './routes/app.movements'
+import { Route as AppMachinesRouteImport } from './routes/app.machines'
 import { Route as AppInventoryRouteImport } from './routes/app.inventory'
 import { Route as AppHelpRouteImport } from './routes/app.help'
 import { Route as AppGoodsReturnsRouteImport } from './routes/app.goods-returns'
@@ -96,6 +97,11 @@ const AppMovementsRoute = AppMovementsRouteImport.update({
   path: '/movements',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMachinesRoute = AppMachinesRouteImport.update({
+  id: '/machines',
+  path: '/machines',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppInventoryRoute = AppInventoryRouteImport.update({
   id: '/inventory',
   path: '/inventory',
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/app/goods-returns': typeof AppGoodsReturnsRoute
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
+  '/app/machines': typeof AppMachinesRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/products': typeof AppProductsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
@@ -171,6 +178,7 @@ export interface FileRoutesByTo {
   '/app/goods-returns': typeof AppGoodsReturnsRoute
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
+  '/app/machines': typeof AppMachinesRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/products': typeof AppProductsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
@@ -195,6 +203,7 @@ export interface FileRoutesById {
   '/app/goods-returns': typeof AppGoodsReturnsRoute
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
+  '/app/machines': typeof AppMachinesRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/products': typeof AppProductsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
@@ -220,6 +229,7 @@ export interface FileRouteTypes {
     | '/app/goods-returns'
     | '/app/help'
     | '/app/inventory'
+    | '/app/machines'
     | '/app/movements'
     | '/app/products'
     | '/app/purchase-orders'
@@ -242,6 +252,7 @@ export interface FileRouteTypes {
     | '/app/goods-returns'
     | '/app/help'
     | '/app/inventory'
+    | '/app/machines'
     | '/app/movements'
     | '/app/products'
     | '/app/purchase-orders'
@@ -265,6 +276,7 @@ export interface FileRouteTypes {
     | '/app/goods-returns'
     | '/app/help'
     | '/app/inventory'
+    | '/app/machines'
     | '/app/movements'
     | '/app/products'
     | '/app/purchase-orders'
@@ -376,6 +388,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMovementsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/machines': {
+      id: '/app/machines'
+      path: '/machines'
+      fullPath: '/app/machines'
+      preLoaderRoute: typeof AppMachinesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/inventory': {
       id: '/app/inventory'
       path: '/inventory'
@@ -444,6 +463,7 @@ interface AppRouteChildren {
   AppGoodsReturnsRoute: typeof AppGoodsReturnsRoute
   AppHelpRoute: typeof AppHelpRoute
   AppInventoryRoute: typeof AppInventoryRoute
+  AppMachinesRoute: typeof AppMachinesRoute
   AppMovementsRoute: typeof AppMovementsRoute
   AppProductsRoute: typeof AppProductsRoute
   AppPurchaseOrdersRoute: typeof AppPurchaseOrdersRoute
@@ -465,6 +485,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppGoodsReturnsRoute: AppGoodsReturnsRoute,
   AppHelpRoute: AppHelpRoute,
   AppInventoryRoute: AppInventoryRoute,
+  AppMachinesRoute: AppMachinesRoute,
   AppMovementsRoute: AppMovementsRoute,
   AppProductsRoute: AppProductsRoute,
   AppPurchaseOrdersRoute: AppPurchaseOrdersRoute,
