@@ -67,7 +67,7 @@ export function useManufacturingOrders() {
         warehouse:warehouses(id, name, code)
       `)
       .order("created_at", { ascending: false });
-    if (error) notify.error("Failed to load manufacturing orders", { description: error.message });
+    if (error) notify.error("Failed to load production logs", { description: error.message });
     setData((rows ?? []) as unknown as MOWithDetails[]);
     setLoading(false);
   }, []);
@@ -78,7 +78,7 @@ export function useManufacturingOrders() {
 export async function nextMoNumber(): Promise<string | null> {
   const { data, error } = await supabase.rpc("next_doc_number", { _doc_type: "MO" });
   if (error) {
-    notify.error("Could not generate MO number", { description: error.message });
+    notify.error("Could not generate log number", { description: error.message });
     return null;
   }
   return data as string;

@@ -89,10 +89,10 @@ export function MoCreateSheet({ open, onOpenChange, prefill, onCreated }: Props)
       .maybeSingle();
     setSaving(false);
     if (error || !data) {
-      notify.error("Could not create manufacturing order", { description: error?.message });
+      notify.error("Could not create production log", { description: error?.message });
       return;
     }
-    notify.success(`Manufacturing order ${number} created`);
+    notify.success(`Production log ${number} created`);
     onCreated(data.id);
     reset();
     onOpenChange(false);
@@ -102,12 +102,12 @@ export function MoCreateSheet({ open, onOpenChange, prefill, onCreated }: Props)
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>New manufacturing order</SheetTitle>
+          <SheetTitle>New production log</SheetTitle>
           <SheetDescription>Plan production for a finished or semi-finished variant.</SheetDescription>
         </SheetHeader>
         <div className="mt-6 space-y-4">
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">MO number</Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Log number</Label>
             <Input value={moNumber} onChange={(e) => setMoNumber(e.target.value)} placeholder="Auto-generated" className="font-mono" />
           </div>
 

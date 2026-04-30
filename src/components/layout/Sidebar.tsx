@@ -79,7 +79,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Manufacturing",
     items: [
-      { label: "Manufacturing orders", href: "/app/manufacturing", icon: Factory },
+      { label: "Production logs", href: "/app/manufacturing", icon: Factory },
       { label: "Stations", href: "/app/stations", icon: Wrench },
       { label: "Machines", href: "/app/machines", icon: Cpu },
       { label: "Moulds", href: "/app/moulds", icon: Hammer },
