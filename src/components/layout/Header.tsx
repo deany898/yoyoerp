@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Search, Plus, Menu, User, LogOut, Settings, ChevronDown, ScanBarcode } from "lucide-react";
+import { Search, Plus, Menu, User, LogOut, Settings, ChevronDown, ScanBarcode, Wifi, WifiOff } from "lucide-react";
+import { Breadcrumbs } from "@/components/shell/Breadcrumbs";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { NotificationPreferences } from "@/components/notifications/NotificationPreferences";
 import { Button } from "@/components/ui/button";
@@ -30,12 +31,22 @@ import { PermissionGate } from "@/hooks/usePermissions";
 const ROLE_BADGE_STYLES: Record<string, string> = {
   admin: "bg-primary/15 text-primary border-primary/20",
   manager: "bg-secondary/15 text-secondary-foreground border-secondary/20",
+  supervisor: "bg-accent/20 text-accent-foreground border-accent/30",
+  worker: "bg-muted text-muted-foreground border-border",
+  dispatch: "bg-muted text-muted-foreground border-border",
+  sales: "bg-muted text-muted-foreground border-border",
+  customer: "bg-muted text-muted-foreground border-border",
   requestor: "bg-muted text-muted-foreground border-border",
 };
 
 const ROLE_LABELS: Record<string, string> = {
   admin: "Admin",
   manager: "Manager",
+  supervisor: "Supervisor",
+  worker: "Worker",
+  dispatch: "Dispatch",
+  sales: "Sales",
+  customer: "Customer",
   requestor: "Requestor",
 };
 
@@ -45,6 +56,7 @@ export function Header() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [prefsOpen, setPrefsOpen] = useState(false);
+  const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
   
   const { exitDemoMode, isDemo } = useDemo();
   const { role } = useRole();
@@ -77,8 +89,21 @@ export function Header() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
+  // Online / sync indicator.
+  useEffect(() => {
+    const up = () => setOnline(true);
+    const down = () => setOnline(false);
+    window.addEventListener("online", up);
+    window.addEventListener("offline", down);
+    return () => {
+      window.removeEventListener("online", up);
+      window.removeEventListener("offline", down);
+    };
+  }, []);
+
   return (
-    <header className="flex h-16 items-center gap-3 border-b border-border bg-card px-4 shadow-sm md:px-8">
+    <header className="flex flex-col border-b border-border bg-card shadow-sm">
+      <div className="flex h-14 items-center gap-2 px-3 md:h-16 md:gap-3 md:px-8">
       <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileOpen(true)} aria-label="Open menu">
         <Menu className="h-5 w-5" />
       </Button>
@@ -101,6 +126,26 @@ export function Header() {
         </Button>
       </PermissionGate>
 
+      <span
+        className={`hidden items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium md:inline-flex ${
+          online
+            ? "border-emerald-500/30 bg-emerald-50 text-emerald-700"
+            : "border-amber-500/30 bg-amber-50 text-amber-700"
+        }`}
+        aria-label={online ? "Synced" : "Offline"}
+        title={online ? "Synced" : "Offline · changes will retry"}
+      >
+        {online ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
+        {online ? "Synced" : "Offline"}
+      </span>
+
+      <Badge
+        variant="outline"
+        className={`hidden text-[10px] font-semibold uppercase md:inline-flex ${ROLE_BADGE_STYLES[role] ?? "border-border"}`}
+      >
+        {ROLE_LABELS[role] ?? role}
+      </Badge>
+
       <NotificationBell onClick={() => setNotifOpen(true)} />
 
       <DropdownMenu>
@@ -116,8 +161,8 @@ export function Header() {
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuLabel className="flex items-center justify-between font-normal text-xs text-muted-foreground">
             {displayName}
-            <Badge variant="outline" className={`ml-2 text-[10px] font-semibold uppercase ${ROLE_BADGE_STYLES[role]}`}>
-              {ROLE_LABELS[role]}
+            <Badge variant="outline" className={`ml-2 text-[10px] font-semibold uppercase ${ROLE_BADGE_STYLES[role] ?? "border-border"}`}>
+              {ROLE_LABELS[role] ?? role}
             </Badge>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
@@ -143,7 +188,11 @@ export function Header() {
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <NotificationCenter open={notifOpen} onOpenChange={setNotifOpen} onOpenPrefs={() => { setNotifOpen(false); setTimeout(() => setPrefsOpen(true), 300); }} />
       <NotificationPreferences open={prefsOpen} onOpenChange={setPrefsOpen} />
-      
+      </div>
+
+      <div className="hidden h-8 items-center gap-2 border-t border-border/60 bg-background/60 px-8 md:flex">
+        <Breadcrumbs />
+      </div>
     </header>
   );
 }
