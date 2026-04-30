@@ -1,17 +1,11 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Package, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { MetricCard } from "@/components/dashboard/MetricCard";
-import { NeedsAttention } from "@/components/dashboard/NeedsAttention";
-import { RecentActivity } from "@/components/dashboard/RecentActivity";
-import { DashboardReorderSection } from "@/components/insights/DashboardReorderSection";
-import { DashboardAnomalySection } from "@/components/insights/DashboardAnomalySection";
+import { RoleDashboard } from "@/components/dashboard/RoleDashboard";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
-
-import { useStockSummary } from "@/hooks/useInventoryData";
 import { useAlertGenerator } from "@/hooks/useStockAlertGenerator";
 import { useDemo } from "@/hooks/useDemo";
+import { useRole } from "@/hooks/useRole";
 import { useOnboarding, type TourStep } from "@/hooks/useOnboarding";
 
 const TOUR_STEPS: TourStep[] = [
@@ -29,16 +23,11 @@ export const Route = createFileRoute("/app/dashboard")({
 });
 
 function DashboardPage() {
-  const { data: summary } = useStockSummary();
-  const { demoStore, isDemo } = useDemo();
+  const { isDemo } = useDemo();
+  const { role } = useRole();
   useAlertGenerator();
 
-  const items = demoStore?.getItems() ?? [];
-  const movements = demoStore?.getMovements() ?? [];
-  const suppliers = demoStore?.getSuppliers() ?? [];
-
   const tour = useOnboarding("dashboard");
-  
 
   // Auto-start tour on first demo visit
   useEffect(() => {
@@ -53,29 +42,25 @@ function DashboardPage() {
     toast.success("Tour complete! Explore freely or start the walkthrough.");
   };
 
+  const greeting =
+    role === "customer"
+      ? "Welcome back \u00b7 here are your orders."
+      : role === "sales"
+        ? "Welcome back \u00b7 here is today\u2019s catalog snapshot."
+        : role === "dispatch"
+          ? "Welcome back \u00b7 here\u2019s what needs to ship."
+          : role === "worker"
+            ? "Welcome back \u00b7 ready to log activity."
+            : "Welcome back \u00b7 here\u2019s your operational overview.";
+
   return (
     <div className="mx-auto max-w-[1400px] space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Welcome back — here's your inventory overview.</p>
+        <p className="text-sm text-muted-foreground">{greeting}</p>
       </div>
 
-      <div data-tour="metrics" className="rounded-xl border border-border bg-card p-3 shadow-xs">
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard label="Total SKUs" value={summary.total} accentColor="neutral" icon={Package} />
-          <MetricCard label="In stock" value={summary.inStock} accentColor="healthy" icon={CheckCircle2} />
-          <MetricCard label="Low stock" value={summary.lowStock} accentColor="warning" icon={AlertTriangle} />
-          <MetricCard label="Out of stock" value={summary.outOfStock} accentColor="danger" icon={XCircle} />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
-        <div data-tour="needs-attention" className="min-h-0"><NeedsAttention /></div>
-        <div className="min-h-0"><RecentActivity /></div>
-      </div>
-
-      <DashboardAnomalySection movements={movements} items={items} />
-      <DashboardReorderSection items={items} movements={movements} suppliers={suppliers} />
+      <RoleDashboard role={role} />
 
       <OnboardingTour
         steps={TOUR_STEPS}
@@ -86,8 +71,6 @@ function DashboardPage() {
         onSkip={tour.skipTour}
         onComplete={handleTourComplete}
       />
-
-      
     </div>
   );
 }
