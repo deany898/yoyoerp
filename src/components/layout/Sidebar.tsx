@@ -41,9 +41,7 @@ const navGroups: NavGroup[] = [
       { label: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard },
       { label: "Products", href: "/app/products", icon: Boxes },
       { label: "Warehouses", href: "/app/warehouses", icon: Warehouse },
-      { label: "Catalog (legacy)", href: "/app/products", icon: Package },
       { label: "Movements", href: "/app/movements", icon: ArrowLeftRight, permKey: "canLogMovements" },
-      { label: "Locations (legacy)", href: "/app/locations", icon: MapPin },
     ],
   },
   {
