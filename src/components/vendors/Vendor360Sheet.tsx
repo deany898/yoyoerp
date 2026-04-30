@@ -75,9 +75,9 @@ export function Vendor360Sheet({ supplier, open, onOpenChange, canManage, onChan
   }
 
   if (!supplier) return null;
-  const cat = (supplier as SupplierRow & { category?: string }).category as string | undefined;
-  const credit = (supplier as SupplierRow & { credit_days?: number }).credit_days ?? 0;
-  const opening = Number((supplier as SupplierRow & { opening_balance?: number }).opening_balance ?? 0);
+  const cat = supplier.category;
+  const credit = supplier.credit_days ?? 0;
+  const opening = Number(supplier.opening_balance ?? 0);
 
   return (
     <>
