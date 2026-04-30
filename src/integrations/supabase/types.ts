@@ -500,6 +500,113 @@ export type Database = {
         }
         Relationships: []
       }
+      goods_return_lines: {
+        Row: {
+          condition: Database["public"]["Enums"]["gr_condition"]
+          created_at: string
+          goods_return_id: string
+          id: string
+          line_total: number
+          notes: string | null
+          qty: number
+          reason: Database["public"]["Enums"]["gr_reason"]
+          restock_zone_id: string | null
+          unit_price: number
+          variant_id: string
+        }
+        Insert: {
+          condition?: Database["public"]["Enums"]["gr_condition"]
+          created_at?: string
+          goods_return_id: string
+          id?: string
+          line_total?: number
+          notes?: string | null
+          qty: number
+          reason?: Database["public"]["Enums"]["gr_reason"]
+          restock_zone_id?: string | null
+          unit_price?: number
+          variant_id: string
+        }
+        Update: {
+          condition?: Database["public"]["Enums"]["gr_condition"]
+          created_at?: string
+          goods_return_id?: string
+          id?: string
+          line_total?: number
+          notes?: string | null
+          qty?: number
+          reason?: Database["public"]["Enums"]["gr_reason"]
+          restock_zone_id?: string | null
+          unit_price?: number
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goods_return_lines_goods_return_id_fkey"
+            columns: ["goods_return_id"]
+            isOneToOne: false
+            referencedRelation: "goods_returns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goods_returns: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          dispatch_order_id: string | null
+          gr_number: string
+          id: string
+          notes: string | null
+          reason: Database["public"]["Enums"]["gr_reason"] | null
+          received_at: string | null
+          refund_amount: number
+          return_date: string
+          status: Database["public"]["Enums"]["gr_status"]
+          updated_at: string
+          warehouse_id: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          dispatch_order_id?: string | null
+          gr_number: string
+          id?: string
+          notes?: string | null
+          reason?: Database["public"]["Enums"]["gr_reason"] | null
+          received_at?: string | null
+          refund_amount?: number
+          return_date?: string
+          status?: Database["public"]["Enums"]["gr_status"]
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          dispatch_order_id?: string | null
+          gr_number?: string
+          id?: string
+          notes?: string | null
+          reason?: Database["public"]["Enums"]["gr_reason"] | null
+          received_at?: string | null
+          refund_amount?: number
+          return_date?: string
+          status?: Database["public"]["Enums"]["gr_status"]
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Relationships: []
+      }
       inventory_request_lines: {
         Row: {
           created_at: string
@@ -1786,6 +1893,20 @@ export type Database = {
         | "dispatched"
         | "delivered"
         | "cancelled"
+      gr_condition: "resaleable" | "repairable" | "scrap"
+      gr_reason:
+        | "damaged"
+        | "wrong_item"
+        | "excess"
+        | "quality_issue"
+        | "expired"
+        | "other"
+      gr_status:
+        | "draft"
+        | "pending_approval"
+        | "approved"
+        | "received"
+        | "cancelled"
       movement_reason:
         | "receipt"
         | "consumption"
@@ -1991,6 +2112,22 @@ export const Constants = {
         "ready_for_dispatch",
         "dispatched",
         "delivered",
+        "cancelled",
+      ],
+      gr_condition: ["resaleable", "repairable", "scrap"],
+      gr_reason: [
+        "damaged",
+        "wrong_item",
+        "excess",
+        "quality_issue",
+        "expired",
+        "other",
+      ],
+      gr_status: [
+        "draft",
+        "pending_approval",
+        "approved",
+        "received",
         "cancelled",
       ],
       movement_reason: [
