@@ -9,6 +9,7 @@ import { ShortcutsHelpDialog } from "@/components/command/ShortcutsHelpDialog";
 import { PageTransition } from "@/components/shared/PageTransition";
 import { useDemo } from "@/hooks/useDemo";
 import { useRole } from "@/hooks/useRole";
+import { useAuth } from "@/hooks/useAuth";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { canAccessRoute } from "@/lib/route-guard";
 import { toast } from "sonner";
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/app")({
 function AppLayout() {
   const { isDemo } = useDemo();
   const { role } = useRole();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [helpOpen, setHelpOpen] = useState(false);
@@ -35,14 +37,15 @@ function AppLayout() {
     }
   }, [location.pathname, role, navigate, isDemo]);
 
-  // Demo guard — redirect to landing if not in demo
+  // Access guard — must be in demo OR signed in
   useEffect(() => {
-    if (!isDemo) {
-      navigate({ to: "/" });
+    if (authLoading) return;
+    if (!isDemo && !user) {
+      navigate({ to: "/auth" });
     }
-  }, [isDemo, navigate]);
+  }, [isDemo, user, authLoading, navigate]);
 
-  if (!isDemo) {
+  if (authLoading || (!isDemo && !user)) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground" />
