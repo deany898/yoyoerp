@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SmartSelect } from "@/components/forms/SmartSelect";
 import { TableSkeleton } from "@/components/shared/skeletons";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useProducts, useCategories, type ProductWithVariants } from "@/hooks/useErpData";
@@ -80,16 +80,20 @@ function ProductsPage() {
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by code, name, or SKU" className="pl-9" />
         </div>
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="md:w-56"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All types</SelectItem>
-            <SelectItem value="raw_material">Raw material</SelectItem>
-            <SelectItem value="packaging">Packaging</SelectItem>
-            <SelectItem value="wip">Work in progress</SelectItem>
-            <SelectItem value="finished_good">Finished good</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="md:w-56">
+          <SmartSelect
+            options={[
+              { value: "all", label: "All types" },
+              { value: "raw_material", label: "Raw material" },
+              { value: "packaging", label: "Packaging" },
+              { value: "wip", label: "Work in progress" },
+              { value: "finished_good", label: "Finished good" },
+            ]}
+            value={typeFilter}
+            onChange={(v) => setTypeFilter(v ?? "all")}
+            searchPlaceholder="Filter by type…"
+          />
+        </div>
       </div>
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">
