@@ -18,9 +18,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+import { SmartSelect } from "@/components/forms/SmartSelect";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -233,24 +231,23 @@ function RequestsPage() {
                 <div><Label>Request #</Label><Input value={draft.request_number} onChange={(e) => setDraft({ ...draft, request_number: e.target.value })} /></div>
                 <div>
                   <Label>Status</Label>
-                  <Select value={draft.status} onValueChange={(v) => setDraft({ ...draft, status: v as RequestStatusEnum })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {(["draft","submitted","approved","rejected","fulfilled","cancelled"] as RequestStatusEnum[]).map((s) => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SmartSelect
+                    options={(["draft","submitted","approved","rejected","fulfilled","cancelled"] as RequestStatusEnum[]).map((s) => ({ value: s, label: s }))}
+                    value={draft.status}
+                    onChange={(v) => v && setDraft({ ...draft, status: v as RequestStatusEnum })}
+                    searchPlaceholder="Search status…"
+                  />
                 </div>
               </div>
               <div>
                 <Label>Warehouse</Label>
-                <Select value={draft.warehouse_id} onValueChange={(v) => setDraft({ ...draft, warehouse_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Choose warehouse" /></SelectTrigger>
-                  <SelectContent>
-                    {warehouses.map((w) => <SelectItem key={w.id} value={w.id}>{w.code} · {w.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <SmartSelect
+                  options={warehouses.map((w) => ({ value: w.id, label: w.name, hint: w.code }))}
+                  value={draft.warehouse_id || null}
+                  onChange={(v) => setDraft({ ...draft, warehouse_id: v ?? "" })}
+                  placeholder="Choose warehouse"
+                  searchPlaceholder="Search warehouse…"
+                />
               </div>
               <div><Label>Reason</Label><Input value={draft.reason} onChange={(e) => setDraft({ ...draft, reason: e.target.value })} placeholder="Production batch, dispatch, etc." /></div>
 
@@ -265,12 +262,13 @@ function RequestsPage() {
                   <div className="space-y-2">
                     {draft.lines.map((l, i) => (
                       <div key={i} className="grid grid-cols-[1fr_100px_36px] gap-2 items-center">
-                        <Select value={l.variant_id} onValueChange={(v) => updateLine(i, { variant_id: v })}>
-                          <SelectTrigger><SelectValue placeholder="Pick variant" /></SelectTrigger>
-                          <SelectContent>
-                            {variantOptions.map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
+                        <SmartSelect
+                          options={variantOptions.map((o) => ({ value: o.id, label: o.label }))}
+                          value={l.variant_id || null}
+                          onChange={(v) => updateLine(i, { variant_id: v ?? "" })}
+                          placeholder="Pick variant"
+                          searchPlaceholder="Search product or SKU…"
+                        />
                         <Input type="number" min={0} step="0.01" value={l.qty_requested} onChange={(e) => updateLine(i, { qty_requested: Number(e.target.value) })} />
                         <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => removeLine(i)}><X className="h-3.5 w-3.5" /></Button>
                       </div>
