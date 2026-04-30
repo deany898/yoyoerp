@@ -97,10 +97,6 @@ export function Sidebar({ onNavigate }: SidebarProps) {
     <nav data-tour="sidebar" className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
         <Logo size={36} variant="light" />
-        <div className="leading-tight">
-          <div className="text-sm font-semibold">YOYO ERP</div>
-          <div className="text-[10px] uppercase tracking-widest text-sidebar-foreground/50">Industrial</div>
-        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-3 py-2">
