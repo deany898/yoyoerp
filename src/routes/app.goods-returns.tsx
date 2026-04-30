@@ -407,14 +407,13 @@ function GoodsReturnsPage() {
                 <div><Label>GR number</Label><Input value={draft.gr_number} onChange={(e) => patchDraft({ gr_number: e.target.value })} disabled={isReceived} /></div>
                 <div>
                   <Label>Status</Label>
-                  <Select value={draft.status} onValueChange={(v) => patchDraft({ status: v as GRStatus })} disabled={isReceived}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {(["draft","pending_approval","approved","received","cancelled"] as GRStatus[]).map((s) => (
-                        <SelectItem key={s} value={s}>{s.replace(/_/g, " ")}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SmartSelect
+                    options={(["draft","pending_approval","approved","received","cancelled"] as GRStatus[]).map((s) => ({ value: s, label: s.replace(/_/g, " ") }))}
+                    value={draft.status}
+                    onChange={(v) => v && patchDraft({ status: v as GRStatus })}
+                    disabled={isReceived}
+                    searchPlaceholder="Search status…"
+                  />
                 </div>
               </div>
 
@@ -433,22 +432,23 @@ function GoodsReturnsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Linked dispatch order</Label>
-                  <Select value={draft.dispatch_order_id || "none"} onValueChange={(v) => patchDraft({ dispatch_order_id: v === "none" ? "" : v })}>
-                    <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">— None —</SelectItem>
-                      {filteredDOs.map((d) => <SelectItem key={d.id} value={d.id}>{d.do_number}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <SmartSelect
+                    options={[{ value: "none", label: "— None —" }, ...filteredDOs.map((d) => ({ value: d.id, label: d.do_number }))]}
+                    value={draft.dispatch_order_id || "none"}
+                    onChange={(v) => patchDraft({ dispatch_order_id: !v || v === "none" ? "" : v })}
+                    placeholder="Optional"
+                    searchPlaceholder="Search dispatch order…"
+                  />
                 </div>
                 <div>
                   <Label>Warehouse</Label>
-                  <Select value={draft.warehouse_id} onValueChange={(v) => patchDraft({ warehouse_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Pick warehouse" /></SelectTrigger>
-                    <SelectContent>
-                      {warehouses.map((w) => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <SmartSelect
+                    options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+                    value={draft.warehouse_id || null}
+                    onChange={(v) => patchDraft({ warehouse_id: v ?? "" })}
+                    placeholder="Pick warehouse"
+                    searchPlaceholder="Search warehouse…"
+                  />
                 </div>
               </div>
 
@@ -456,13 +456,13 @@ function GoodsReturnsPage() {
                 <div><Label>Return date</Label><Input type="date" value={draft.return_date} onChange={(e) => patchDraft({ return_date: e.target.value })} /></div>
                 <div>
                   <Label>Primary reason</Label>
-                  <Select value={draft.reason || "unset"} onValueChange={(v) => patchDraft({ reason: v === "unset" ? "" : v as GRReason })}>
-                    <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="unset">— Not specified —</SelectItem>
-                      {REASONS.map((r) => <SelectItem key={r} value={r}>{r.replace(/_/g, " ")}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <SmartSelect
+                    options={[{ value: "unset", label: "— Not specified —" }, ...REASONS.map((r) => ({ value: r, label: r.replace(/_/g, " ") }))]}
+                    value={draft.reason || "unset"}
+                    onChange={(v) => patchDraft({ reason: !v || v === "unset" ? "" : v as GRReason })}
+                    placeholder="Optional"
+                    searchPlaceholder="Search reason…"
+                  />
                 </div>
               </div>
 
@@ -505,33 +505,39 @@ function GoodsReturnsPage() {
                             </div>
                             <div>
                               <Label className="text-[10px] uppercase text-muted-foreground">Reason</Label>
-                              <Select value={l.reason} onValueChange={(v) => updateLine(i, { reason: v as GRReason })} disabled={isReceived}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  {REASONS.map((r) => <SelectItem key={r} value={r}>{r.replace(/_/g, " ")}</SelectItem>)}
-                                </SelectContent>
-                              </Select>
+                              <SmartSelect
+                                options={REASONS.map((r) => ({ value: r, label: r.replace(/_/g, " ") }))}
+                                value={l.reason}
+                                onChange={(v) => v && updateLine(i, { reason: v as GRReason })}
+                                disabled={isReceived}
+                                size="sm"
+                                searchPlaceholder="Search reason…"
+                              />
                             </div>
                             <div>
                               <Label className="text-[10px] uppercase text-muted-foreground">Condition</Label>
-                              <Select value={l.condition} onValueChange={(v) => updateLine(i, { condition: v as GRCondition })} disabled={isReceived}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  {CONDITIONS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                                </SelectContent>
-                              </Select>
+                              <SmartSelect
+                                options={CONDITIONS.map((c) => ({ value: c, label: c }))}
+                                value={l.condition}
+                                onChange={(v) => v && updateLine(i, { condition: v as GRCondition })}
+                                disabled={isReceived}
+                                size="sm"
+                                searchPlaceholder="Search condition…"
+                              />
                             </div>
                           </div>
                           {l.condition === "resaleable" && (
                             <div>
                               <Label className="text-[10px] uppercase text-muted-foreground">Restock zone</Label>
-                              <Select value={l.restock_zone_id || "unset"} onValueChange={(v) => updateLine(i, { restock_zone_id: v === "unset" ? "" : v })} disabled={isReceived}>
-                                <SelectTrigger><SelectValue placeholder="Pick zone" /></SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="unset">— Pick zone —</SelectItem>
-                                  {zoneOpts.map((z) => <SelectItem key={z.value} value={z.value}>{z.label}</SelectItem>)}
-                                </SelectContent>
-                              </Select>
+                              <SmartSelect
+                                options={[{ value: "unset", label: "— Pick zone —" }, ...zoneOpts.map((z) => ({ value: z.value, label: z.label }))]}
+                                value={l.restock_zone_id || "unset"}
+                                onChange={(v) => updateLine(i, { restock_zone_id: !v || v === "unset" ? "" : v })}
+                                disabled={isReceived}
+                                size="sm"
+                                placeholder="Pick zone"
+                                searchPlaceholder="Search zone…"
+                              />
                             </div>
                           )}
                         </div>
