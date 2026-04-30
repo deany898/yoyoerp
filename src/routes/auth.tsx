@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail, Lock, Eye, EyeOff, User as UserIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand/Logo";
 import { lovable } from "@/integrations/lovable/index";
@@ -37,6 +37,8 @@ function AuthPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<"signin" | "signup">("signin");
   const [submitting, setSubmitting] = useState(false);
+  const [showSigninPwd, setShowSigninPwd] = useState(false);
+  const [showSignupPwd, setShowSignupPwd] = useState(false);
 
   // Sign-in form state
   const [signinEmail, setSigninEmail] = useState("");
@@ -131,14 +133,35 @@ function AuthPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+    <div className="relative flex min-h-screen items-center justify-center px-4 py-10
+                    bg-[radial-gradient(ellipse_at_top_left,theme(colors.sky.100),transparent_55%),radial-gradient(ellipse_at_bottom_right,theme(colors.cyan.100),transparent_55%)]
+                    bg-background">
       <div className="w-full max-w-md">
-        <Link to="/" className="mb-8 flex items-center justify-center text-foreground">
-          <Logo size={44} />
-        </Link>
+        {/* Brand mark */}
+        <div className="mb-8 flex flex-col items-center text-center">
+          <Link to="/" aria-label="YOYO ERP home" className="mb-5">
+            <Logo size={88} showWordmark={false} />
+          </Link>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">YOYO ERP</h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            YOYO Internal Operations Platform
+          </p>
+        </div>
 
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
+        {/* Auth card */}
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-[0_8px_30px_-12px_rgba(15,23,42,0.12)] md:p-8">
           <Tabs value={tab} onValueChange={(v) => setTab(v as "signin" | "signup")} className="w-full">
+            <div className="mb-5 text-center">
+              <h2 className="text-xl font-semibold text-foreground">
+                {tab === "signin" ? "Welcome back" : "Create your account"}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {tab === "signin"
+                  ? "Sign in to continue to YOYO"
+                  : "Set up your YOYO ERP workspace access"}
+              </p>
+            </div>
+
             <TabsList className="mb-6 grid w-full grid-cols-2">
               <TabsTrigger value="signin">Sign in</TabsTrigger>
               <TabsTrigger value="signup">Create account</TabsTrigger>
@@ -146,73 +169,126 @@ function AuthPage() {
 
             <TabsContent value="signin" className="space-y-4">
               <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
-                  <Input
-                    id="signin-email"
-                    type="email"
-                    autoComplete="email"
-                    value={signinEmail}
-                    onChange={(e) => setSigninEmail(e.target.value)}
-                    required
-                  />
+                <div className="space-y-1.5">
+                  <Label htmlFor="signin-email" className="text-sm font-medium">Email</Label>
+                  <div className="relative">
+                    <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="signin-email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="you@company.com"
+                      value={signinEmail}
+                      onChange={(e) => setSigninEmail(e.target.value)}
+                      required
+                      className="h-11 pl-9"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signin-password">Password</Label>
-                  <Input
-                    id="signin-password"
-                    type="password"
-                    autoComplete="current-password"
-                    value={signinPassword}
-                    onChange={(e) => setSigninPassword(e.target.value)}
-                    required
-                  />
+                <div className="space-y-1.5">
+                  <Label htmlFor="signin-password" className="text-sm font-medium">Password</Label>
+                  <div className="relative">
+                    <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="signin-password"
+                      type={showSigninPwd ? "text" : "password"}
+                      autoComplete="current-password"
+                      placeholder="••••••••"
+                      value={signinPassword}
+                      onChange={(e) => setSigninPassword(e.target.value)}
+                      required
+                      className="h-11 pl-9 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowSigninPwd((v) => !v)}
+                      aria-label={showSigninPwd ? "Hide password" : "Show password"}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    >
+                      {showSigninPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
-                <Button type="submit" className="w-full" disabled={submitting}>
-                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign in"}
+                <Button type="submit" className="h-11 w-full text-base font-semibold" disabled={submitting}>
+                  {submitting ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Opening dashboard…
+                    </span>
+                  ) : (
+                    "Sign in"
+                  )}
                 </Button>
               </form>
             </TabsContent>
 
             <TabsContent value="signup" className="space-y-4">
               <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-name">Name</Label>
-                  <Input
-                    id="signup-name"
-                    type="text"
-                    autoComplete="name"
-                    value={signupName}
-                    onChange={(e) => setSignupName(e.target.value)}
-                    required
-                  />
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-name" className="text-sm font-medium">Name</Label>
+                  <div className="relative">
+                    <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="signup-name"
+                      type="text"
+                      autoComplete="name"
+                      placeholder="Jane Doe"
+                      value={signupName}
+                      onChange={(e) => setSignupName(e.target.value)}
+                      required
+                      className="h-11 pl-9"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    autoComplete="email"
-                    value={signupEmail}
-                    onChange={(e) => setSignupEmail(e.target.value)}
-                    required
-                  />
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-email" className="text-sm font-medium">Email</Label>
+                  <div className="relative">
+                    <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="you@company.com"
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
+                      required
+                      className="h-11 pl-9"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    autoComplete="new-password"
-                    value={signupPassword}
-                    onChange={(e) => setSignupPassword(e.target.value)}
-                    required
-                    minLength={8}
-                  />
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-password" className="text-sm font-medium">Password</Label>
+                  <div className="relative">
+                    <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="signup-password"
+                      type={showSignupPwd ? "text" : "password"}
+                      autoComplete="new-password"
+                      placeholder="At least 8 characters"
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
+                      required
+                      minLength={8}
+                      className="h-11 pl-9 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowSignupPwd((v) => !v)}
+                      aria-label={showSignupPwd ? "Hide password" : "Show password"}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    >
+                      {showSignupPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                   <p className="text-xs text-muted-foreground">Minimum 8 characters.</p>
                 </div>
-                <Button type="submit" className="w-full" disabled={submitting}>
-                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create account"}
+                <Button type="submit" className="h-11 w-full text-base font-semibold" disabled={submitting}>
+                  {submitting ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Creating account…
+                    </span>
+                  ) : (
+                    "Create account"
+                  )}
                 </Button>
               </form>
             </TabsContent>
@@ -226,18 +302,22 @@ function AuthPage() {
             <Button
               type="button"
               variant="outline"
-              className="w-full"
+              className="h-11 w-full"
               onClick={handleGoogle}
               disabled={submitting}
             >
               <GoogleIcon className="mr-2 h-4 w-4" />
               Continue with Google
             </Button>
+
+            <p className="mt-6 text-center text-xs text-muted-foreground">
+              Authorized personnel only · Accounts are managed by administrators.
+            </p>
           </Tabs>
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Just exploring?{" "}
+          © {new Date().getFullYear()} YOYO · All rights reserved ·{" "}
           <Link to="/" className="font-medium text-foreground underline-offset-2 hover:underline">
             Try the demo
           </Link>
