@@ -32,9 +32,10 @@
 }
 
 /*
- * Stackwise Design System
+ * YOYO ERP Design System
  *
- * Teal/amber palette per design-guidelines.md.
+ * Deep industrial blue primary, with industrial-orange and sky-cyan
+ * accents drawn from the YOYO logo. ERP-grade neutral surfaces.
  * All colors use oklch format. Semantic tokens only.
  */
 
@@ -90,100 +91,100 @@
 :root {
   --radius: 0.625rem;
 
-  /* Core palette — teal/amber from design-guidelines.md */
-  --background: oklch(0.985 0.005 80);
-  --foreground: oklch(0.18 0.03 160);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.03 160);
+  /* Core palette — YOYO deep industrial blue + orange/cyan accents */
+  --background: oklch(0.984 0.004 250);          /* #F7F8FA */
+  --foreground: oklch(0.205 0.04 256);           /* slate-900 */
+  --card: oklch(1 0 0);                          /* #FFFFFF */
+  --card-foreground: oklch(0.205 0.04 256);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.03 160);
-  --primary: oklch(0.55 0.17 162);
-  --primary-foreground: oklch(0.985 0.005 80);
-  --secondary: oklch(0.75 0.15 75);
-  --secondary-foreground: oklch(0.18 0.03 160);
-  --muted: oklch(0.95 0.01 80);
-  --muted-foreground: oklch(0.55 0.02 160);
-  --accent: oklch(0.95 0.01 80);
-  --accent-foreground: oklch(0.18 0.03 160);
-  --destructive: oklch(0.60 0.22 25);
-  --destructive-foreground: oklch(0.985 0.005 80);
-  --border: oklch(0.94 0.005 80);
-  --input: oklch(0.92 0.01 80);
-  --ring: oklch(0.55 0.17 162);
+  --popover-foreground: oklch(0.205 0.04 256);
+  --primary: oklch(0.355 0.16 264);              /* #1E3A8A deep blue */
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.70 0.18 47);              /* #F97316 industrial orange */
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.965 0.005 250);               /* slate-50 */
+  --muted-foreground: oklch(0.52 0.03 256);      /* slate-500 */
+  --accent: oklch(0.78 0.13 230);                /* #38BDF8 sky cyan */
+  --accent-foreground: oklch(0.205 0.04 256);
+  --destructive: oklch(0.58 0.22 27);            /* red-600 */
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.92 0.01 250);                /* slate-200 */
+  --input: oklch(0.92 0.01 250);
+  --ring: oklch(0.355 0.16 264);
 
-  /* Charts */
-  --chart-1: oklch(0.55 0.17 162);
-  --chart-2: oklch(0.75 0.15 75);
-  --chart-3: oklch(0.60 0.17 155);
-  --chart-4: oklch(0.60 0.22 25);
-  --chart-5: oklch(0.55 0.02 160);
+  /* Charts — blue-led ramp with orange + cyan secondaries */
+  --chart-1: oklch(0.355 0.16 264);
+  --chart-2: oklch(0.70 0.18 47);
+  --chart-3: oklch(0.78 0.13 230);
+  --chart-4: oklch(0.58 0.17 152);
+  --chart-5: oklch(0.52 0.03 256);
 
-  /* Sidebar — dark desaturated teal-charcoal */
-  --sidebar: oklch(0.20 0.02 162);
-  --sidebar-foreground: oklch(0.85 0.01 80);
-  --sidebar-primary: oklch(0.65 0.12 162);
-  --sidebar-primary-foreground: oklch(0.98 0.005 80);
-  --sidebar-accent: oklch(0.27 0.025 162);
-  --sidebar-accent-foreground: oklch(0.95 0.01 80);
-  --sidebar-border: oklch(0.27 0.02 162);
-  --sidebar-ring: oklch(0.65 0.12 162);
+  /* Sidebar — deep navy industrial */
+  --sidebar: oklch(0.20 0.05 262);               /* #0B1733 */
+  --sidebar-foreground: oklch(0.88 0.01 250);
+  --sidebar-primary: oklch(0.70 0.18 47);        /* orange accent */
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.27 0.06 262);
+  --sidebar-accent-foreground: oklch(0.96 0.005 250);
+  --sidebar-border: oklch(0.27 0.05 262);
+  --sidebar-ring: oklch(0.70 0.18 47);
 
   /* Metric tints */
-  --metric-healthy-bg: oklch(0.96 0.04 155);
-  --metric-warning-bg: oklch(0.96 0.04 75);
-  --metric-danger-bg: oklch(0.96 0.04 25);
-  --metric-neutral-bg: oklch(0.96 0.03 162);
+  --metric-healthy-bg: oklch(0.965 0.04 152);
+  --metric-warning-bg: oklch(0.965 0.04 75);
+  --metric-danger-bg: oklch(0.965 0.04 25);
+  --metric-neutral-bg: oklch(0.965 0.04 264);
 
   /* Stock status tokens */
-  --stock-healthy: oklch(0.60 0.17 155);
-  --stock-low: oklch(0.75 0.15 75);
-  --stock-out: oklch(0.60 0.22 25);
-  --amber-accent: oklch(0.75 0.15 75);
+  --stock-healthy: oklch(0.58 0.17 152);
+  --stock-low: oklch(0.72 0.17 75);
+  --stock-out: oklch(0.58 0.22 27);
+  --amber-accent: oklch(0.70 0.18 47);
 }
 
 .dark {
-  --background: oklch(0.16 0.02 160);
-  --foreground: oklch(0.93 0.01 80);
-  --card: oklch(0.20 0.02 160);
-  --card-foreground: oklch(0.93 0.01 80);
-  --popover: oklch(0.20 0.02 160);
-  --popover-foreground: oklch(0.93 0.01 80);
-  --primary: oklch(0.65 0.17 162);
-  --primary-foreground: oklch(0.16 0.02 160);
-  --secondary: oklch(0.70 0.12 75);
-  --secondary-foreground: oklch(0.16 0.02 160);
-  --muted: oklch(0.25 0.02 160);
-  --muted-foreground: oklch(0.65 0.02 160);
-  --accent: oklch(0.25 0.02 160);
-  --accent-foreground: oklch(0.93 0.01 80);
-  --destructive: oklch(0.65 0.22 25);
-  --destructive-foreground: oklch(0.93 0.01 80);
-  --border: oklch(0.30 0.02 160);
-  --input: oklch(0.30 0.02 160);
-  --ring: oklch(0.65 0.17 162);
+  --background: oklch(0.16 0.04 262);
+  --foreground: oklch(0.95 0.01 250);
+  --card: oklch(0.22 0.05 262);
+  --card-foreground: oklch(0.95 0.01 250);
+  --popover: oklch(0.22 0.05 262);
+  --popover-foreground: oklch(0.95 0.01 250);
+  --primary: oklch(0.62 0.16 262);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.72 0.18 47);
+  --secondary-foreground: oklch(0.16 0.04 262);
+  --muted: oklch(0.27 0.04 262);
+  --muted-foreground: oklch(0.70 0.02 250);
+  --accent: oklch(0.78 0.13 230);
+  --accent-foreground: oklch(0.16 0.04 262);
+  --destructive: oklch(0.65 0.22 27);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.30 0.05 262);
+  --input: oklch(0.30 0.05 262);
+  --ring: oklch(0.62 0.16 262);
 
   /* Charts */
-  --chart-1: oklch(0.65 0.17 162);
-  --chart-2: oklch(0.70 0.12 75);
-  --chart-3: oklch(0.65 0.17 155);
-  --chart-4: oklch(0.65 0.22 25);
-  --chart-5: oklch(0.65 0.02 160);
+  --chart-1: oklch(0.62 0.16 262);
+  --chart-2: oklch(0.72 0.18 47);
+  --chart-3: oklch(0.78 0.13 230);
+  --chart-4: oklch(0.65 0.17 152);
+  --chart-5: oklch(0.70 0.02 250);
 
   /* Sidebar */
-  --sidebar: oklch(0.18 0.02 160);
-  --sidebar-foreground: oklch(0.93 0.01 80);
-  --sidebar-primary: oklch(0.65 0.17 162);
-  --sidebar-primary-foreground: oklch(0.16 0.02 160);
-  --sidebar-accent: oklch(0.25 0.02 160);
-  --sidebar-accent-foreground: oklch(0.93 0.01 80);
-  --sidebar-border: oklch(0.30 0.02 160);
-  --sidebar-ring: oklch(0.65 0.17 162);
+  --sidebar: oklch(0.18 0.05 262);
+  --sidebar-foreground: oklch(0.93 0.01 250);
+  --sidebar-primary: oklch(0.72 0.18 47);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.27 0.05 262);
+  --sidebar-accent-foreground: oklch(0.93 0.01 250);
+  --sidebar-border: oklch(0.30 0.05 262);
+  --sidebar-ring: oklch(0.72 0.18 47);
 
   /* Stock status tokens */
-  --stock-healthy: oklch(0.65 0.17 155);
-  --stock-low: oklch(0.70 0.12 75);
-  --stock-out: oklch(0.65 0.22 25);
-  --amber-accent: oklch(0.70 0.12 75);
+  --stock-healthy: oklch(0.65 0.17 152);
+  --stock-low: oklch(0.72 0.17 75);
+  --stock-out: oklch(0.65 0.22 27);
+  --amber-accent: oklch(0.72 0.18 47);
 }
 
 @theme inline {
