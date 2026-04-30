@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { Search, Menu, Wifi, WifiOff } from "lucide-react";
 import { Breadcrumbs } from "@/components/shell/Breadcrumbs";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
