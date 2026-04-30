@@ -67,7 +67,7 @@ function QuickOrderPage() {
     (async () => {
       const [custRes, numRes, tiers, imgs, stocks] = await Promise.all([
         supabase.from("customers")
-          .select("id,code,name,contact_name,phone,delivery_address,billing_address,payment_terms,pricing_tier")
+          .select("id,code,name,contact_name,phone,city,delivery_address,billing_address,payment_terms,pricing_tier")
           .eq("is_active", true).order("name"),
         supabase.rpc("next_doc_number", { _doc_type: "DO" }),
         loadTierPrices(),
