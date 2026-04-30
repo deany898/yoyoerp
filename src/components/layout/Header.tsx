@@ -24,6 +24,7 @@ import { CommandPalette } from "@/components/command/CommandPalette";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { useDemo } from "@/hooks/useDemo";
 import { useRole } from "@/hooks/useRole";
+import { useAuth } from "@/hooks/useAuth";
 import { PermissionGate } from "@/hooks/usePermissions";
 
 const ROLE_BADGE_STYLES: Record<string, string> = {
@@ -45,15 +46,23 @@ export function Header() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [prefsOpen, setPrefsOpen] = useState(false);
   
-  const { exitDemoMode } = useDemo();
+  const { exitDemoMode, isDemo } = useDemo();
   const { role } = useRole();
+  const { user, displayName: authDisplayName, signOut } = useAuth();
   const navigate = useNavigate();
 
-  const displayName = "Demo Admin";
+  const displayName = isDemo
+    ? "Demo Admin"
+    : (authDisplayName ?? user?.email ?? "Account");
 
   const handleExit = async () => {
-    await navigate({ to: "/" });
-    exitDemoMode();
+    if (isDemo) {
+      await navigate({ to: "/" });
+      exitDemoMode();
+      return;
+    }
+    await signOut();
+    await navigate({ to: "/auth" });
   };
 
   // CMD+K / Ctrl+K shortcut
@@ -118,7 +127,7 @@ export function Header() {
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleExit}>
             <LogOut className="mr-2 h-4 w-4" />
-            Exit demo
+            {isDemo ? "Exit demo" : "Sign out"}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
