@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Undo2, Pencil, Trash2, X, CheckCircle2 } from "lucide-react";
+import { Plus, Undo2, Pencil, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useProducts, useWarehouses } from "@/hooks/useErpData";
@@ -12,6 +12,9 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SmartSelect } from "@/components/forms/SmartSelect";
+import { GRStatusStepper, type GRStatus } from "@/components/goods-returns/GRStatusStepper";
+import { GRLifecycleActions, type GRTransition } from "@/components/goods-returns/GRLifecycleActions";
+import { GRMovementsTimeline } from "@/components/goods-returns/GRMovementsTimeline";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
@@ -31,7 +34,6 @@ export const Route = createFileRoute("/app/goods-returns")({
   head: () => ({ meta: [{ title: "Goods returns · YOYO ERP" }] }),
 });
 
-type GRStatus = "draft" | "pending_approval" | "approved" | "received" | "cancelled";
 type GRReason = "damaged" | "wrong_item" | "excess" | "quality_issue" | "expired" | "other";
 type GRCondition = "resaleable" | "repairable" | "scrap";
 
@@ -100,7 +102,7 @@ function GoodsReturnsPage() {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<DraftGR | null>(null);
   const [saving, setSaving] = useState(false);
-  const [receiving, setReceiving] = useState(false);
+  const [busyTransition, setBusyTransition] = useState<GRTransition | null>(null);
   const [deleting, setDeleting] = useState<GRRow | null>(null);
 
   async function refresh() {
@@ -195,30 +197,31 @@ function GoodsReturnsPage() {
     return dispatchOrders.filter((d) => d.customer_id === draft.customer_id);
   }, [dispatchOrders, draft?.customer_id]);
 
-  async function persist(): Promise<string | null> {
-    if (!draft) return null;
-    if (!draft.customer_id) { toast.error("Pick a customer"); return null; }
-    if (draft.lines.length === 0) { toast.error("Add at least one line"); return null; }
-    if (draft.lines.some((l) => !l.variant_id || l.qty <= 0)) {
+  async function persist(override?: DraftGR): Promise<string | null> {
+    const src = override ?? draft;
+    if (!src) return null;
+    if (!src.customer_id) { toast.error("Pick a customer"); return null; }
+    if (src.lines.length === 0) { toast.error("Add at least one line"); return null; }
+    if (src.lines.some((l) => !l.variant_id || l.qty <= 0)) {
       toast.error("Each line needs a product and qty > 0"); return null;
     }
-    let grNumber = draft.gr_number;
+    let grNumber = src.gr_number;
     if (!grNumber) {
       const { data, error } = await supabase.rpc("next_doc_number", { _doc_type: "GR" });
       if (error || !data) { toast.error("Could not generate GR number"); return null; }
       grNumber = data as string;
     }
     const header = {
-      gr_number: grNumber, customer_id: draft.customer_id,
-      dispatch_order_id: draft.dispatch_order_id || null,
-      warehouse_id: draft.warehouse_id || null,
-      status: draft.status,
-      return_date: draft.return_date,
-      reason: draft.reason || null,
-      refund_amount: draft.refund_amount || refundAuto,
-      notes: draft.notes || null,
+      gr_number: grNumber, customer_id: src.customer_id,
+      dispatch_order_id: src.dispatch_order_id || null,
+      warehouse_id: src.warehouse_id || null,
+      status: src.status,
+      return_date: src.return_date,
+      reason: src.reason || null,
+      refund_amount: src.refund_amount || src.lines.reduce((s, l) => s + l.qty * l.unit_price, 0),
+      notes: src.notes || null,
     };
-    let id = draft.id;
+    let id = src.id;
     if (id) {
       const { error } = await supabase.from("goods_returns").update(header).eq("id", id);
       if (error) { toast.error("Save failed", { description: error.message }); return null; }
@@ -228,7 +231,7 @@ function GoodsReturnsPage() {
       if (error || !data) { toast.error("Save failed", { description: error?.message }); return null; }
       id = data.id;
     }
-    const lines = draft.lines.map((l) => ({
+    const lines = src.lines.map((l) => ({
       goods_return_id: id!, variant_id: l.variant_id, qty: l.qty,
       unit_price: l.unit_price, line_total: l.qty * l.unit_price,
       reason: l.reason, condition: l.condition,
@@ -236,6 +239,7 @@ function GoodsReturnsPage() {
     }));
     const { error: lErr } = await supabase.from("goods_return_lines").insert(lines);
     if (lErr) { toast.error("Lines failed", { description: lErr.message }); return null; }
+    setDraft({ ...src, id });
     return id!;
   }
 
@@ -248,43 +252,49 @@ function GoodsReturnsPage() {
     setOpen(false); setDraft(null); void refresh();
   }
 
+  const NEXT_STATUS: Record<GRTransition, GRStatus> = {
+    submit: "pending_approval",
+    approve: "approved",
+    receive: "received",
+    cancel: "cancelled",
+    reopen: "draft",
+  };
+
   /**
-   * Receive the return: mark received and post stock movements.
-   * - resaleable lines → movement reason "return" into selected restock zone
-   * - repairable / scrap → movement reason "scrap" (no stock added) for audit
-   * Requires every resaleable line to have a restock zone.
+   * Move the return to its next status. The "receive" transition also posts
+   * stock movements (reason=return for resaleable, reason=scrap for the rest)
+   * and bumps inventory_stock.on_hand for restocked zones.
    */
-  async function saveAndReceive() {
+  async function transitionTo(t: GRTransition) {
     if (!draft) return;
-    const missing = draft.lines.find((l) => l.condition === "resaleable" && !l.restock_zone_id);
-    if (missing) { toast.error("Pick a restock zone for every resaleable line"); return; }
-    setReceiving(true);
-    const before = { ...draft, status: "received" as GRStatus };
-    setDraft(before);
-    const id = await persist();
-    if (!id) { setReceiving(false); return; }
-    const { data: { user } } = await supabase.auth.getUser();
-    const movements = draft.lines.map((l) => ({
-      variant_id: l.variant_id,
-      qty: l.condition === "resaleable" ? l.qty : 0,
-      to_zone_id: l.condition === "resaleable" ? l.restock_zone_id : null,
-      from_zone_id: null,
-      reason: (l.condition === "resaleable" ? "return" : "scrap") as "return" | "scrap",
-      reference_type: "goods_return",
-      reference_id: id,
-      unit_cost: l.unit_price,
-      performed_by: user?.id ?? null,
-      notes: `GR ${draft.gr_number} · ${l.condition}`,
-    })).filter((m) => m.qty > 0);
-    if (movements.length > 0) {
+    const nextStatus = NEXT_STATUS[t];
+    if (t === "receive") {
+      const missing = draft.lines.find((l) => l.condition === "resaleable" && !l.restock_zone_id);
+      if (missing) { toast.error("Pick a restock zone for every resaleable line"); return; }
+    }
+    setBusyTransition(t);
+    const updated = { ...draft, status: nextStatus };
+    setDraft(updated);
+    const id = await persist(updated);
+    if (!id) { setBusyTransition(null); return; }
+
+    if (t === "receive") {
+      const { data: { user } } = await supabase.auth.getUser();
+      const movements = updated.lines.map((l) => ({
+        variant_id: l.variant_id,
+        qty: l.qty,
+        to_zone_id: l.condition === "resaleable" ? l.restock_zone_id : null,
+        from_zone_id: null,
+        reason: (l.condition === "resaleable" ? "return" : "scrap") as "return" | "scrap",
+        reference_type: "goods_return",
+        reference_id: id,
+        unit_cost: l.unit_price,
+        performed_by: user?.id ?? null,
+        notes: `GR ${updated.gr_number} · ${l.condition}`,
+      })).filter((m) => m.qty > 0);
       const { error: mErr } = await supabase.from("stock_movements").insert(movements);
-      if (mErr) {
-        setReceiving(false);
-        toast.error("Stock movement failed", { description: mErr.message });
-        return;
-      }
-      // Bump on_hand
-      for (const m of movements) {
+      if (mErr) { setBusyTransition(null); toast.error("Stock movement failed", { description: mErr.message }); return; }
+      for (const m of movements.filter((x) => x.to_zone_id)) {
         const { data: stock } = await supabase
           .from("inventory_stock")
           .select("id, on_hand")
@@ -299,10 +309,12 @@ function GoodsReturnsPage() {
           });
         }
       }
+      toast.success(`Return received · ${movements.length} item(s) processed`);
+    } else {
+      toast.success(`Return ${nextStatus.replace(/_/g, " ")}`);
     }
-    setReceiving(false);
-    toast.success(`Return received · ${movements.length} item(s) restocked`);
-    setOpen(false); setDraft(null); void refresh();
+    setBusyTransition(null);
+    void refresh();
   }
 
   async function handleDelete() {
@@ -383,6 +395,16 @@ function GoodsReturnsPage() {
           </SheetHeader>
           {draft && (
             <div className="mt-6 space-y-5">
+              <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-4">
+                <GRStatusStepper status={draft.status} />
+                <GRLifecycleActions
+                  status={draft.status}
+                  busy={busyTransition}
+                  canEdit={canEdit}
+                  onTransition={transitionTo}
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>GR number</Label><Input value={draft.gr_number} onChange={(e) => patchDraft({ gr_number: e.target.value })} disabled={isReceived} /></div>
                 <div>
@@ -533,23 +555,20 @@ function GoodsReturnsPage() {
 
               <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-3">
                 <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                {!isReceived && (
-                  <>
-                    <Button variant="outline" onClick={save} disabled={saving || receiving}>
-                      {saving ? "Saving…" : "Save draft"}
-                    </Button>
-                    <Button onClick={saveAndReceive} disabled={saving || receiving} className="gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90">
-                      <CheckCircle2 className="h-4 w-4" />
-                      {receiving ? "Receiving…" : "Save & receive · restock"}
-                    </Button>
-                  </>
-                )}
-                {isReceived && (
-                  <Button onClick={save} disabled={saving}>
-                    {saving ? "Saving…" : "Save changes"}
-                  </Button>
-                )}
+                <Button onClick={save} disabled={saving || busyTransition !== null}>
+                  {saving ? "Saving…" : isReceived ? "Save changes" : "Save draft"}
+                </Button>
               </div>
+
+              {draft.id && (
+                <div className="space-y-2 border-t border-border pt-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Posted stock movements</Label>
+                    <span className="text-[11px] text-muted-foreground">Audit trail · linked to this GR</span>
+                  </div>
+                  <GRMovementsTimeline goodsReturnId={draft.id} />
+                </div>
+              )}
             </div>
           )}
         </SheetContent>
