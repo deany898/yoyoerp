@@ -4,7 +4,7 @@ import { Plus, Search, AlertTriangle, Package2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SmartSelect } from "@/components/forms/SmartSelect";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 import { TableSkeleton } from "@/components/shared/skeletons";
@@ -98,20 +98,22 @@ function InventoryPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by product, SKU, or variant…" className="pl-9" />
         </div>
-        <Select value={warehouseFilter} onValueChange={(v) => { setWarehouseFilter(v); setZoneFilter("all"); }}>
-          <SelectTrigger className="w-full md:w-56"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All warehouses</SelectItem>
-            {warehouses.map((w) => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={zoneFilter} onValueChange={setZoneFilter}>
-          <SelectTrigger className="w-full md:w-56"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All zones</SelectItem>
-            {zones.map((z) => <SelectItem key={z.id} value={z.id}>{z.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <div className="w-full md:w-56">
+          <SmartSelect
+            options={[{ value: "all", label: "All warehouses" }, ...warehouses.map((w) => ({ value: w.id, label: w.name }))]}
+            value={warehouseFilter}
+            onChange={(v) => { setWarehouseFilter(v ?? "all"); setZoneFilter("all"); }}
+            searchPlaceholder="Search warehouse…"
+          />
+        </div>
+        <div className="w-full md:w-56">
+          <SmartSelect
+            options={[{ value: "all", label: "All zones" }, ...zones.map((z) => ({ value: z.id, label: z.name }))]}
+            value={zoneFilter}
+            onChange={(v) => setZoneFilter(v ?? "all")}
+            searchPlaceholder="Search zone…"
+          />
+        </div>
       </div>
 
       {loading ? (
