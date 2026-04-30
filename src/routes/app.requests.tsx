@@ -138,7 +138,12 @@ function RequestsPage() {
   }
 
   async function quickStatus(r: RequestWithLines, status: RequestStatusEnum) {
-    const patch: Record<string, unknown> = { status };
+    const patch: {
+      status: RequestStatusEnum;
+      approved_by?: string | null;
+      approved_at?: string | null;
+      fulfilled_at?: string | null;
+    } = { status };
     if (status === "approved") { patch.approved_by = user?.id ?? null; patch.approved_at = new Date().toISOString(); }
     if (status === "fulfilled") { patch.fulfilled_at = new Date().toISOString(); }
     const { error } = await supabase.from("inventory_requests").update(patch).eq("id", r.id);
