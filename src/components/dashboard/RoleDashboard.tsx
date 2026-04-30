@@ -1,4 +1,6 @@
 import { Package, CheckCircle2, AlertTriangle, XCircle, Truck, ClipboardList, Inbox, ArrowLeftRight } from "lucide-react";
+import { OperationsOverviewChart } from "@/components/dashboard/OperationsOverviewChart";
+import { StockMixDonut } from "@/components/dashboard/StockMixDonut";
 import { Link } from "@tanstack/react-router";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { NeedsAttention } from "@/components/dashboard/NeedsAttention";
@@ -47,14 +49,18 @@ function FullOpsDashboard({ withInsights }: { withInsights: boolean }) {
 
   return (
     <>
-      <div data-tour="metrics" className="rounded-xl border border-border bg-card p-3 shadow-xs">
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-          <MetricCard label="Total SKUs" value={summary.total} accentColor="neutral" icon={Package} />
-          <MetricCard label="In stock" value={summary.inStock} accentColor="healthy" icon={CheckCircle2} />
-          <MetricCard label="Low stock" value={summary.lowStock} accentColor="warning" icon={AlertTriangle} />
-          <MetricCard label="Out of stock" value={summary.outOfStock} accentColor="danger" icon={XCircle} />
-        </div>
+      <div data-tour="metrics" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <MetricCard label="Total SKUs" value={summary.total} accentColor="neutral" icon={Package} trend={{ direction: "up", percentage: 4 }} />
+        <MetricCard label="In stock" value={summary.inStock} accentColor="healthy" icon={CheckCircle2} trend={{ direction: "up", percentage: 2 }} />
+        <MetricCard label="Low stock" value={summary.lowStock} accentColor="warning" icon={AlertTriangle} trend={{ direction: "down", percentage: 6 }} />
+        <MetricCard label="Out of stock" value={summary.outOfStock} accentColor="danger" icon={XCircle} />
       </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
+        <OperationsOverviewChart movements={movements} />
+        <StockMixDonut summary={summary} />
+      </div>
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
         <div data-tour="needs-attention" className="min-h-0"><NeedsAttention /></div>
         <div className="min-h-0"><RecentActivity /></div>
