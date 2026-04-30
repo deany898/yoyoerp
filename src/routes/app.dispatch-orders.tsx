@@ -19,9 +19,6 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
@@ -321,14 +318,12 @@ function DispatchOrdersPage() {
                 <div><Label>DO number</Label><Input value={draft.do_number} onChange={(e) => patchDraft({ do_number: e.target.value })} /></div>
                 <div>
                   <Label>Status</Label>
-                  <Select value={draft.status} onValueChange={(v) => patchDraft({ status: v as DispatchStatus })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {(["draft","pending_approval","approved","ready_for_dispatch","dispatched","delivered","cancelled"] as DispatchStatus[]).map((s) => (
-                        <SelectItem key={s} value={s}>{s.replace(/_/g, " ")}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SmartSelect
+                    options={(["draft","pending_approval","approved","ready_for_dispatch","dispatched","delivered","cancelled"] as DispatchStatus[]).map((s) => ({ value: s, label: s.replace(/_/g, " ") }))}
+                    value={draft.status}
+                    onChange={(v) => v && patchDraft({ status: v as DispatchStatus })}
+                    searchPlaceholder="Search status…"
+                  />
                 </div>
               </div>
 
@@ -353,12 +348,13 @@ function DispatchOrdersPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Warehouse</Label>
-                  <Select value={draft.warehouse_id} onValueChange={(v) => patchDraft({ warehouse_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Pick warehouse" /></SelectTrigger>
-                    <SelectContent>
-                      {warehouses.map((w) => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <SmartSelect
+                    options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+                    value={draft.warehouse_id || null}
+                    onChange={(v) => patchDraft({ warehouse_id: v ?? "" })}
+                    placeholder="Pick warehouse"
+                    searchPlaceholder="Search warehouse…"
+                  />
                 </div>
                 <div><Label>Expected dispatch date</Label><Input type="date" value={draft.expected_dispatch_date} onChange={(e) => patchDraft({ expected_dispatch_date: e.target.value })} /></div>
               </div>
