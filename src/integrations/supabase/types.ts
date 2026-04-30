@@ -1634,11 +1634,13 @@ export type Database = {
           mould_cost: number
           notes: string | null
           overhead_cost: number
+          pay_mode: Database["public"]["Enums"]["stage_pay_mode"]
           qc_cost: number
           rejection_pct: number
           sequence: number
           stage_kind: Database["public"]["Enums"]["stage_kind"]
           stage_name: string
+          unit_cost: number
           utility_cost: number
           variant_id: string
         }
@@ -1650,11 +1652,13 @@ export type Database = {
           mould_cost?: number
           notes?: string | null
           overhead_cost?: number
+          pay_mode?: Database["public"]["Enums"]["stage_pay_mode"]
           qc_cost?: number
           rejection_pct?: number
           sequence?: number
           stage_kind?: Database["public"]["Enums"]["stage_kind"]
           stage_name: string
+          unit_cost?: number
           utility_cost?: number
           variant_id: string
         }
@@ -1666,11 +1670,13 @@ export type Database = {
           mould_cost?: number
           notes?: string | null
           overhead_cost?: number
+          pay_mode?: Database["public"]["Enums"]["stage_pay_mode"]
           qc_cost?: number
           rejection_pct?: number
           sequence?: number
           stage_kind?: Database["public"]["Enums"]["stage_kind"]
           stage_name?: string
+          unit_cost?: number
           utility_cost?: number
           variant_id?: string
         }
@@ -2013,11 +2019,13 @@ export type Database = {
           mould_cost: number
           notes: string | null
           overhead_cost: number
+          pay_mode: Database["public"]["Enums"]["stage_pay_mode"]
           qc_cost: number
           rejection_pct: number
           sequence: number
           stage_kind: Database["public"]["Enums"]["stage_kind"]
           stage_name: string
+          unit_cost: number
           utility_cost: number
         }
         Insert: {
@@ -2029,11 +2037,13 @@ export type Database = {
           mould_cost?: number
           notes?: string | null
           overhead_cost?: number
+          pay_mode?: Database["public"]["Enums"]["stage_pay_mode"]
           qc_cost?: number
           rejection_pct?: number
           sequence?: number
           stage_kind?: Database["public"]["Enums"]["stage_kind"]
           stage_name: string
+          unit_cost?: number
           utility_cost?: number
         }
         Update: {
@@ -2045,11 +2055,13 @@ export type Database = {
           mould_cost?: number
           notes?: string | null
           overhead_cost?: number
+          pay_mode?: Database["public"]["Enums"]["stage_pay_mode"]
           qc_cost?: number
           rejection_pct?: number
           sequence?: number
           stage_kind?: Database["public"]["Enums"]["stage_kind"]
           stage_name?: string
+          unit_cost?: number
           utility_cost?: number
         }
         Relationships: [
@@ -2058,6 +2070,42 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "stage_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stage_group_products: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          product_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          product_id: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stage_group_products_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "stage_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stage_group_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -2593,6 +2641,7 @@ export type Database = {
         | "cancelled"
       sourcing_type: "purchased" | "manufactured" | "hybrid"
       stage_kind: "moulding" | "assembly" | "packing" | "qc" | "other"
+      stage_pay_mode: "salary" | "per_unit"
       variant_kind: "base" | "variation" | "component"
       zone_kind:
         | "raw_material"
@@ -2824,6 +2873,7 @@ export const Constants = {
       ],
       sourcing_type: ["purchased", "manufactured", "hybrid"],
       stage_kind: ["moulding", "assembly", "packing", "qc", "other"],
+      stage_pay_mode: ["salary", "per_unit"],
       variant_kind: ["base", "variation", "component"],
       zone_kind: [
         "raw_material",
