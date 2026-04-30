@@ -12,6 +12,8 @@ import {
   Settings,
   ChevronRight,
   HelpCircle,
+  Boxes,
+  Warehouse,
 } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
@@ -37,9 +39,11 @@ const navGroups: NavGroup[] = [
     label: "Operations",
     items: [
       { label: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard },
-      { label: "Catalog", href: "/app/catalog", icon: Package },
+      { label: "Products", href: "/app/products", icon: Boxes },
+      { label: "Warehouses", href: "/app/warehouses", icon: Warehouse },
+      { label: "Catalog (legacy)", href: "/app/catalog", icon: Package },
       { label: "Movements", href: "/app/movements", icon: ArrowLeftRight, permKey: "canLogMovements" },
-      { label: "Locations", href: "/app/locations", icon: MapPin },
+      { label: "Locations (legacy)", href: "/app/locations", icon: MapPin },
     ],
   },
   {
