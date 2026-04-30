@@ -20,10 +20,8 @@ import { Route as AppRequestsRouteImport } from './routes/app.requests'
 import { Route as AppPurchaseOrdersRouteImport } from './routes/app.purchase-orders'
 import { Route as AppProductsRouteImport } from './routes/app.products'
 import { Route as AppMovementsRouteImport } from './routes/app.movements'
-import { Route as AppLocationsRouteImport } from './routes/app.locations'
 import { Route as AppHelpRouteImport } from './routes/app.help'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
-import { Route as AppCatalogRouteImport } from './routes/app.catalog'
 import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
 import { Route as AppAiInsightsRouteImport } from './routes/app.ai-insights'
 
@@ -82,11 +80,6 @@ const AppMovementsRoute = AppMovementsRouteImport.update({
   path: '/movements',
   getParentRoute: () => AppRoute,
 } as any)
-const AppLocationsRoute = AppLocationsRouteImport.update({
-  id: '/locations',
-  path: '/locations',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppHelpRoute = AppHelpRouteImport.update({
   id: '/help',
   path: '/help',
@@ -95,11 +88,6 @@ const AppHelpRoute = AppHelpRouteImport.update({
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppCatalogRoute = AppCatalogRouteImport.update({
-  id: '/catalog',
-  path: '/catalog',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
@@ -119,10 +107,8 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/app/ai-insights': typeof AppAiInsightsRoute
   '/app/analytics': typeof AppAnalyticsRoute
-  '/app/products': typeof AppCatalogRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/help': typeof AppHelpRoute
-  '/app/locations': typeof AppLocationsRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/products': typeof AppProductsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
@@ -137,10 +123,8 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/app/ai-insights': typeof AppAiInsightsRoute
   '/app/analytics': typeof AppAnalyticsRoute
-  '/app/products': typeof AppCatalogRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/help': typeof AppHelpRoute
-  '/app/locations': typeof AppLocationsRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/products': typeof AppProductsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
@@ -157,10 +141,8 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/app/ai-insights': typeof AppAiInsightsRoute
   '/app/analytics': typeof AppAnalyticsRoute
-  '/app/products': typeof AppCatalogRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/help': typeof AppHelpRoute
-  '/app/locations': typeof AppLocationsRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/products': typeof AppProductsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
@@ -178,10 +160,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/app/ai-insights'
     | '/app/analytics'
-    | '/app/products'
     | '/app/dashboard'
     | '/app/help'
-    | '/app/locations'
     | '/app/movements'
     | '/app/products'
     | '/app/purchase-orders'
@@ -196,10 +176,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/app/ai-insights'
     | '/app/analytics'
-    | '/app/products'
     | '/app/dashboard'
     | '/app/help'
-    | '/app/locations'
     | '/app/movements'
     | '/app/products'
     | '/app/purchase-orders'
@@ -215,10 +193,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/app/ai-insights'
     | '/app/analytics'
-    | '/app/products'
     | '/app/dashboard'
     | '/app/help'
-    | '/app/locations'
     | '/app/movements'
     | '/app/products'
     | '/app/purchase-orders'
@@ -314,13 +290,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMovementsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/locations': {
-      id: '/app/locations'
-      path: '/locations'
-      fullPath: '/app/locations'
-      preLoaderRoute: typeof AppLocationsRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/help': {
       id: '/app/help'
       path: '/help'
@@ -333,13 +302,6 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/app/dashboard'
       preLoaderRoute: typeof AppDashboardRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/products': {
-      id: '/app/products'
-      path: '/catalog'
-      fullPath: '/app/products'
-      preLoaderRoute: typeof AppCatalogRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/analytics': {
@@ -362,10 +324,8 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAiInsightsRoute: typeof AppAiInsightsRoute
   AppAnalyticsRoute: typeof AppAnalyticsRoute
-  AppCatalogRoute: typeof AppCatalogRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppHelpRoute: typeof AppHelpRoute
-  AppLocationsRoute: typeof AppLocationsRoute
   AppMovementsRoute: typeof AppMovementsRoute
   AppProductsRoute: typeof AppProductsRoute
   AppPurchaseOrdersRoute: typeof AppPurchaseOrdersRoute
@@ -379,10 +339,8 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAiInsightsRoute: AppAiInsightsRoute,
   AppAnalyticsRoute: AppAnalyticsRoute,
-  AppCatalogRoute: AppCatalogRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppHelpRoute: AppHelpRoute,
-  AppLocationsRoute: AppLocationsRoute,
   AppMovementsRoute: AppMovementsRoute,
   AppProductsRoute: AppProductsRoute,
   AppPurchaseOrdersRoute: AppPurchaseOrdersRoute,
