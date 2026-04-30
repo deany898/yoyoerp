@@ -22,7 +22,7 @@ function useTable<T>(table: string, orderBy = "created_at", asc = false) {
       .from(table as never)
       .select("*")
       .order(orderBy, { ascending: asc });
-    if (error) notify.error(`Failed to load ${table}`, error.message);
+    if (error) notify.error(`Failed to load ${table}`, { description: error.message });
     setData((rows ?? []) as T[]);
     setLoading(false);
   }, [table, orderBy, asc]);
@@ -67,7 +67,7 @@ export function useManufacturingOrders() {
         warehouse:warehouses(id, name, code)
       `)
       .order("created_at", { ascending: false });
-    if (error) notify.error("Failed to load manufacturing orders", error.message);
+    if (error) notify.error("Failed to load manufacturing orders", { description: error.message });
     setData((rows ?? []) as unknown as MOWithDetails[]);
     setLoading(false);
   }, []);
@@ -78,7 +78,7 @@ export function useManufacturingOrders() {
 export async function nextMoNumber(): Promise<string | null> {
   const { data, error } = await supabase.rpc("next_doc_number", { _doc_type: "MO" });
   if (error) {
-    notify.error("Could not generate MO number", error.message);
+    notify.error("Could not generate MO number", { description: error.message });
     return null;
   }
   return data as string;
