@@ -21,6 +21,7 @@ import { Route as AppStationsRouteImport } from './routes/app.stations'
 import { Route as AppStagesRouteImport } from './routes/app.stages'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppRequestsRouteImport } from './routes/app.requests'
+import { Route as AppQuickOrderRouteImport } from './routes/app.quick-order'
 import { Route as AppPurchaseOrdersRouteImport } from './routes/app.purchase-orders'
 import { Route as AppProductsRouteImport } from './routes/app.products'
 import { Route as AppMovementsRouteImport } from './routes/app.movements'
@@ -95,6 +96,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
 const AppRequestsRoute = AppRequestsRouteImport.update({
   id: '/requests',
   path: '/requests',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppQuickOrderRoute = AppQuickOrderRouteImport.update({
+  id: '/quick-order',
+  path: '/quick-order',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPurchaseOrdersRoute = AppPurchaseOrdersRouteImport.update({
@@ -191,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/app/movements': typeof AppMovementsRoute
   '/app/products': typeof AppProductsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
+  '/app/quick-order': typeof AppQuickOrderRoute
   '/app/requests': typeof AppRequestsRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/stages': typeof AppStagesRoute
@@ -219,6 +226,7 @@ export interface FileRoutesByTo {
   '/app/movements': typeof AppMovementsRoute
   '/app/products': typeof AppProductsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
+  '/app/quick-order': typeof AppQuickOrderRoute
   '/app/requests': typeof AppRequestsRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/stages': typeof AppStagesRoute
@@ -249,6 +257,7 @@ export interface FileRoutesById {
   '/app/movements': typeof AppMovementsRoute
   '/app/products': typeof AppProductsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
+  '/app/quick-order': typeof AppQuickOrderRoute
   '/app/requests': typeof AppRequestsRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/stages': typeof AppStagesRoute
@@ -280,6 +289,7 @@ export interface FileRouteTypes {
     | '/app/movements'
     | '/app/products'
     | '/app/purchase-orders'
+    | '/app/quick-order'
     | '/app/requests'
     | '/app/settings'
     | '/app/stages'
@@ -308,6 +318,7 @@ export interface FileRouteTypes {
     | '/app/movements'
     | '/app/products'
     | '/app/purchase-orders'
+    | '/app/quick-order'
     | '/app/requests'
     | '/app/settings'
     | '/app/stages'
@@ -337,6 +348,7 @@ export interface FileRouteTypes {
     | '/app/movements'
     | '/app/products'
     | '/app/purchase-orders'
+    | '/app/quick-order'
     | '/app/requests'
     | '/app/settings'
     | '/app/stages'
@@ -439,6 +451,13 @@ declare module '@tanstack/react-router' {
       path: '/requests'
       fullPath: '/app/requests'
       preLoaderRoute: typeof AppRequestsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/quick-order': {
+      id: '/app/quick-order'
+      path: '/quick-order'
+      fullPath: '/app/quick-order'
+      preLoaderRoute: typeof AppQuickOrderRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/purchase-orders': {
@@ -575,6 +594,7 @@ interface AppRouteChildren {
   AppMovementsRoute: typeof AppMovementsRoute
   AppProductsRoute: typeof AppProductsRoute
   AppPurchaseOrdersRoute: typeof AppPurchaseOrdersRoute
+  AppQuickOrderRoute: typeof AppQuickOrderRoute
   AppRequestsRoute: typeof AppRequestsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStagesRoute: typeof AppStagesRoute
@@ -601,6 +621,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMovementsRoute: AppMovementsRoute,
   AppProductsRoute: AppProductsRoute,
   AppPurchaseOrdersRoute: AppPurchaseOrdersRoute,
+  AppQuickOrderRoute: AppQuickOrderRoute,
   AppRequestsRoute: AppRequestsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStagesRoute: AppStagesRoute,
