@@ -96,7 +96,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   return (
     <nav data-tour="sidebar" className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
-        <Logo size={36} variant="light" />
+        <Logo size={36} variant="light" showWordmark={false} />
       </div>
 
       <div className="flex-1 overflow-y-auto px-3 py-2">
