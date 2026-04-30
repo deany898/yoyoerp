@@ -13,14 +13,19 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppWorkersRouteImport } from './routes/app.workers'
 import { Route as AppWarehousesRouteImport } from './routes/app.warehouses'
 import { Route as AppUsersRouteImport } from './routes/app.users'
 import { Route as AppSuppliersRouteImport } from './routes/app.suppliers'
+import { Route as AppStationsRouteImport } from './routes/app.stations'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppRequestsRouteImport } from './routes/app.requests'
 import { Route as AppPurchaseOrdersRouteImport } from './routes/app.purchase-orders'
 import { Route as AppProductsRouteImport } from './routes/app.products'
 import { Route as AppMovementsRouteImport } from './routes/app.movements'
+import { Route as AppMouldsRouteImport } from './routes/app.moulds'
+import { Route as AppManufacturingRouteImport } from './routes/app.manufacturing'
+import { Route as AppMachinesRouteImport } from './routes/app.machines'
 import { Route as AppInventoryRouteImport } from './routes/app.inventory'
 import { Route as AppHelpRouteImport } from './routes/app.help'
 import { Route as AppGoodsReturnsRouteImport } from './routes/app.goods-returns'
@@ -29,6 +34,7 @@ import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppCustomersRouteImport } from './routes/app.customers'
 import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
 import { Route as AppAiInsightsRouteImport } from './routes/app.ai-insights'
+import { Route as AppManufacturingMoIdRouteImport } from './routes/app.manufacturing.$moId'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -50,6 +56,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppWorkersRoute = AppWorkersRouteImport.update({
+  id: '/workers',
+  path: '/workers',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppWarehousesRoute = AppWarehousesRouteImport.update({
   id: '/warehouses',
   path: '/warehouses',
@@ -63,6 +74,11 @@ const AppUsersRoute = AppUsersRouteImport.update({
 const AppSuppliersRoute = AppSuppliersRouteImport.update({
   id: '/suppliers',
   path: '/suppliers',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStationsRoute = AppStationsRouteImport.update({
+  id: '/stations',
+  path: '/stations',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -88,6 +104,21 @@ const AppProductsRoute = AppProductsRouteImport.update({
 const AppMovementsRoute = AppMovementsRouteImport.update({
   id: '/movements',
   path: '/movements',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMouldsRoute = AppMouldsRouteImport.update({
+  id: '/moulds',
+  path: '/moulds',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppManufacturingRoute = AppManufacturingRouteImport.update({
+  id: '/manufacturing',
+  path: '/manufacturing',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMachinesRoute = AppMachinesRouteImport.update({
+  id: '/machines',
+  path: '/machines',
   getParentRoute: () => AppRoute,
 } as any)
 const AppInventoryRoute = AppInventoryRouteImport.update({
@@ -130,6 +161,11 @@ const AppAiInsightsRoute = AppAiInsightsRouteImport.update({
   path: '/ai-insights',
   getParentRoute: () => AppRoute,
 } as any)
+const AppManufacturingMoIdRoute = AppManufacturingMoIdRouteImport.update({
+  id: '/$moId',
+  path: '/$moId',
+  getParentRoute: () => AppManufacturingRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -143,15 +179,21 @@ export interface FileRoutesByFullPath {
   '/app/goods-returns': typeof AppGoodsReturnsRoute
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
+  '/app/machines': typeof AppMachinesRoute
+  '/app/manufacturing': typeof AppManufacturingRouteWithChildren
+  '/app/moulds': typeof AppMouldsRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/products': typeof AppProductsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
   '/app/requests': typeof AppRequestsRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/stations': typeof AppStationsRoute
   '/app/suppliers': typeof AppSuppliersRoute
   '/app/users': typeof AppUsersRoute
   '/app/warehouses': typeof AppWarehousesRoute
+  '/app/workers': typeof AppWorkersRoute
   '/app/': typeof AppIndexRoute
+  '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -164,15 +206,21 @@ export interface FileRoutesByTo {
   '/app/goods-returns': typeof AppGoodsReturnsRoute
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
+  '/app/machines': typeof AppMachinesRoute
+  '/app/manufacturing': typeof AppManufacturingRouteWithChildren
+  '/app/moulds': typeof AppMouldsRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/products': typeof AppProductsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
   '/app/requests': typeof AppRequestsRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/stations': typeof AppStationsRoute
   '/app/suppliers': typeof AppSuppliersRoute
   '/app/users': typeof AppUsersRoute
   '/app/warehouses': typeof AppWarehousesRoute
+  '/app/workers': typeof AppWorkersRoute
   '/app': typeof AppIndexRoute
+  '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -187,15 +235,21 @@ export interface FileRoutesById {
   '/app/goods-returns': typeof AppGoodsReturnsRoute
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
+  '/app/machines': typeof AppMachinesRoute
+  '/app/manufacturing': typeof AppManufacturingRouteWithChildren
+  '/app/moulds': typeof AppMouldsRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/products': typeof AppProductsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
   '/app/requests': typeof AppRequestsRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/stations': typeof AppStationsRoute
   '/app/suppliers': typeof AppSuppliersRoute
   '/app/users': typeof AppUsersRoute
   '/app/warehouses': typeof AppWarehousesRoute
+  '/app/workers': typeof AppWorkersRoute
   '/app/': typeof AppIndexRoute
+  '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -211,15 +265,21 @@ export interface FileRouteTypes {
     | '/app/goods-returns'
     | '/app/help'
     | '/app/inventory'
+    | '/app/machines'
+    | '/app/manufacturing'
+    | '/app/moulds'
     | '/app/movements'
     | '/app/products'
     | '/app/purchase-orders'
     | '/app/requests'
     | '/app/settings'
+    | '/app/stations'
     | '/app/suppliers'
     | '/app/users'
     | '/app/warehouses'
+    | '/app/workers'
     | '/app/'
+    | '/app/manufacturing/$moId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -232,15 +292,21 @@ export interface FileRouteTypes {
     | '/app/goods-returns'
     | '/app/help'
     | '/app/inventory'
+    | '/app/machines'
+    | '/app/manufacturing'
+    | '/app/moulds'
     | '/app/movements'
     | '/app/products'
     | '/app/purchase-orders'
     | '/app/requests'
     | '/app/settings'
+    | '/app/stations'
     | '/app/suppliers'
     | '/app/users'
     | '/app/warehouses'
+    | '/app/workers'
     | '/app'
+    | '/app/manufacturing/$moId'
   id:
     | '__root__'
     | '/'
@@ -254,15 +320,21 @@ export interface FileRouteTypes {
     | '/app/goods-returns'
     | '/app/help'
     | '/app/inventory'
+    | '/app/machines'
+    | '/app/manufacturing'
+    | '/app/moulds'
     | '/app/movements'
     | '/app/products'
     | '/app/purchase-orders'
     | '/app/requests'
     | '/app/settings'
+    | '/app/stations'
     | '/app/suppliers'
     | '/app/users'
     | '/app/warehouses'
+    | '/app/workers'
     | '/app/'
+    | '/app/manufacturing/$moId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -301,6 +373,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/workers': {
+      id: '/app/workers'
+      path: '/workers'
+      fullPath: '/app/workers'
+      preLoaderRoute: typeof AppWorkersRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/warehouses': {
       id: '/app/warehouses'
       path: '/warehouses'
@@ -320,6 +399,13 @@ declare module '@tanstack/react-router' {
       path: '/suppliers'
       fullPath: '/app/suppliers'
       preLoaderRoute: typeof AppSuppliersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/stations': {
+      id: '/app/stations'
+      path: '/stations'
+      fullPath: '/app/stations'
+      preLoaderRoute: typeof AppStationsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/settings': {
@@ -355,6 +441,27 @@ declare module '@tanstack/react-router' {
       path: '/movements'
       fullPath: '/app/movements'
       preLoaderRoute: typeof AppMovementsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/moulds': {
+      id: '/app/moulds'
+      path: '/moulds'
+      fullPath: '/app/moulds'
+      preLoaderRoute: typeof AppMouldsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/manufacturing': {
+      id: '/app/manufacturing'
+      path: '/manufacturing'
+      fullPath: '/app/manufacturing'
+      preLoaderRoute: typeof AppManufacturingRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/machines': {
+      id: '/app/machines'
+      path: '/machines'
+      fullPath: '/app/machines'
+      preLoaderRoute: typeof AppMachinesRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/inventory': {
@@ -413,8 +520,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAiInsightsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/manufacturing/$moId': {
+      id: '/app/manufacturing/$moId'
+      path: '/$moId'
+      fullPath: '/app/manufacturing/$moId'
+      preLoaderRoute: typeof AppManufacturingMoIdRouteImport
+      parentRoute: typeof AppManufacturingRoute
+    }
   }
 }
+
+interface AppManufacturingRouteChildren {
+  AppManufacturingMoIdRoute: typeof AppManufacturingMoIdRoute
+}
+
+const AppManufacturingRouteChildren: AppManufacturingRouteChildren = {
+  AppManufacturingMoIdRoute: AppManufacturingMoIdRoute,
+}
+
+const AppManufacturingRouteWithChildren =
+  AppManufacturingRoute._addFileChildren(AppManufacturingRouteChildren)
 
 interface AppRouteChildren {
   AppAiInsightsRoute: typeof AppAiInsightsRoute
@@ -425,14 +550,19 @@ interface AppRouteChildren {
   AppGoodsReturnsRoute: typeof AppGoodsReturnsRoute
   AppHelpRoute: typeof AppHelpRoute
   AppInventoryRoute: typeof AppInventoryRoute
+  AppMachinesRoute: typeof AppMachinesRoute
+  AppManufacturingRoute: typeof AppManufacturingRouteWithChildren
+  AppMouldsRoute: typeof AppMouldsRoute
   AppMovementsRoute: typeof AppMovementsRoute
   AppProductsRoute: typeof AppProductsRoute
   AppPurchaseOrdersRoute: typeof AppPurchaseOrdersRoute
   AppRequestsRoute: typeof AppRequestsRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppStationsRoute: typeof AppStationsRoute
   AppSuppliersRoute: typeof AppSuppliersRoute
   AppUsersRoute: typeof AppUsersRoute
   AppWarehousesRoute: typeof AppWarehousesRoute
+  AppWorkersRoute: typeof AppWorkersRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
@@ -445,14 +575,19 @@ const AppRouteChildren: AppRouteChildren = {
   AppGoodsReturnsRoute: AppGoodsReturnsRoute,
   AppHelpRoute: AppHelpRoute,
   AppInventoryRoute: AppInventoryRoute,
+  AppMachinesRoute: AppMachinesRoute,
+  AppManufacturingRoute: AppManufacturingRouteWithChildren,
+  AppMouldsRoute: AppMouldsRoute,
   AppMovementsRoute: AppMovementsRoute,
   AppProductsRoute: AppProductsRoute,
   AppPurchaseOrdersRoute: AppPurchaseOrdersRoute,
   AppRequestsRoute: AppRequestsRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppStationsRoute: AppStationsRoute,
   AppSuppliersRoute: AppSuppliersRoute,
   AppUsersRoute: AppUsersRoute,
   AppWarehousesRoute: AppWarehousesRoute,
+  AppWorkersRoute: AppWorkersRoute,
   AppIndexRoute: AppIndexRoute,
 }
 

@@ -817,6 +817,391 @@ export type Database = {
           },
         ]
       }
+      machines: {
+        Row: {
+          code: string
+          created_at: string
+          hourly_rate: number
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          station_id: string | null
+          status: Database["public"]["Enums"]["machine_status"]
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          hourly_rate?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          station_id?: string | null
+          status?: Database["public"]["Enums"]["machine_status"]
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          hourly_rate?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          station_id?: string | null
+          status?: Database["public"]["Enums"]["machine_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "machines_station_id_fkey"
+            columns: ["station_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      manufacturing_orders: {
+        Row: {
+          actual_end: string | null
+          actual_start: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          mo_number: string
+          notes: string | null
+          planned_end: string | null
+          planned_start: string | null
+          qty_planned: number
+          qty_produced: number
+          qty_scrapped: number
+          source_do_id: string | null
+          status: Database["public"]["Enums"]["mo_status"]
+          updated_at: string
+          variant_id: string
+          warehouse_id: string | null
+        }
+        Insert: {
+          actual_end?: string | null
+          actual_start?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          mo_number: string
+          notes?: string | null
+          planned_end?: string | null
+          planned_start?: string | null
+          qty_planned: number
+          qty_produced?: number
+          qty_scrapped?: number
+          source_do_id?: string | null
+          status?: Database["public"]["Enums"]["mo_status"]
+          updated_at?: string
+          variant_id: string
+          warehouse_id?: string | null
+        }
+        Update: {
+          actual_end?: string | null
+          actual_start?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          mo_number?: string
+          notes?: string | null
+          planned_end?: string | null
+          planned_start?: string | null
+          qty_planned?: number
+          qty_produced?: number
+          qty_scrapped?: number
+          source_do_id?: string | null
+          status?: Database["public"]["Enums"]["mo_status"]
+          updated_at?: string
+          variant_id?: string
+          warehouse_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manufacturing_orders_source_do_id_fkey"
+            columns: ["source_do_id"]
+            isOneToOne: false
+            referencedRelation: "dispatch_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manufacturing_orders_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manufacturing_orders_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mo_material_issues: {
+        Row: {
+          from_zone_id: string | null
+          id: string
+          mo_id: string
+          movement_id: string | null
+          notes: string | null
+          posted_at: string
+          posted_by: string | null
+          qty: number
+          variant_id: string
+        }
+        Insert: {
+          from_zone_id?: string | null
+          id?: string
+          mo_id: string
+          movement_id?: string | null
+          notes?: string | null
+          posted_at?: string
+          posted_by?: string | null
+          qty: number
+          variant_id: string
+        }
+        Update: {
+          from_zone_id?: string | null
+          id?: string
+          mo_id?: string
+          movement_id?: string | null
+          notes?: string | null
+          posted_at?: string
+          posted_by?: string | null
+          qty?: number
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mo_material_issues_from_zone_id_fkey"
+            columns: ["from_zone_id"]
+            isOneToOne: false
+            referencedRelation: "warehouse_zones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mo_material_issues_mo_id_fkey"
+            columns: ["mo_id"]
+            isOneToOne: false
+            referencedRelation: "manufacturing_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mo_material_issues_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "stock_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mo_material_issues_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mo_outputs: {
+        Row: {
+          id: string
+          mo_id: string
+          movement_id: string | null
+          notes: string | null
+          posted_at: string
+          posted_by: string | null
+          qty: number
+          to_zone_id: string | null
+          variant_id: string
+        }
+        Insert: {
+          id?: string
+          mo_id: string
+          movement_id?: string | null
+          notes?: string | null
+          posted_at?: string
+          posted_by?: string | null
+          qty: number
+          to_zone_id?: string | null
+          variant_id: string
+        }
+        Update: {
+          id?: string
+          mo_id?: string
+          movement_id?: string | null
+          notes?: string | null
+          posted_at?: string
+          posted_by?: string | null
+          qty?: number
+          to_zone_id?: string | null
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mo_outputs_mo_id_fkey"
+            columns: ["mo_id"]
+            isOneToOne: false
+            referencedRelation: "manufacturing_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mo_outputs_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "stock_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mo_outputs_to_zone_id_fkey"
+            columns: ["to_zone_id"]
+            isOneToOne: false
+            referencedRelation: "warehouse_zones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mo_outputs_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mo_stage_runs: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          id: string
+          machine_id: string | null
+          mo_id: string
+          mould_id: string | null
+          notes: string | null
+          qty_in: number
+          qty_out: number
+          qty_rework: number
+          qty_scrap: number
+          stage_id: string | null
+          started_at: string | null
+          worker_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          machine_id?: string | null
+          mo_id: string
+          mould_id?: string | null
+          notes?: string | null
+          qty_in?: number
+          qty_out?: number
+          qty_rework?: number
+          qty_scrap?: number
+          stage_id?: string | null
+          started_at?: string | null
+          worker_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          machine_id?: string | null
+          mo_id?: string
+          mould_id?: string | null
+          notes?: string | null
+          qty_in?: number
+          qty_out?: number
+          qty_rework?: number
+          qty_scrap?: number
+          stage_id?: string | null
+          started_at?: string | null
+          worker_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mo_stage_runs_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mo_stage_runs_mo_id_fkey"
+            columns: ["mo_id"]
+            isOneToOne: false
+            referencedRelation: "manufacturing_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mo_stage_runs_mould_id_fkey"
+            columns: ["mould_id"]
+            isOneToOne: false
+            referencedRelation: "moulds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mo_stage_runs_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "production_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mo_stage_runs_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      moulds: {
+        Row: {
+          cavity_count: number
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          life_cycles: number
+          name: string
+          notes: string | null
+          updated_at: string
+          used_cycles: number
+        }
+        Insert: {
+          cavity_count?: number
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          life_cycles?: number
+          name: string
+          notes?: string | null
+          updated_at?: string
+          used_cycles?: number
+        }
+        Update: {
+          cavity_count?: number
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          life_cycles?: number
+          name?: string
+          notes?: string | null
+          updated_at?: string
+          used_cycles?: number
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -1529,6 +1914,36 @@ export type Database = {
           },
         ]
       }
+      stations: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          location: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       stock_movements: {
         Row: {
           from_zone_id: string | null
@@ -1841,6 +2256,53 @@ export type Database = {
         }
         Relationships: []
       }
+      workers: {
+        Row: {
+          code: string
+          created_at: string
+          hourly_rate: number
+          id: string
+          is_active: boolean
+          job_role: string | null
+          name: string
+          phone: string | null
+          station_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          hourly_rate?: number
+          id?: string
+          is_active?: boolean
+          job_role?: string | null
+          name: string
+          phone?: string | null
+          station_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          hourly_rate?: number
+          id?: string
+          is_active?: boolean
+          job_role?: string | null
+          name?: string
+          phone?: string | null
+          station_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workers_station_id_fkey"
+            columns: ["station_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1907,6 +2369,8 @@ export type Database = {
         | "approved"
         | "received"
         | "cancelled"
+      machine_status: "idle" | "running" | "maintenance" | "offline"
+      mo_status: "draft" | "released" | "in_progress" | "done" | "cancelled"
       movement_reason:
         | "receipt"
         | "consumption"
@@ -2130,6 +2594,8 @@ export const Constants = {
         "received",
         "cancelled",
       ],
+      machine_status: ["idle", "running", "maintenance", "offline"],
+      mo_status: ["draft", "released", "in_progress", "done", "cancelled"],
       movement_reason: [
         "receipt",
         "consumption",
