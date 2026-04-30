@@ -119,7 +119,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/app/ai-insights': typeof AppAiInsightsRoute
   '/app/analytics': typeof AppAnalyticsRoute
-  '/app/catalog': typeof AppCatalogRoute
+  '/app/products': typeof AppCatalogRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/help': typeof AppHelpRoute
   '/app/locations': typeof AppLocationsRoute
@@ -137,7 +137,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/app/ai-insights': typeof AppAiInsightsRoute
   '/app/analytics': typeof AppAnalyticsRoute
-  '/app/catalog': typeof AppCatalogRoute
+  '/app/products': typeof AppCatalogRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/help': typeof AppHelpRoute
   '/app/locations': typeof AppLocationsRoute
@@ -157,7 +157,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/app/ai-insights': typeof AppAiInsightsRoute
   '/app/analytics': typeof AppAnalyticsRoute
-  '/app/catalog': typeof AppCatalogRoute
+  '/app/products': typeof AppCatalogRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/help': typeof AppHelpRoute
   '/app/locations': typeof AppLocationsRoute
@@ -178,7 +178,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/app/ai-insights'
     | '/app/analytics'
-    | '/app/catalog'
+    | '/app/products'
     | '/app/dashboard'
     | '/app/help'
     | '/app/locations'
@@ -196,7 +196,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/app/ai-insights'
     | '/app/analytics'
-    | '/app/catalog'
+    | '/app/products'
     | '/app/dashboard'
     | '/app/help'
     | '/app/locations'
@@ -215,7 +215,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/app/ai-insights'
     | '/app/analytics'
-    | '/app/catalog'
+    | '/app/products'
     | '/app/dashboard'
     | '/app/help'
     | '/app/locations'
@@ -335,10 +335,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/catalog': {
-      id: '/app/catalog'
+    '/app/products': {
+      id: '/app/products'
       path: '/catalog'
-      fullPath: '/app/catalog'
+      fullPath: '/app/products'
       preLoaderRoute: typeof AppCatalogRouteImport
       parentRoute: typeof AppRoute
     }

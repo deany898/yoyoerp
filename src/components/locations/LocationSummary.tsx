@@ -113,7 +113,7 @@ export function LocationSummary({ node, allLocations, items }: LocationSummaryPr
             ))}
           </div>
           <a
-            href={`/app/catalog?location=${node.id}`}
+            href={`/app/products?location=${node.id}`}
             className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
           >
             View all in catalog

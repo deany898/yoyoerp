@@ -22,7 +22,7 @@ export const ACTIONS: ActionDef[] = [
     label: "New Item",
     icon: <Plus className="h-4 w-4" />,
     shortcut: "N I",
-    action: (nav) => nav({ to: "/app/catalog", search: {} }),
+    action: (nav) => nav({ to: "/app/products", search: {} }),
     permission: "create_item",
   },
   {
@@ -54,7 +54,7 @@ export const ACTIONS: ActionDef[] = [
   {
     label: "Export Items CSV",
     icon: <FileDown className="h-4 w-4" />,
-    action: (nav) => nav({ to: "/app/catalog", search: {} }),
+    action: (nav) => nav({ to: "/app/products", search: {} }),
     permission: "export_data",
   },
 ];

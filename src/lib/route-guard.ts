@@ -13,7 +13,7 @@ const ROUTE_ACCESS: Record<string, UserRoleType[]> = {
   "/app/products": ALL_STAFF,
   "/app/warehouses": ALL_STAFF,
   // Legacy modules
-  "/app/catalog": ALL_STAFF,
+  "/app/products": ALL_STAFF,
   "/app/requests": ALL_STAFF,
   "/app/locations": ALL_STAFF,
   "/app/movements": OPS,

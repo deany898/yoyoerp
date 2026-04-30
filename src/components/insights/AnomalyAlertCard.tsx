@@ -57,7 +57,7 @@ export function AnomalyAlertCard({ alert, itemName, itemSku, onDismiss }: Anomal
           {(itemName || itemSku) && (
             <p className="mt-1 text-xs">
               <Link
-                to="/app/catalog"
+                to="/app/products"
                 search={{ item: alert.itemId }}
                 className="text-primary hover:underline"
               >
@@ -74,7 +74,7 @@ export function AnomalyAlertCard({ alert, itemName, itemSku, onDismiss }: Anomal
 
           <div className="mt-2 flex items-center gap-2">
             <Button size="sm" variant="outline" className="h-6 text-xs" asChild>
-              <Link to="/app/catalog" search={{ item: alert.itemId }}>
+              <Link to="/app/products" search={{ item: alert.itemId }}>
                 <Search className="h-3 w-3 mr-1" />
                 Investigate
               </Link>
