@@ -238,13 +238,19 @@ export async function postMovement(input: PostMovementInput) {
   switch (input.reason) {
     case "receipt":
     case "production_output":
-    case "adjustment_in":
+    case "return":
+    case "opening_balance":
       if (input.to_zone_id) await adjustStockBucket(input.variant_id, input.to_zone_id, qty);
+      break;
+    case "adjustment":
+      if (input.to_zone_id) await adjustStockBucket(input.variant_id, input.to_zone_id, qty);
+      else if (input.from_zone_id) await adjustStockBucket(input.variant_id, input.from_zone_id, -qty);
       break;
     case "consumption":
     case "dispatch":
-    case "adjustment_out":
     case "scrap":
+    case "reservation":
+    case "release":
       if (input.from_zone_id) await adjustStockBucket(input.variant_id, input.from_zone_id, -qty);
       break;
     case "transfer":
