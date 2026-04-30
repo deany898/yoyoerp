@@ -218,6 +218,270 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          billing_address: string | null
+          city: string | null
+          code: string
+          contact_name: string | null
+          country: string
+          created_at: string
+          created_by: string | null
+          delivery_address: string | null
+          email: string | null
+          gst_number: string | null
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          pan_number: string | null
+          payment_terms: string | null
+          phone: string | null
+          pricing_tier: string
+          state: string | null
+          transporter: string | null
+          updated_at: string
+        }
+        Insert: {
+          billing_address?: string | null
+          city?: string | null
+          code: string
+          contact_name?: string | null
+          country?: string
+          created_at?: string
+          created_by?: string | null
+          delivery_address?: string | null
+          email?: string | null
+          gst_number?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          pan_number?: string | null
+          payment_terms?: string | null
+          phone?: string | null
+          pricing_tier?: string
+          state?: string | null
+          transporter?: string | null
+          updated_at?: string
+        }
+        Update: {
+          billing_address?: string | null
+          city?: string | null
+          code?: string
+          contact_name?: string | null
+          country?: string
+          created_at?: string
+          created_by?: string | null
+          delivery_address?: string | null
+          email?: string | null
+          gst_number?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          pan_number?: string | null
+          payment_terms?: string | null
+          phone?: string | null
+          pricing_tier?: string
+          state?: string | null
+          transporter?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      dispatch_order_lines: {
+        Row: {
+          created_at: string
+          custom_fields: Json
+          discount_type: Database["public"]["Enums"]["discount_type"]
+          discount_value: number
+          dispatch_order_id: string
+          freight_cost: number
+          id: string
+          line_total: number
+          notes: string | null
+          other_charges: number
+          packing_cost: number
+          qty: number
+          tax_rate: number
+          unit_cost: number
+          unit_price: number
+          uom: string
+          variant_id: string
+          wholesale_price: number
+        }
+        Insert: {
+          created_at?: string
+          custom_fields?: Json
+          discount_type?: Database["public"]["Enums"]["discount_type"]
+          discount_value?: number
+          dispatch_order_id: string
+          freight_cost?: number
+          id?: string
+          line_total?: number
+          notes?: string | null
+          other_charges?: number
+          packing_cost?: number
+          qty: number
+          tax_rate?: number
+          unit_cost?: number
+          unit_price?: number
+          uom?: string
+          variant_id: string
+          wholesale_price?: number
+        }
+        Update: {
+          created_at?: string
+          custom_fields?: Json
+          discount_type?: Database["public"]["Enums"]["discount_type"]
+          discount_value?: number
+          dispatch_order_id?: string
+          freight_cost?: number
+          id?: string
+          line_total?: number
+          notes?: string | null
+          other_charges?: number
+          packing_cost?: number
+          qty?: number
+          tax_rate?: number
+          unit_cost?: number
+          unit_price?: number
+          uom?: string
+          variant_id?: string
+          wholesale_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispatch_order_lines_dispatch_order_id_fkey"
+            columns: ["dispatch_order_id"]
+            isOneToOne: false
+            referencedRelation: "dispatch_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispatch_order_lines_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dispatch_orders: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          billing_address: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          customer_id: string
+          delivered_at: string | null
+          delivery_address: string | null
+          discount_total: number
+          dispatched_at: string | null
+          do_number: string
+          expected_dispatch_date: string | null
+          freight_cost: number
+          grand_total: number
+          id: string
+          lr_number: string | null
+          margin_total: number
+          notes: string | null
+          order_date: string
+          other_charges: number
+          packing_cost: number
+          pricing_tier: string | null
+          status: Database["public"]["Enums"]["dispatch_status"]
+          subtotal: number
+          tax_total: number
+          transporter: string | null
+          updated_at: string
+          vehicle_number: string | null
+          warehouse_id: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          billing_address?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_id: string
+          delivered_at?: string | null
+          delivery_address?: string | null
+          discount_total?: number
+          dispatched_at?: string | null
+          do_number: string
+          expected_dispatch_date?: string | null
+          freight_cost?: number
+          grand_total?: number
+          id?: string
+          lr_number?: string | null
+          margin_total?: number
+          notes?: string | null
+          order_date?: string
+          other_charges?: number
+          packing_cost?: number
+          pricing_tier?: string | null
+          status?: Database["public"]["Enums"]["dispatch_status"]
+          subtotal?: number
+          tax_total?: number
+          transporter?: string | null
+          updated_at?: string
+          vehicle_number?: string | null
+          warehouse_id?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          billing_address?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_id?: string
+          delivered_at?: string | null
+          delivery_address?: string | null
+          discount_total?: number
+          dispatched_at?: string | null
+          do_number?: string
+          expected_dispatch_date?: string | null
+          freight_cost?: number
+          grand_total?: number
+          id?: string
+          lr_number?: string | null
+          margin_total?: number
+          notes?: string | null
+          order_date?: string
+          other_charges?: number
+          packing_cost?: number
+          pricing_tier?: string | null
+          status?: Database["public"]["Enums"]["dispatch_status"]
+          subtotal?: number
+          tax_total?: number
+          transporter?: string | null
+          updated_at?: string
+          vehicle_number?: string | null
+          warehouse_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispatch_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispatch_orders_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_request_lines: {
         Row: {
           created_at: string
@@ -463,6 +727,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      po_documents: {
+        Row: {
+          created_at: string
+          file_name: string
+          id: string
+          kind: Database["public"]["Enums"]["po_document_kind"]
+          mime_type: string | null
+          po_id: string
+          size_bytes: number | null
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          id?: string
+          kind: Database["public"]["Enums"]["po_document_kind"]
+          mime_type?: string | null
+          po_id: string
+          size_bytes?: number | null
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["po_document_kind"]
+          mime_type?: string | null
+          po_id?: string
+          size_bytes?: number | null
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "po_documents_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_cost_snapshots: {
         Row: {
@@ -999,57 +1307,84 @@ export type Database = {
       }
       purchase_orders: {
         Row: {
+          arrival_date: string | null
           created_at: string
           created_by: string | null
           currency: string
           expected_date: string | null
+          freight_cost: number
           id: string
+          lr_number: string | null
           notes: string | null
           order_date: string
+          other_charges: number
+          pickup_cost: number
           po_number: string
           received_date: string | null
           status: Database["public"]["Enums"]["po_status"]
           subtotal: number
+          supplier_dispatch_date: string | null
           supplier_id: string
+          supplier_invoice_no: string | null
           tax_total: number
           total: number
+          transporter: string | null
           updated_at: string
+          vehicle_number: string | null
           warehouse_id: string | null
         }
         Insert: {
+          arrival_date?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
           expected_date?: string | null
+          freight_cost?: number
           id?: string
+          lr_number?: string | null
           notes?: string | null
           order_date?: string
+          other_charges?: number
+          pickup_cost?: number
           po_number: string
           received_date?: string | null
           status?: Database["public"]["Enums"]["po_status"]
           subtotal?: number
+          supplier_dispatch_date?: string | null
           supplier_id: string
+          supplier_invoice_no?: string | null
           tax_total?: number
           total?: number
+          transporter?: string | null
           updated_at?: string
+          vehicle_number?: string | null
           warehouse_id?: string | null
         }
         Update: {
+          arrival_date?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
           expected_date?: string | null
+          freight_cost?: number
           id?: string
+          lr_number?: string | null
           notes?: string | null
           order_date?: string
+          other_charges?: number
+          pickup_cost?: number
           po_number?: string
           received_date?: string | null
           status?: Database["public"]["Enums"]["po_status"]
           subtotal?: number
+          supplier_dispatch_date?: string | null
           supplier_id?: string
+          supplier_invoice_no?: string | null
           tax_total?: number
           total?: number
+          transporter?: string | null
           updated_at?: string
+          vehicle_number?: string | null
           warehouse_id?: string | null
         }
         Relationships: [
@@ -1423,6 +1758,15 @@ export type Database = {
         | "lowest"
         | "preferred"
         | "unset"
+      discount_type: "percent" | "amount"
+      dispatch_status:
+        | "draft"
+        | "pending_approval"
+        | "approved"
+        | "ready_for_dispatch"
+        | "dispatched"
+        | "delivered"
+        | "cancelled"
       movement_reason:
         | "receipt"
         | "consumption"
@@ -1436,6 +1780,15 @@ export type Database = {
         | "scrap"
         | "opening_balance"
       packaging_kind: "poly" | "carton" | "box" | "label" | "pallet" | "other"
+      po_document_kind:
+        | "lr"
+        | "invoice"
+        | "eway_bill"
+        | "delivery_challan"
+        | "qc"
+        | "packaging"
+        | "shipment_proof"
+        | "other"
       po_status:
         | "draft"
         | "submitted"
@@ -1444,6 +1797,10 @@ export type Database = {
         | "received"
         | "cancelled"
         | "closed"
+        | "supplier_confirmed"
+        | "supplier_dispatched"
+        | "in_transit"
+        | "grn_completed"
       product_type: "raw_material" | "packaging" | "finished_good" | "wip"
       request_status:
         | "draft"
@@ -1607,6 +1964,16 @@ export const Constants = {
         "preferred",
         "unset",
       ],
+      discount_type: ["percent", "amount"],
+      dispatch_status: [
+        "draft",
+        "pending_approval",
+        "approved",
+        "ready_for_dispatch",
+        "dispatched",
+        "delivered",
+        "cancelled",
+      ],
       movement_reason: [
         "receipt",
         "consumption",
@@ -1621,6 +1988,16 @@ export const Constants = {
         "opening_balance",
       ],
       packaging_kind: ["poly", "carton", "box", "label", "pallet", "other"],
+      po_document_kind: [
+        "lr",
+        "invoice",
+        "eway_bill",
+        "delivery_challan",
+        "qc",
+        "packaging",
+        "shipment_proof",
+        "other",
+      ],
       po_status: [
         "draft",
         "submitted",
@@ -1629,6 +2006,10 @@ export const Constants = {
         "received",
         "cancelled",
         "closed",
+        "supplier_confirmed",
+        "supplier_dispatched",
+        "in_transit",
+        "grn_completed",
       ],
       product_type: ["raw_material", "packaging", "finished_good", "wip"],
       request_status: [

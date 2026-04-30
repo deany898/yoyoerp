@@ -24,6 +24,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { PODocumentsPanel } from "@/components/purchase-orders/PODocumentsPanel";
 
 export const Route = createFileRoute("/app/purchase-orders")({
   component: POPage,
@@ -38,6 +39,10 @@ const STATUS_COLORS: Record<POStatus, string> = {
   received: "bg-emerald-500/10 text-emerald-700",
   cancelled: "bg-destructive/10 text-destructive",
   closed: "bg-slate-500/10 text-slate-700",
+  supplier_confirmed: "bg-indigo-500/10 text-indigo-700",
+  supplier_dispatched: "bg-violet-500/10 text-violet-700",
+  in_transit: "bg-amber-500/10 text-amber-700",
+  grn_completed: "bg-emerald-500/10 text-emerald-700",
 };
 
 interface DraftLine { variant_id: string; qty_ordered: number; unit_cost: number; }
@@ -50,6 +55,15 @@ interface DraftPO {
   expected_date: string;
   notes: string;
   lines: DraftLine[];
+  lr_number?: string;
+  transporter?: string;
+  vehicle_number?: string;
+  supplier_invoice_no?: string;
+  supplier_dispatch_date?: string;
+  arrival_date?: string;
+  freight_cost?: number;
+  pickup_cost?: number;
+  other_charges?: number;
 }
 
 function emptyDraft(): DraftPO {
@@ -58,6 +72,9 @@ function emptyDraft(): DraftPO {
     po_number: `PO-${yymm}-${Math.floor(Math.random() * 9000 + 1000)}`,
     supplier_id: "", status: "draft", expected_date: "", notes: "",
     lines: [],
+    lr_number: "", transporter: "", vehicle_number: "",
+    supplier_invoice_no: "", supplier_dispatch_date: "", arrival_date: "",
+    freight_cost: 0, pickup_cost: 0, other_charges: 0,
   };
 }
 
@@ -86,6 +103,15 @@ function POPage() {
       lines: po.lines.map((l) => ({
         variant_id: l.variant_id, qty_ordered: Number(l.qty_ordered), unit_cost: Number(l.unit_cost),
       })),
+      lr_number: (po as unknown as { lr_number?: string }).lr_number ?? "",
+      transporter: (po as unknown as { transporter?: string }).transporter ?? "",
+      vehicle_number: (po as unknown as { vehicle_number?: string }).vehicle_number ?? "",
+      supplier_invoice_no: (po as unknown as { supplier_invoice_no?: string }).supplier_invoice_no ?? "",
+      supplier_dispatch_date: (po as unknown as { supplier_dispatch_date?: string }).supplier_dispatch_date ?? "",
+      arrival_date: (po as unknown as { arrival_date?: string }).arrival_date ?? "",
+      freight_cost: Number((po as unknown as { freight_cost?: number }).freight_cost ?? 0),
+      pickup_cost: Number((po as unknown as { pickup_cost?: number }).pickup_cost ?? 0),
+      other_charges: Number((po as unknown as { other_charges?: number }).other_charges ?? 0),
     });
     setOpen(true);
   }
@@ -123,6 +149,15 @@ function POPage() {
       po_number: draft.po_number, supplier_id: draft.supplier_id, status: draft.status,
       expected_date: draft.expected_date || null, notes: draft.notes || null,
       subtotal, total: subtotal,
+      lr_number: draft.lr_number || null,
+      transporter: draft.transporter || null,
+      vehicle_number: draft.vehicle_number || null,
+      supplier_invoice_no: draft.supplier_invoice_no || null,
+      supplier_dispatch_date: draft.supplier_dispatch_date || null,
+      arrival_date: draft.arrival_date || null,
+      freight_cost: draft.freight_cost ?? 0,
+      pickup_cost: draft.pickup_cost ?? 0,
+      other_charges: draft.other_charges ?? 0,
     };
 
     let poId = draft.id;
@@ -234,8 +269,12 @@ function POPage() {
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {(["draft","submitted","approved","partial","received","cancelled","closed"] as POStatus[]).map((s) => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                        <SelectItem key={s} value={s}>{s.replace(/_/g, " ")}</SelectItem>
                       ))}
+                      <SelectItem value="supplier_confirmed">supplier confirmed</SelectItem>
+                      <SelectItem value="supplier_dispatched">supplier dispatched</SelectItem>
+                      <SelectItem value="in_transit">in transit</SelectItem>
+                      <SelectItem value="grn_completed">grn completed</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -252,6 +291,21 @@ function POPage() {
               <div>
                 <Label>Expected delivery</Label>
                 <Input type="date" value={draft.expected_date} onChange={(e) => setDraft({ ...draft, expected_date: e.target.value })} />
+              </div>
+
+              <div className="rounded-md border border-border p-3 space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Shipment & logistics</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Supplier invoice no.</Label><Input value={draft.supplier_invoice_no ?? ""} onChange={(e) => setDraft({ ...draft, supplier_invoice_no: e.target.value })} /></div>
+                  <div><Label>LR number</Label><Input value={draft.lr_number ?? ""} onChange={(e) => setDraft({ ...draft, lr_number: e.target.value })} /></div>
+                  <div><Label>Transporter</Label><Input value={draft.transporter ?? ""} onChange={(e) => setDraft({ ...draft, transporter: e.target.value })} /></div>
+                  <div><Label>Vehicle no.</Label><Input value={draft.vehicle_number ?? ""} onChange={(e) => setDraft({ ...draft, vehicle_number: e.target.value })} /></div>
+                  <div><Label>Supplier dispatch date</Label><Input type="date" value={draft.supplier_dispatch_date ?? ""} onChange={(e) => setDraft({ ...draft, supplier_dispatch_date: e.target.value })} /></div>
+                  <div><Label>Arrival date</Label><Input type="date" value={draft.arrival_date ?? ""} onChange={(e) => setDraft({ ...draft, arrival_date: e.target.value })} /></div>
+                  <div><Label>Freight ₹</Label><Input type="number" min={0} step="0.01" value={draft.freight_cost ?? 0} onChange={(e) => setDraft({ ...draft, freight_cost: Number(e.target.value) })} /></div>
+                  <div><Label>Pickup ₹</Label><Input type="number" min={0} step="0.01" value={draft.pickup_cost ?? 0} onChange={(e) => setDraft({ ...draft, pickup_cost: Number(e.target.value) })} /></div>
+                  <div><Label>Other charges ₹</Label><Input type="number" min={0} step="0.01" value={draft.other_charges ?? 0} onChange={(e) => setDraft({ ...draft, other_charges: Number(e.target.value) })} /></div>
+                </div>
               </div>
 
               <div className="space-y-2 pt-2">
@@ -288,6 +342,11 @@ function POPage() {
               </div>
 
               <div><Label>Notes</Label><Textarea rows={2} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></div>
+
+              <div className="space-y-2">
+                <Label>Documents (LR, invoice, e-way, etc.)</Label>
+                <PODocumentsPanel poId={draft.id ?? null} canManage={canManage} />
+              </div>
 
               <div className="flex justify-end gap-2 pt-4">
                 <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>

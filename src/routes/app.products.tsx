@@ -107,7 +107,6 @@ function ProductsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Code</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Category</TableHead>
@@ -121,7 +120,6 @@ function ProductsPage() {
                 const v0 = p.variants[0];
                 return (
                   <TableRow key={p.id} className="cursor-pointer" onClick={() => can("edit_item") && openEdit(p)}>
-                    <TableCell className="font-mono text-xs">{p.code}</TableCell>
                     <TableCell className="font-medium">{p.name}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={`ring-1 ${TYPE_TONE[p.product_type] ?? ""}`}>

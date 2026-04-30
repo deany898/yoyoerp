@@ -13,6 +13,8 @@ import {
   Boxes,
   Warehouse,
   Layers,
+  Send,
+  Users,
 } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
@@ -48,6 +50,13 @@ const navGroups: NavGroup[] = [
     items: [
       { label: "Suppliers", href: "/app/suppliers", icon: Truck },
       { label: "Purchase orders", href: "/app/purchase-orders", icon: ClipboardList },
+    ],
+  },
+  {
+    label: "Sales",
+    items: [
+      { label: "Customers", href: "/app/customers", icon: Users },
+      { label: "Dispatch orders", href: "/app/dispatch-orders", icon: Send },
     ],
   },
   {
