@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { ArrowLeft, Package, PlayCircle, CheckCircle2, XCircle, Send, Inbox } from "lucide-react";
+import { Hammer, PackageOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +9,8 @@ import { notify } from "@/lib/notify";
 import type { MORow, MORunRow, MOIssueRow, MOOutputRow, MOStatus } from "@/hooks/useMfgData";
 import { MaterialIssueDialog } from "@/components/manufacturing/MaterialIssueDialog";
 import { OutputReceiveDialog } from "@/components/manufacturing/OutputReceiveDialog";
+import { MouldingRunDialog } from "@/components/manufacturing/MouldingRunDialog";
+import { PackingRunDialog } from "@/components/manufacturing/PackingRunDialog";
 import { useConfirm } from "@/components/forms/ConfirmDialog";
 
 export const Route = createFileRoute("/app/manufacturing/$moId")({
@@ -50,6 +53,8 @@ function MoDetailPage() {
   const [issueOpen, setIssueOpen] = useState(false);
   const [issueComponent, setIssueComponent] = useState<BomLineRow | null>(null);
   const [outputOpen, setOutputOpen] = useState(false);
+  const [mouldOpen, setMouldOpen] = useState(false);
+  const [packOpen, setPackOpen] = useState(false);
   const confirm = useConfirm();
 
   const load = useCallback(async () => {
@@ -156,6 +161,12 @@ function MoDetailPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          {(mo.status === "released" || mo.status === "in_progress") && mo.variant && (
+            <>
+              <Button onClick={() => setMouldOpen(true)} variant="outline" className="gap-2"><Hammer className="h-4 w-4" /> Moulding run</Button>
+              <Button onClick={() => setPackOpen(true)} variant="outline" className="gap-2"><PackageOpen className="h-4 w-4" /> Packing run</Button>
+            </>
+          )}
           {mo.status === "draft" && (
             <Button onClick={() => setStatus("released")} className="gap-2"><Send className="h-4 w-4" /> Release</Button>
           )}
@@ -297,6 +308,29 @@ function MoDetailPage() {
         warehouseId={mo.warehouse_id}
         onPosted={load}
       />
+
+      {mo.variant && (
+        <>
+          <MouldingRunDialog
+            open={mouldOpen}
+            onOpenChange={setMouldOpen}
+            moId={mo.id}
+            baseVariantId={mo.variant.id}
+            baseVariantLabel={mo.variant.variant_name}
+            warehouseId={mo.warehouse_id}
+            onPosted={load}
+          />
+          <PackingRunDialog
+            open={packOpen}
+            onOpenChange={setPackOpen}
+            moId={mo.id}
+            baseVariantId={mo.variant.id}
+            baseVariantLabel={mo.variant.variant_name}
+            warehouseId={mo.warehouse_id}
+            onPosted={load}
+          />
+        </>
+      )}
 
       {/* Used vars (silence unused warnings) */}
       <span className="hidden">{runs.length}{navigate.length}</span>
