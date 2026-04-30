@@ -98,7 +98,7 @@ function MovementsPage() {
             filename="yoyo-movements"
           />
           <PermissionGate permission="log_movement">
-            <Button onClick={() => setFormOpen(true)} className="gap-1.5 bg-amber-600 hover:bg-amber-700 text-white">
+            <Button onClick={() => setFormOpen(true)} className="gap-1.5 bg-secondary text-secondary-foreground hover:bg-secondary/90">
               <Plus className="h-4 w-4" />
               Log Movement
             </Button>
