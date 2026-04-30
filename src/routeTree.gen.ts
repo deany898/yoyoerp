@@ -22,6 +22,7 @@ import { Route as AppProductsRouteImport } from './routes/app.products'
 import { Route as AppMovementsRouteImport } from './routes/app.movements'
 import { Route as AppInventoryRouteImport } from './routes/app.inventory'
 import { Route as AppHelpRouteImport } from './routes/app.help'
+import { Route as AppDispatchOrdersRouteImport } from './routes/app.dispatch-orders'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppCustomersRouteImport } from './routes/app.customers'
 import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
@@ -92,6 +93,11 @@ const AppHelpRoute = AppHelpRouteImport.update({
   path: '/help',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDispatchOrdersRoute = AppDispatchOrdersRouteImport.update({
+  id: '/dispatch-orders',
+  path: '/dispatch-orders',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/dashboard': typeof AppDashboardRoute
+  '/app/dispatch-orders': typeof AppDispatchOrdersRoute
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
   '/app/movements': typeof AppMovementsRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/dashboard': typeof AppDashboardRoute
+  '/app/dispatch-orders': typeof AppDispatchOrdersRoute
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
   '/app/movements': typeof AppMovementsRoute
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/dashboard': typeof AppDashboardRoute
+  '/app/dispatch-orders': typeof AppDispatchOrdersRoute
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
   '/app/movements': typeof AppMovementsRoute
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/customers'
     | '/app/dashboard'
+    | '/app/dispatch-orders'
     | '/app/help'
     | '/app/inventory'
     | '/app/movements'
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/customers'
     | '/app/dashboard'
+    | '/app/dispatch-orders'
     | '/app/help'
     | '/app/inventory'
     | '/app/movements'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/customers'
     | '/app/dashboard'
+    | '/app/dispatch-orders'
     | '/app/help'
     | '/app/inventory'
     | '/app/movements'
@@ -328,6 +340,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHelpRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/dispatch-orders': {
+      id: '/app/dispatch-orders'
+      path: '/dispatch-orders'
+      fullPath: '/app/dispatch-orders'
+      preLoaderRoute: typeof AppDispatchOrdersRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/dashboard': {
       id: '/app/dashboard'
       path: '/dashboard'
@@ -364,6 +383,7 @@ interface AppRouteChildren {
   AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppCustomersRoute: typeof AppCustomersRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppDispatchOrdersRoute: typeof AppDispatchOrdersRoute
   AppHelpRoute: typeof AppHelpRoute
   AppInventoryRoute: typeof AppInventoryRoute
   AppMovementsRoute: typeof AppMovementsRoute
@@ -381,6 +401,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAnalyticsRoute: AppAnalyticsRoute,
   AppCustomersRoute: AppCustomersRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppDispatchOrdersRoute: AppDispatchOrdersRoute,
   AppHelpRoute: AppHelpRoute,
   AppInventoryRoute: AppInventoryRoute,
   AppMovementsRoute: AppMovementsRoute,
