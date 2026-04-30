@@ -5,13 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SmartSelect } from "@/components/forms/SmartSelect";
 import { toast } from "sonner";
 import { ForecastSummary } from "@/components/insights/ForecastSummary";
 import { DemandForecastChart } from "@/components/insights/DemandForecastChart";
@@ -141,39 +135,48 @@ function AiInsightsPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        <Select value={urgency} onValueChange={(v) => setUrgency(v as UrgencyFilter)}>
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Urgency" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Urgency</SelectItem>
-            <SelectItem value="critical">Critical (&lt;7d)</SelectItem>
-            <SelectItem value="moderate">Moderate (7-14d)</SelectItem>
-            <SelectItem value="low">Low (&gt;14d)</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="w-[160px]">
+          <SmartSelect
+            options={[
+              { value: "all", label: "All Urgency" },
+              { value: "critical", label: "Critical (<7d)" },
+              { value: "moderate", label: "Moderate (7-14d)" },
+              { value: "low", label: "Low (>14d)" },
+            ]}
+            value={urgency}
+            onChange={(v) => setUrgency((v ?? "all") as UrgencyFilter)}
+            placeholder="Urgency"
+            searchPlaceholder="Search urgency…"
+          />
+        </div>
 
-        <Select value={confidence} onValueChange={(v) => setConfidence(v as ConfidenceFilter)}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Confidence" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Confidence</SelectItem>
-            <SelectItem value="high">High</SelectItem>
-            <SelectItem value="medium">Medium</SelectItem>
-            <SelectItem value="low">Low</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="w-[160px]">
+          <SmartSelect
+            options={[
+              { value: "all", label: "All Confidence" },
+              { value: "high", label: "High" },
+              { value: "medium", label: "Medium" },
+              { value: "low", label: "Low" },
+            ]}
+            value={confidence}
+            onChange={(v) => setConfidence((v ?? "all") as ConfidenceFilter)}
+            placeholder="Confidence"
+            searchPlaceholder="Search confidence…"
+          />
+        </div>
 
-        <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortBy)}>
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="stockout">Days to Stockout</SelectItem>
-            <SelectItem value="delta">Order delta</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="w-[170px]">
+          <SmartSelect
+            options={[
+              { value: "stockout", label: "Days to Stockout" },
+              { value: "delta", label: "Order delta" },
+            ]}
+            value={sortBy}
+            onChange={(v) => v && setSortBy(v as SortBy)}
+            placeholder="Sort by"
+            searchPlaceholder="Search sort…"
+          />
+        </div>
 
         <span className="text-xs text-muted-foreground ml-auto">
           {filtered.length} order{filtered.length !== 1 ? "s" : ""}
@@ -221,28 +224,34 @@ function AiInsightsPage() {
 
         {/* Anomaly filters */}
         <div className="flex flex-wrap items-center gap-3">
-          <Select value={anomSeverity} onValueChange={(v) => setAnomSeverity(v as AnomalySeverityFilter)}>
-            <SelectTrigger className="w-[130px]">
-              <SelectValue placeholder="Severity" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Severity</SelectItem>
-              <SelectItem value="critical">Critical</SelectItem>
-              <SelectItem value="warning">Warning</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="w-[150px]">
+            <SmartSelect
+              options={[
+                { value: "all", label: "All Severity" },
+                { value: "critical", label: "Critical" },
+                { value: "warning", label: "Warning" },
+              ]}
+              value={anomSeverity}
+              onChange={(v) => setAnomSeverity((v ?? "all") as AnomalySeverityFilter)}
+              placeholder="Severity"
+              searchPlaceholder="Search severity…"
+            />
+          </div>
 
-          <Select value={anomType} onValueChange={(v) => setAnomType(v as AnomalyTypeFilter)}>
-            <SelectTrigger className="w-[170px]">
-              <SelectValue placeholder="Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="quantity_spike">Quantity Spike</SelectItem>
-              <SelectItem value="frequent_adjustments">Frequent Adjustments</SelectItem>
-              <SelectItem value="unusual_timing">Unusual Timing</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="w-[190px]">
+            <SmartSelect
+              options={[
+                { value: "all", label: "All Types" },
+                { value: "quantity_spike", label: "Quantity Spike" },
+                { value: "frequent_adjustments", label: "Frequent Adjustments" },
+                { value: "unusual_timing", label: "Unusual Timing" },
+              ]}
+              value={anomType}
+              onChange={(v) => setAnomType((v ?? "all") as AnomalyTypeFilter)}
+              placeholder="Type"
+              searchPlaceholder="Search type…"
+            />
+          </div>
 
           <div className="flex items-center gap-2 ml-auto">
             <Switch
