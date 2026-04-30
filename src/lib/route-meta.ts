@@ -46,7 +46,7 @@ export function getBreadcrumbs(pathname: string): { label: string; href?: string
   const seen = new Set<string>();
   while (current && ROUTE_META[current] && !seen.has(current)) {
     seen.add(current);
-    const meta = ROUTE_META[current];
+    const meta: RouteMeta = ROUTE_META[current];
     crumbs.unshift({ label: meta.label, href: current });
     current = meta.parent;
   }
