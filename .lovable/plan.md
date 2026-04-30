@@ -1,156 +1,101 @@
-# Mobile-First PWA + Activate All Features
 
-The app is already UI-complete (all 28 PRDs ship in demo mode against an in-memory store). This plan does two things in parallel tracks:
+# YOYO ERP rebrand · Phase 1.5
 
-- **Track A (Phase 0):** Make Stackwise installable on phones with a mobile-first manifest.
-- **Track B (Phases 1–6):** Migrate each feature area from the in-memory `DemoStore` to the real Lovable Cloud database, behind a single data-source abstraction so demo mode keeps working.
+Apply YOYO branding across the app surface (logo, colors, names, manifest, PWA icons, marketing page) before resuming the data-migration phases. After this lands, Phase 2 (Catalog foundation) continues on the new visual identity.
 
-After every phase the app remains fully usable. Demo mode is preserved end-to-end.
+## 1 · Brand assets
 
----
+- Save the uploaded logo to the project at three resolutions:
+  - `src/assets/yoyo-logo.png` — the source mark (full color on white) for in-app use
+  - `public/icons/icon-192.png`, `icon-384.png`, `icon-512.png`, `icon-512-maskable.png`, `apple-touch-icon.png` — regenerate from the logo on a **white tile** with safe padding so the mark reads on iOS/Android home screens
+  - `public/favicon.ico` / `public/icons/favicon-32.png` — small favicon
+- Add a tiny `<Logo />` component (`src/components/brand/Logo.tsx`) that renders the mark + "YOYO ERP" wordmark, with `size` and `variant="dark" | "light"` props. Used everywhere the brand appears.
 
-## Track A · Phase 0: Mobile-first installable app (manifest-only)
+## 2 · Color system (deep industrial blue)
 
-Ship a Web App Manifest so users can "Add to Home Screen" on iOS and Android with a native-feeling launch (standalone window, branded icon, splash). **No service worker** — that avoids the preview-iframe staleness trap. Offline support can be added later as an opt-in phase.
-
-What gets built:
-- `public/manifest.webmanifest` with `display: standalone`, theme colors pulled from `src/styles.css` (matte ceramic / teal-emerald primary), `start_url: "/app/dashboard"`, scope `/`.
-- App icons (192, 384, 512, maskable 512) + Apple touch icon, generated from a Stackwise mark.
-- `<link rel="manifest">`, `apple-mobile-web-app-*` meta, `theme-color` meta wired into `src/routes/__root.tsx`.
-- Mobile-first audit pass on the auth page and dashboard for safe-area insets and tap targets ≥ 44px.
-
-Verified by: opening the published URL on a phone → "Add to Home Screen" → app launches standalone with branded icon and splash.
-
----
-
-## Track B · Backend migration overview
-
-A single data-access layer wraps both the existing `DemoStore` and a new Supabase-backed store. Components keep using the same hooks (`useInventoryData`, `useInventoryMutations`, etc.) — the hook picks the source based on `useDemo().isDemo`. This means migration is incremental, reversible, and never breaks demo mode.
+Rewrite the design tokens in `src/styles.css`. New palette derived from the logo:
 
 ```text
-Component
-   │
-   ▼
-useInventoryData / useInventoryMutations
-   │
-   ├── isDemo? ──► DemoStore (in-memory, unchanged)
-   │
-   └── else  ───► supabaseStore (new, per-feature)
+Primary       deep industrial blue   #1E3A8A   (logo "Y")
+Primary 600   richer blue for hover  #1E40AF
+Accent warm   industrial orange      #F97316   (logo arc)
+Accent cool   sky cyan               #38BDF8   (logo arc)
+Background    ERP neutral off-white  #F7F8FA
+Surface       pure white tile        #FFFFFF
+Border        cool neutral           #E2E8F0
+Foreground    near-black slate       #0F172A
+Muted text    slate-500              #64748B
+Sidebar bg    deep navy              #0B1733
+Success       emerald 600            #059669
+Warning       amber 500              #F59E0B
+Danger        red 600                #DC2626
 ```
 
----
+- Convert all values to oklch (matching the existing token format) and update both `:root` and `.dark` blocks.
+- Remap chart colors to a blue-led ramp with orange + cyan as secondary accents.
+- Update sidebar tokens to deep navy `#0B1733` (currently dark teal) so the dark left rail reads as ERP, not consumer SaaS.
+- Update the `<meta name="theme-color">` and `manifest.webmanifest` `theme_color` to `#1E3A8A`, `background_color` to `#FFFFFF` (white tile).
+- Update the comment block header in `styles.css` from "Stackwise Design System" to "YOYO ERP Design System".
 
-## Phase 1 · Identity, roles, and a real account
+## 3 · Name + copy swap
 
-Goal: real users can sign in, have a role, and see correct UI everywhere.
+Replace every user-visible "Stackwise" with "YOYO ERP" (or "YOYO" alone where space is tight). Files to update:
 
-- Promote-first-user-to-admin bootstrap (one-time): a server function that grants `admin` role to the very first signup so you have a way in.
-- Wire `useRole()` to read from the new `user_roles` table (already created) when not in demo mode; keep demo role-switcher for demo only.
-- Real-auth user-management page (PRD-23): list users from `auth.users` via a server function, change roles, deactivate. Admin-only.
-- Add a "Workspaces" concept? **No** — single-tenant per project for now (simpler RLS, can add multi-tenant later).
+- `public/manifest.webmanifest` — `name`, `short_name`, `description`
+- `src/routes/__root.tsx` — `<title>`, `apple-mobile-web-app-title`, all OG/twitter tags, description
+- `src/routes/index.tsx` — landing page hero, nav brand, meta, footer
+- `src/routes/auth.tsx` — page title, description, header wordmark
+- `src/components/layout/Sidebar.tsx` — sidebar wordmark (use `<Logo variant="light" />`)
+- `src/components/layout/Header.tsx` — no copy change, but ensure mobile sheet shows the new logo
+- `src/components/onboarding/OnboardingTour.tsx`, `src/hooks/useOnboarding.ts`, `src/lib/faq-data.ts`, `src/components/settings/SystemSettings.tsx`, `src/components/purchase-orders/POPrintView.tsx`, `src/lib/demo/seed-notifications.ts`, `src/lib/demo-store.ts` — copy + tour text + PO header
+- All `src/routes/app.*.tsx` page heads (titles like "Catalog · Stackwise" → "Catalog · YOYO ERP")
 
----
+Docs in `docs/PRD-*.json` and `docs/prd-inventory.json` are reference material — leave them unless you also want them rebranded (call it out and skip by default).
 
-## Phase 2 · Catalog foundation (core data)
+## 4 · Landing page (public surface)
 
-Goal: real items, categories, suppliers, locations persist and respect RLS.
+The landing page is the future "public + ERP consistency" anchor. Rework it lightly so it reads as enterprise ERP, not consumer inventory app:
 
-Tables (using your existing `docs/migrations/` schema as reference):
-- `categories`, `suppliers`, `locations` (with parent-child for location tree)
-- `items` (SKU, name, qty, reorder point, category/supplier/location FKs, custom_fields JSONB)
-- `custom_field_definitions`
+- Replace hero badge "Inventory Command Center" → "Industrial ERP Platform"
+- Hero headline stays product-focused but uses the new deep-blue gradient + orange CTA
+- Nav: render `<Logo variant="dark" />` left, "Sign in" + primary "Open ERP" right
+- Trust strip under hero: ERP-style ("Built for operations · Role-based · Audit-ready · Mobile-first")
+- Footer: "© YOYO ERP" with same logo, no Lovable mention
+- Keep the existing feature tabs and 3D visuals; only swap colors and copy
 
-RLS model: signed-in users in any role can read; only admin/manager can write.
+## 5 · App chrome polish (mobile-first ERP)
 
-UI rewires (PRDs 07, 08, 10, 14, 22):
-- Catalog list, item detail sheet, item form, bulk actions, custom-fields tab
-- Suppliers table + detail + form
-- Locations tree + transfer
-- Settings → Categories, Custom Fields, Reorder Defaults
+- Sidebar: deep navy `#0B1733` background, white logo tile at the top (logo on white rounded square, 40px), section labels in slate-400 uppercase, active item with orange left-bar accent.
+- Header: white surface, 1px slate border, primary buttons in deep blue, secondary in white-with-border. Quick actions (scan, +) keep icon-only on mobile.
+- Bottom nav (mobile): white with deep-blue active icon and a thin orange underline on the active tab.
+- Buttons: primary = deep blue, "CTA / warning" = orange, destructive = red. Update the variant defaults in `src/components/ui/button.tsx` only if needed (most should pick up the new `--primary` token automatically).
+- Cards: white surface, slate-200 border, 8px radius (slightly softer than the matte ceramic 4-6px) for a calmer ERP feel.
 
-Seed: optional "Load sample data" button on first sign-in (admin-only) that inserts the same seed data the demo uses.
+## 6 · Memory + design guidelines update
 
----
+- Rewrite `mem://style/aesthetic` with the new palette + "Premium industrial SaaS · ERP-grade".
+- Update `mem://index.md` Core lines: brand → "YOYO ERP", colors → "Deep industrial blue + orange/cyan accents".
+- Update `docs/design-guidelines.md` so the next iteration uses the new tokens as the source of truth.
 
-## Phase 3 · Stock movements, requests, and POs
+## 7 · Verification
 
-Goal: the operational workflows write to real tables.
+After implementing, screenshot:
+1. Landing page (desktop + 390px mobile)
+2. `/auth` page
+3. `/app/dashboard` (signed-in, with sidebar)
+4. Mobile bottom nav
+5. PWA manifest preview (DevTools → Application)
 
-Tables:
-- `stock_movements` (received / shipped / adjusted / transferred, with FK to item, location, user)
-- `purchase_orders` + `purchase_order_lines` (status enum: draft / sent / received / closed)
-- `inventory_requests` + `inventory_request_lines` (status enum, approval audit fields)
+Confirm: no remaining "Stackwise" text in user-visible UI, theme-color matches the new blue, the white logo tile renders as the PWA icon.
 
-UI rewires (PRDs 09, 11, 12, 13):
-- Movements page + filters + new-movement sheet
-- POs list, form, detail, status actions, receive-shipment flow, print view
-- Requests list, form, approval actions, status stepper
+## 8 · Then resume Phase 2
 
-Business rules in DB:
-- Trigger: when a PO line is received, insert a corresponding `stock_movement` and bump `items.current_stock`.
-- Trigger: when a request is fulfilled, insert a `shipped` movement.
-- Constraint: prevent negative stock on `shipped` adjustments.
-
----
-
-## Phase 4 · Notifications + dashboard + analytics
-
-Goal: real-time alerts and reporting against live data.
-
-- `notifications` table + RLS (user can only see their own); Supabase Realtime subscription powers the bell.
-- `notification_preferences` per user.
-- A scheduled `pg_cron` job (every 15 min) that runs the existing `useStockAlertGenerator` logic in SQL and inserts low-stock notifications for users who opted in.
-- Dashboard metrics, charts, recent activity all read from real tables.
-- Analytics pages (PRDs 24–25): supplier scorecards, cost trends, turnover — implemented as SQL views or `createServerFn` aggregates.
+Once the rebrand is approved and merged, immediately continue with **Phase 2 — Catalog foundation** as defined in `.lovable/plan.md` (categories, suppliers, locations, items, custom fields with RLS + the data-source abstraction). No scope change — just a different paint job underneath.
 
 ---
 
-## Phase 5 · AI features (real backend)
+### Technical notes
 
-Goal: AI insights run via Lovable AI Gateway, not mock data.
-
-- Reorder suggestions (PRD-19): server function that pulls real movement history and asks `google/gemini-2.5-flash` for forecasts; cache results in a `reorder_forecasts` table with a 24h TTL.
-- Anomaly detection (PRD-20): same pattern, surfaces in the dashboard anomaly section.
-- NL search (PRD-20): server function translates natural language → filter object using Gemini, then runs the structured query.
-
-No API key needed — uses the built-in `LOVABLE_API_KEY` already in your secrets.
-
----
-
-## Phase 6 · CSV / barcode / command palette / onboarding (polish)
-
-Goal: utility features connect to real data.
-
-- CSV export pulls from real tables; CSV import opens a server function that validates + bulk-inserts (PRD-16).
-- Barcode generation/print already client-side — no DB change, but quick-entry mode now writes a real movement.
-- Command palette (PRD-17): search hits real items via a `createServerFn` with `ilike` query.
-- Onboarding tour (PRD-28): unchanged, but the "Try the demo" CTA on the auth page already bridges new users into demo mode.
-
----
-
-## Cross-cutting items
-
-- **Email confirmation:** currently ON (default secure setting). For phase 1, recommend keeping it on; if you want frictionless testing, we can disable it.
-- **Storage:** add a `storage` bucket for item photos and PO attachments in Phase 2 (RLS: only signed-in users can upload to their org's prefix).
-- **Removing demo mode later:** out of scope. Demo mode stays as the marketing surface.
-
----
-
-## Technical details (for reference)
-
-- Data-access pattern: each feature gets a `lib/data/<feature>.ts` exporting the same shape, with `getStore(isDemo)` returning the right backend.
-- All new tables use the existing `update_updated_at_column` trigger and `has_role(auth.uid(), …)` for write policies.
-- Server functions live in `src/server/<feature>.functions.ts`, server-only helpers in `src/server/<feature>.server.ts`.
-- Realtime: per `docs/migrations/`, add tables to `supabase_realtime` publication only where the UI subscribes (notifications, stock movements).
-- PWA: manifest-only in Phase 0; if/when a service worker is added later, it must be guarded by `isPreviewHost || isInIframe` and use `NetworkFirst` for HTML.
-
----
-
-## Suggested cadence
-
-Phase 0 + Phase 1 in the next message (small, high-value, unblocks everything). Then one phase per message so you can review and test each before moving on. Total: ~7 implementation messages.
-
-Two questions before I start (the rest I'll just decide based on your existing patterns):
-
-1. **PWA scope:** manifest-only (recommended) or full PWA with offline support (complex, risk of stale previews)?
-2. **Email confirmation:** keep ON (secure default) or turn OFF so you can test signup → app instantly?
+- The uploaded logo will be copied via `code--copy user-uploads://LOGO.png src/assets/yoyo-logo.png` and PWA icons regenerated from it onto a white background using `nix run nixpkgs#imagemagick`.
+- All color changes flow through CSS variables in `src/styles.css`; component code does not need per-element edits because Tailwind tokens (`bg-primary`, `text-primary`, etc.) read those variables.
+- No database changes in this step. No new dependencies.
