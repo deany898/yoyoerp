@@ -65,9 +65,9 @@ function SuppliersPage() {
       lead_time_days: Number(editing.lead_time_days) || 7,
       notes: editing.notes || null,
       is_active: editing.is_active ?? true,
-      category: ((editing as SupplierRow).category as VendorCategory) || "other",
-      credit_days: Number((editing as SupplierRow & { credit_days?: number }).credit_days) || 0,
-      opening_balance: Number((editing as SupplierRow & { opening_balance?: number }).opening_balance) || 0,
+      category: (editing.category as VendorCategory) || "other",
+      credit_days: Number(editing.credit_days) || 0,
+      opening_balance: Number(editing.opening_balance) || 0,
     };
     const op = editing.id
       ? supabase.from("suppliers").update(payload).eq("id", editing.id)
@@ -89,7 +89,7 @@ function SuppliersPage() {
 
   const filtered = categoryFilter === "all"
     ? suppliers
-    : suppliers.filter((s) => (s as SupplierRow & { category?: VendorCategory }).category === categoryFilter);
+    : suppliers.filter((s) => s.category === categoryFilter);
 
   return (
     <div className="mx-auto max-w-[1400px] space-y-6">
@@ -152,21 +152,19 @@ function SuppliersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((s) => {
-                const sx = s as SupplierRow & { category?: VendorCategory; credit_days?: number };
-                return (
+              {filtered.map((s) => (
                 <TableRow key={s.id} className="cursor-pointer hover:bg-muted/30" onClick={() => setViewing(s)}>
                   <TableCell className="font-mono text-xs">{s.code}</TableCell>
                   <TableCell className="font-medium">{s.name}</TableCell>
                   <TableCell>
                     <Badge variant="secondary" className="text-xs">
-                      {sx.category ? categoryLabel(sx.category) : "Other"}
+                      {s.category ? categoryLabel(s.category) : "Other"}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">{s.contact_name || "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{s.phone || "—"}</TableCell>
                   <TableCell className="font-mono">{s.lead_time_days}d</TableCell>
-                  <TableCell className="font-mono">{sx.credit_days ?? 0}d</TableCell>
+                  <TableCell className="font-mono">{s.credit_days ?? 0}d</TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <div className="flex justify-end gap-1">
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setViewing(s)} title="Vendor 360">
@@ -183,8 +181,7 @@ function SuppliersPage() {
                     </div>
                   </TableCell>
                 </TableRow>
-                );
-              })}
+              ))}
             </TableBody>
           </Table>
         </div>
