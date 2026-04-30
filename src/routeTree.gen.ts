@@ -23,6 +23,7 @@ import { Route as AppProductsRouteImport } from './routes/app.products'
 import { Route as AppMovementsRouteImport } from './routes/app.movements'
 import { Route as AppInventoryRouteImport } from './routes/app.inventory'
 import { Route as AppHelpRouteImport } from './routes/app.help'
+import { Route as AppGoodsReturnsRouteImport } from './routes/app.goods-returns'
 import { Route as AppDispatchOrdersRouteImport } from './routes/app.dispatch-orders'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppCustomersRouteImport } from './routes/app.customers'
@@ -99,6 +100,11 @@ const AppHelpRoute = AppHelpRouteImport.update({
   path: '/help',
   getParentRoute: () => AppRoute,
 } as any)
+const AppGoodsReturnsRoute = AppGoodsReturnsRouteImport.update({
+  id: '/goods-returns',
+  path: '/goods-returns',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDispatchOrdersRoute = AppDispatchOrdersRouteImport.update({
   id: '/dispatch-orders',
   path: '/dispatch-orders',
@@ -134,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/app/customers': typeof AppCustomersRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/dispatch-orders': typeof AppDispatchOrdersRoute
+  '/app/goods-returns': typeof AppGoodsReturnsRoute
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
   '/app/movements': typeof AppMovementsRoute
@@ -154,6 +161,7 @@ export interface FileRoutesByTo {
   '/app/customers': typeof AppCustomersRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/dispatch-orders': typeof AppDispatchOrdersRoute
+  '/app/goods-returns': typeof AppGoodsReturnsRoute
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
   '/app/movements': typeof AppMovementsRoute
@@ -176,6 +184,7 @@ export interface FileRoutesById {
   '/app/customers': typeof AppCustomersRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/dispatch-orders': typeof AppDispatchOrdersRoute
+  '/app/goods-returns': typeof AppGoodsReturnsRoute
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
   '/app/movements': typeof AppMovementsRoute
@@ -199,6 +208,7 @@ export interface FileRouteTypes {
     | '/app/customers'
     | '/app/dashboard'
     | '/app/dispatch-orders'
+    | '/app/goods-returns'
     | '/app/help'
     | '/app/inventory'
     | '/app/movements'
@@ -219,6 +229,7 @@ export interface FileRouteTypes {
     | '/app/customers'
     | '/app/dashboard'
     | '/app/dispatch-orders'
+    | '/app/goods-returns'
     | '/app/help'
     | '/app/inventory'
     | '/app/movements'
@@ -240,6 +251,7 @@ export interface FileRouteTypes {
     | '/app/customers'
     | '/app/dashboard'
     | '/app/dispatch-orders'
+    | '/app/goods-returns'
     | '/app/help'
     | '/app/inventory'
     | '/app/movements'
@@ -359,6 +371,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHelpRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/goods-returns': {
+      id: '/app/goods-returns'
+      path: '/goods-returns'
+      fullPath: '/app/goods-returns'
+      preLoaderRoute: typeof AppGoodsReturnsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/dispatch-orders': {
       id: '/app/dispatch-orders'
       path: '/dispatch-orders'
@@ -403,6 +422,7 @@ interface AppRouteChildren {
   AppCustomersRoute: typeof AppCustomersRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDispatchOrdersRoute: typeof AppDispatchOrdersRoute
+  AppGoodsReturnsRoute: typeof AppGoodsReturnsRoute
   AppHelpRoute: typeof AppHelpRoute
   AppInventoryRoute: typeof AppInventoryRoute
   AppMovementsRoute: typeof AppMovementsRoute
@@ -422,6 +442,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCustomersRoute: AppCustomersRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDispatchOrdersRoute: AppDispatchOrdersRoute,
+  AppGoodsReturnsRoute: AppGoodsReturnsRoute,
   AppHelpRoute: AppHelpRoute,
   AppInventoryRoute: AppInventoryRoute,
   AppMovementsRoute: AppMovementsRoute,
