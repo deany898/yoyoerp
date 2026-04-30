@@ -108,8 +108,8 @@ function ProductStagesPanel() {
     const ok = await confirm({
       title: "Delete this stage?",
       description: `Stage "${row.stage_name}" will be removed from this product.`,
-      confirmText: "Delete",
-      variant: "danger",
+      confirmLabel: "Delete",
+      destructive: true,
     });
     if (!ok) return;
     const { error } = await supabase.from("production_stages").delete().eq("id", row.id);
