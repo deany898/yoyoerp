@@ -18,6 +18,7 @@ import {
   Undo2,
   LogOut,
 } from "lucide-react";
+import { Factory, Cpu, Hammer, HardHat, Wrench } from "lucide-react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/hooks/useRole";
@@ -73,6 +74,16 @@ const navGroups: NavGroup[] = [
       { label: "Customers", href: "/app/customers", icon: Users },
       { label: "Dispatch orders", href: "/app/dispatch-orders", icon: Send },
       { label: "Goods returns", href: "/app/goods-returns", icon: Undo2 },
+    ],
+  },
+  {
+    label: "Manufacturing",
+    items: [
+      { label: "Manufacturing orders", href: "/app/manufacturing", icon: Factory },
+      { label: "Stations", href: "/app/stations", icon: Wrench },
+      { label: "Machines", href: "/app/machines", icon: Cpu },
+      { label: "Moulds", href: "/app/moulds", icon: Hammer },
+      { label: "Workers", href: "/app/workers", icon: HardHat },
     ],
   },
   {
