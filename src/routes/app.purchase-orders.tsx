@@ -24,6 +24,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { PODocumentsPanel } from "@/components/purchase-orders/PODocumentsPanel";
 
 export const Route = createFileRoute("/app/purchase-orders")({
   component: POPage,
@@ -54,6 +55,15 @@ interface DraftPO {
   expected_date: string;
   notes: string;
   lines: DraftLine[];
+  lr_number?: string;
+  transporter?: string;
+  vehicle_number?: string;
+  supplier_invoice_no?: string;
+  supplier_dispatch_date?: string;
+  arrival_date?: string;
+  freight_cost?: number;
+  pickup_cost?: number;
+  other_charges?: number;
 }
 
 function emptyDraft(): DraftPO {
@@ -62,6 +72,9 @@ function emptyDraft(): DraftPO {
     po_number: `PO-${yymm}-${Math.floor(Math.random() * 9000 + 1000)}`,
     supplier_id: "", status: "draft", expected_date: "", notes: "",
     lines: [],
+    lr_number: "", transporter: "", vehicle_number: "",
+    supplier_invoice_no: "", supplier_dispatch_date: "", arrival_date: "",
+    freight_cost: 0, pickup_cost: 0, other_charges: 0,
   };
 }
 
@@ -90,6 +103,15 @@ function POPage() {
       lines: po.lines.map((l) => ({
         variant_id: l.variant_id, qty_ordered: Number(l.qty_ordered), unit_cost: Number(l.unit_cost),
       })),
+      lr_number: (po as unknown as { lr_number?: string }).lr_number ?? "",
+      transporter: (po as unknown as { transporter?: string }).transporter ?? "",
+      vehicle_number: (po as unknown as { vehicle_number?: string }).vehicle_number ?? "",
+      supplier_invoice_no: (po as unknown as { supplier_invoice_no?: string }).supplier_invoice_no ?? "",
+      supplier_dispatch_date: (po as unknown as { supplier_dispatch_date?: string }).supplier_dispatch_date ?? "",
+      arrival_date: (po as unknown as { arrival_date?: string }).arrival_date ?? "",
+      freight_cost: Number((po as unknown as { freight_cost?: number }).freight_cost ?? 0),
+      pickup_cost: Number((po as unknown as { pickup_cost?: number }).pickup_cost ?? 0),
+      other_charges: Number((po as unknown as { other_charges?: number }).other_charges ?? 0),
     });
     setOpen(true);
   }
@@ -127,6 +149,15 @@ function POPage() {
       po_number: draft.po_number, supplier_id: draft.supplier_id, status: draft.status,
       expected_date: draft.expected_date || null, notes: draft.notes || null,
       subtotal, total: subtotal,
+      lr_number: draft.lr_number || null,
+      transporter: draft.transporter || null,
+      vehicle_number: draft.vehicle_number || null,
+      supplier_invoice_no: draft.supplier_invoice_no || null,
+      supplier_dispatch_date: draft.supplier_dispatch_date || null,
+      arrival_date: draft.arrival_date || null,
+      freight_cost: draft.freight_cost ?? 0,
+      pickup_cost: draft.pickup_cost ?? 0,
+      other_charges: draft.other_charges ?? 0,
     };
 
     let poId = draft.id;
