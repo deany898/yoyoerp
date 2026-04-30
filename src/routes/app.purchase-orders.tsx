@@ -293,6 +293,21 @@ function POPage() {
                 <Input type="date" value={draft.expected_date} onChange={(e) => setDraft({ ...draft, expected_date: e.target.value })} />
               </div>
 
+              <div className="rounded-md border border-border p-3 space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Shipment & logistics</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Supplier invoice no.</Label><Input value={draft.supplier_invoice_no ?? ""} onChange={(e) => setDraft({ ...draft, supplier_invoice_no: e.target.value })} /></div>
+                  <div><Label>LR number</Label><Input value={draft.lr_number ?? ""} onChange={(e) => setDraft({ ...draft, lr_number: e.target.value })} /></div>
+                  <div><Label>Transporter</Label><Input value={draft.transporter ?? ""} onChange={(e) => setDraft({ ...draft, transporter: e.target.value })} /></div>
+                  <div><Label>Vehicle no.</Label><Input value={draft.vehicle_number ?? ""} onChange={(e) => setDraft({ ...draft, vehicle_number: e.target.value })} /></div>
+                  <div><Label>Supplier dispatch date</Label><Input type="date" value={draft.supplier_dispatch_date ?? ""} onChange={(e) => setDraft({ ...draft, supplier_dispatch_date: e.target.value })} /></div>
+                  <div><Label>Arrival date</Label><Input type="date" value={draft.arrival_date ?? ""} onChange={(e) => setDraft({ ...draft, arrival_date: e.target.value })} /></div>
+                  <div><Label>Freight ₹</Label><Input type="number" min={0} step="0.01" value={draft.freight_cost ?? 0} onChange={(e) => setDraft({ ...draft, freight_cost: Number(e.target.value) })} /></div>
+                  <div><Label>Pickup ₹</Label><Input type="number" min={0} step="0.01" value={draft.pickup_cost ?? 0} onChange={(e) => setDraft({ ...draft, pickup_cost: Number(e.target.value) })} /></div>
+                  <div><Label>Other charges ₹</Label><Input type="number" min={0} step="0.01" value={draft.other_charges ?? 0} onChange={(e) => setDraft({ ...draft, other_charges: Number(e.target.value) })} /></div>
+                </div>
+              </div>
+
               <div className="space-y-2 pt-2">
                 <div className="flex items-center justify-between">
                   <Label>Line items</Label>
@@ -327,6 +342,11 @@ function POPage() {
               </div>
 
               <div><Label>Notes</Label><Textarea rows={2} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></div>
+
+              <div className="space-y-2">
+                <Label>Documents (LR, invoice, e-way, etc.)</Label>
+                <PODocumentsPanel poId={draft.id ?? null} canManage={canManage} />
+              </div>
 
               <div className="flex justify-end gap-2 pt-4">
                 <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
