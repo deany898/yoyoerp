@@ -38,6 +38,10 @@ const STATUS_COLORS: Record<POStatus, string> = {
   received: "bg-emerald-500/10 text-emerald-700",
   cancelled: "bg-destructive/10 text-destructive",
   closed: "bg-slate-500/10 text-slate-700",
+  supplier_confirmed: "bg-indigo-500/10 text-indigo-700",
+  supplier_dispatched: "bg-violet-500/10 text-violet-700",
+  in_transit: "bg-amber-500/10 text-amber-700",
+  grn_completed: "bg-emerald-500/10 text-emerald-700",
 };
 
 interface DraftLine { variant_id: string; qty_ordered: number; unit_cost: number; }
@@ -234,8 +238,12 @@ function POPage() {
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {(["draft","submitted","approved","partial","received","cancelled","closed"] as POStatus[]).map((s) => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                        <SelectItem key={s} value={s}>{s.replace(/_/g, " ")}</SelectItem>
                       ))}
+                      <SelectItem value="supplier_confirmed">supplier confirmed</SelectItem>
+                      <SelectItem value="supplier_dispatched">supplier dispatched</SelectItem>
+                      <SelectItem value="in_transit">in transit</SelectItem>
+                      <SelectItem value="grn_completed">grn completed</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
