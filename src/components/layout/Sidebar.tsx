@@ -1,12 +1,10 @@
 import { useState } from "react";
 import {
   LayoutDashboard,
-  Package,
   ArrowLeftRight,
   Truck,
   ClipboardList,
   Inbox,
-  MapPin,
   BarChart3,
   Sparkles,
   Settings,

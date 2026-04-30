@@ -10,6 +10,7 @@ const COMMERCIAL: UserRoleType[] = ["admin", "manager", "sales"];
 const ROUTE_ACCESS: Record<string, UserRoleType[]> = {
   "/app/dashboard": ALL_STAFF,
   // ERP master data
+  "/app/products": ALL_STAFF,
   "/app/warehouses": ALL_STAFF,
   "/app/requests": ALL_STAFF,
   "/app/movements": OPS,
