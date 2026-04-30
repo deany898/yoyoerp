@@ -148,6 +148,17 @@ export function Header() {
 
       <NotificationBell onClick={() => setNotifOpen(true)} />
 
+      <Button
+        size="icon"
+        variant="ghost"
+        className="shrink-0"
+        aria-label={isDemo ? "Exit demo" : "Sign out"}
+        title={isDemo ? "Exit demo" : "Sign out"}
+        onClick={handleExit}
+      >
+        <LogOut className="h-4 w-4" />
+      </Button>
+
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button type="button" className="flex items-center gap-1.5 rounded-full pl-1 pr-2 py-1 hover:bg-muted transition-colors" aria-label="User menu">
