@@ -38,7 +38,7 @@ export function generateStockAlerts(store: DemoStore): void {
         ? `${item.name} (${item.sku}) has reached zero stock. Reorder immediately.`
         : `${item.name} (${item.sku}) stock is at ${item.currentStock} units, below reorder point of ${item.reorderPoint}.`,
       isRead: false,
-      link: `/app/catalog?item=${item.id}`,
+      link: `/app/products?item=${item.id}`,
       referenceId: item.id,
       createdAt: new Date().toISOString(),
     };

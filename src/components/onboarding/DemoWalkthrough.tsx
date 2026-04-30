@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const STEPS = [
-  { label: "Browse the Catalog", description: "Explore your inventory items, search, and view details.", route: "/app/catalog" },
+  { label: "Browse the Catalog", description: "Explore your inventory items, search, and view details.", route: "/app/products" },
   { label: "Log a Movement", description: "Record stock received, shipped, or adjusted.", route: "/app/movements" },
   { label: "Check Low Stock", description: "See items needing attention on the dashboard.", route: "/app/dashboard" },
   { label: "Create a Purchase Order", description: "Restock by creating a new PO from suppliers.", route: "/app/purchase-orders" },

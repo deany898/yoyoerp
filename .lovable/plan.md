@@ -81,3 +81,17 @@ Transform the inventory app into a complete industrial ERP for Yoyo Industries. 
 2. Create Phase 1A tables with full RLS using `has_role`
 3. Seed: default warehouse "Main Plant" with zones (RM, WIP, FG, Packaging, Dispatch)
 4. UI screens land NEXT turn (1A.2)
+
+---
+
+## Phase 1A.3 status · DONE
+- Legacy `/app/catalog` and `/app/locations` removed; redirects + nav cleaned
+- `/app/inventory` live: per-variant per-zone stock, value, reorder flags, search + warehouse/zone filters
+- `StockMovementSheet`: receipt / production_output / consumption / dispatch / transfer / adjustment / scrap / return / opening_balance — writes `stock_movements` + updates `inventory_stock` + `audit_log`
+- Bottom nav now: Dashboard · Products · Inventory · Warehouses · More
+
+## NEXT · Phase 1B kickoff (Procurement)
+- Schema: `vendors`, `vendor_price_history`, `purchase_orders`, `po_lines`, `goods_receipt_notes`, `grn_lines`
+- Replace legacy demo Suppliers + Purchase Orders with Cloud-backed versions
+- GRN posts movements via `postMovement(reason='receipt')` and recomputes `avg_cost`
+- Move stock-mutation logic from client into a Postgres function for atomicity

@@ -40,7 +40,7 @@ export function NeedsAttention() {
           <div className="mb-2 flex items-center justify-between">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Low stock</p>
             {lowStockItems.length > 5 && (
-              <Link to="/app/catalog" className="text-xs font-medium text-primary hover:underline">
+              <Link to="/app/products" className="text-xs font-medium text-primary hover:underline">
                 View all ({lowStockItems.length})
               </Link>
             )}

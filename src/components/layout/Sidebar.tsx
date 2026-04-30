@@ -1,12 +1,10 @@
 import { useState } from "react";
 import {
   LayoutDashboard,
-  Package,
   ArrowLeftRight,
   Truck,
   ClipboardList,
   Inbox,
-  MapPin,
   BarChart3,
   Sparkles,
   Settings,
@@ -14,6 +12,7 @@ import {
   HelpCircle,
   Boxes,
   Warehouse,
+  Layers,
 } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
@@ -41,9 +40,8 @@ const navGroups: NavGroup[] = [
       { label: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard },
       { label: "Products", href: "/app/products", icon: Boxes },
       { label: "Warehouses", href: "/app/warehouses", icon: Warehouse },
-      { label: "Catalog (legacy)", href: "/app/catalog", icon: Package },
+      { label: "Inventory", href: "/app/inventory", icon: Layers },
       { label: "Movements", href: "/app/movements", icon: ArrowLeftRight, permKey: "canLogMovements" },
-      { label: "Locations (legacy)", href: "/app/locations", icon: MapPin },
     ],
   },
   {

@@ -12,10 +12,7 @@ const ROUTE_ACCESS: Record<string, UserRoleType[]> = {
   // ERP master data
   "/app/products": ALL_STAFF,
   "/app/warehouses": ALL_STAFF,
-  // Legacy modules
-  "/app/catalog": ALL_STAFF,
   "/app/requests": ALL_STAFF,
-  "/app/locations": ALL_STAFF,
   "/app/movements": OPS,
   "/app/suppliers": COMMERCIAL,
   "/app/purchase-orders": COMMERCIAL,

@@ -118,7 +118,7 @@ export function MovementsTable({ movements, itemNameMap, locationNameMap }: Move
                     <div className="pt-2 border-t border-border mt-2 space-y-1">
                       {m.reference && <div><span className="text-muted-foreground">Ref:</span> {m.reference}</div>}
                       {m.notes && <div><span className="text-muted-foreground">Note:</span> {m.notes}</div>}
-                      <a href={`/app/catalog?item=${m.itemId}`} className="inline-flex items-center gap-1 text-primary hover:underline text-xs" onClick={(e) => e.stopPropagation()}>
+                      <a href={`/app/products?item=${m.itemId}`} className="inline-flex items-center gap-1 text-primary hover:underline text-xs" onClick={(e) => e.stopPropagation()}>
                         <ExternalLink className="h-3 w-3" /> View Item
                       </a>
                     </div>
@@ -227,7 +227,7 @@ function MovementDetail({ movement, itemName, fromLocation, toLocation }: Moveme
         <div><span className="font-medium text-foreground">Transfer: </span><span className="text-muted-foreground">{fromLocation ?? "—"} → {toLocation ?? "—"}</span></div>
       )}
       <div>
-        <a href={`/app/catalog?item=${movement.itemId}`} className="inline-flex items-center gap-1 text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
+        <a href={`/app/products?item=${movement.itemId}`} className="inline-flex items-center gap-1 text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
           <ExternalLink className="h-3 w-3" />View {itemName}
         </a>
       </div>

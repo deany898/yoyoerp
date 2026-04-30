@@ -13,13 +13,13 @@ interface ShortcutDef {
 export const SHORTCUTS: ShortcutDef[] = [
   // Navigation: G then …
   { keys: ["g", "d"], label: "Go to Dashboard", action: (n) => n({ to: "/app/dashboard" }), category: "navigate" },
-  { keys: ["g", "c"], label: "Go to Catalog", action: (n) => n({ to: "/app/catalog", search: {} }), category: "navigate" },
+  { keys: ["g", "c"], label: "Go to Catalog", action: (n) => n({ to: "/app/products", search: {} }), category: "navigate" },
   { keys: ["g", "m"], label: "Go to Movements", action: (n) => n({ to: "/app/movements", search: { item: undefined } }), category: "navigate" },
   { keys: ["g", "s"], label: "Go to Suppliers", action: (n) => n({ to: "/app/suppliers" }), category: "navigate" },
   { keys: ["g", "p"], label: "Go to Purchase Orders", action: (n) => n({ to: "/app/purchase-orders", search: {} }), category: "navigate" },
   { keys: ["g", "r"], label: "Go to Requests", action: (n) => n({ to: "/app/requests", search: { request: undefined } }), category: "navigate" },
   // Create: N then …
-  { keys: ["n", "i"], label: "New Item", action: (n) => n({ to: "/app/catalog", search: {} }), permission: "create_item", category: "create" },
+  { keys: ["n", "i"], label: "New Item", action: (n) => n({ to: "/app/products", search: {} }), permission: "create_item", category: "create" },
   { keys: ["n", "m"], label: "New Movement", action: (n) => n({ to: "/app/movements", search: { item: undefined } }), permission: "log_movement", category: "create" },
   { keys: ["n", "p"], label: "New Purchase Order", action: (n) => n({ to: "/app/purchase-orders", search: {} }), permission: "create_po", category: "create" },
   { keys: ["n", "r"], label: "New Request", action: (n) => n({ to: "/app/requests", search: { request: undefined } }), permission: "create_request", category: "create" },

@@ -154,7 +154,7 @@ export function SupplierDetailSheet({
 
               {linkedItems.length > MAX_LINKED && (
                 <Link
-                  to="/app/catalog"
+                  to="/app/products"
                   className="mt-2 inline-flex items-center gap-1 text-sm text-primary hover:underline"
                 >
                   View all in catalog
