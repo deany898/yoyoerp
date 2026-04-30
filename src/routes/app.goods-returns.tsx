@@ -395,6 +395,16 @@ function GoodsReturnsPage() {
           </SheetHeader>
           {draft && (
             <div className="mt-6 space-y-5">
+              <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-4">
+                <GRStatusStepper status={draft.status} />
+                <GRLifecycleActions
+                  status={draft.status}
+                  busy={busyTransition}
+                  canEdit={canEdit}
+                  onTransition={transitionTo}
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>GR number</Label><Input value={draft.gr_number} onChange={(e) => patchDraft({ gr_number: e.target.value })} disabled={isReceived} /></div>
                 <div>
@@ -545,23 +555,20 @@ function GoodsReturnsPage() {
 
               <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-3">
                 <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                {!isReceived && (
-                  <>
-                    <Button variant="outline" onClick={save} disabled={saving || receiving}>
-                      {saving ? "Saving…" : "Save draft"}
-                    </Button>
-                    <Button onClick={saveAndReceive} disabled={saving || receiving} className="gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90">
-                      <CheckCircle2 className="h-4 w-4" />
-                      {receiving ? "Receiving…" : "Save & receive · restock"}
-                    </Button>
-                  </>
-                )}
-                {isReceived && (
-                  <Button onClick={save} disabled={saving}>
-                    {saving ? "Saving…" : "Save changes"}
-                  </Button>
-                )}
+                <Button onClick={save} disabled={saving || busyTransition !== null}>
+                  {saving ? "Saving…" : isReceived ? "Save changes" : "Save draft"}
+                </Button>
               </div>
+
+              {draft.id && (
+                <div className="space-y-2 border-t border-border pt-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Posted stock movements</Label>
+                    <span className="text-[11px] text-muted-foreground">Audit trail · linked to this GR</span>
+                  </div>
+                  <GRMovementsTimeline goodsReturnId={draft.id} />
+                </div>
+              )}
             </div>
           )}
         </SheetContent>
