@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSuppliers, type SupplierRow } from "@/hooks/useErpData";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { Vendor360Sheet } from "@/components/vendors/Vendor360Sheet";
