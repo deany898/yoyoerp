@@ -1914,6 +1914,92 @@ export type Database = {
           },
         ]
       }
+      stage_group_lines: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          labour_cost: number
+          machine_cost: number
+          mould_cost: number
+          notes: string | null
+          overhead_cost: number
+          qc_cost: number
+          rejection_pct: number
+          sequence: number
+          stage_name: string
+          utility_cost: number
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          labour_cost?: number
+          machine_cost?: number
+          mould_cost?: number
+          notes?: string | null
+          overhead_cost?: number
+          qc_cost?: number
+          rejection_pct?: number
+          sequence?: number
+          stage_name: string
+          utility_cost?: number
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          labour_cost?: number
+          machine_cost?: number
+          mould_cost?: number
+          notes?: string | null
+          overhead_cost?: number
+          qc_cost?: number
+          rejection_pct?: number
+          sequence?: number
+          stage_name?: string
+          utility_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stage_group_lines_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "stage_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stage_groups: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       stations: {
         Row: {
           code: string
