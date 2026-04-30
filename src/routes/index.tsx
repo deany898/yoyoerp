@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useDemo } from "@/hooks/useDemo";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { useState, useEffect } from "react";
+import { Logo } from "@/components/brand/Logo";
 import {
   Package,
   BarChart3,
@@ -24,13 +25,13 @@ export const Route = createFileRoute("/")({
   component: LandingPage,
   head: () => ({
     meta: [
-      { title: "Stackwise — Inventory Command Center" },
+      { title: "YOYO ERP — Inventory Command Center" },
       {
         name: "description",
         content:
           "Real-time inventory management for businesses of any size. Track stock, manage suppliers, automate reorders, and keep your team aligned.",
       },
-      { property: "og:title", content: "Stackwise — Inventory Command Center" },
+      { property: "og:title", content: "YOYO ERP — Inventory Command Center" },
       {
         property: "og:description",
         content:
@@ -177,9 +178,8 @@ function StickyNav({ onTryDemo }: { onTryDemo: () => void }) {
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
         {/* Logo */}
-        <a href="#" className="flex items-center gap-2">
-          <Package className="h-6 w-6 text-primary" />
-          <span className="text-lg font-semibold tracking-tight">Stackwise</span>
+        <a href="#" className="flex items-center">
+          <Logo size={36} />
         </a>
 
         {/* Desktop nav links */}
@@ -326,7 +326,7 @@ function FeatureTabsSection() {
           <BrowserFrame>
             <img
               src={featureTabs[activeTab].image}
-              alt={`Stackwise ${featureTabs[activeTab].label} view`}
+              alt={`YOYO ERP ${featureTabs[activeTab].label} view`}
               className="w-full transition-opacity duration-300"
             />
           </BrowserFrame>
@@ -422,7 +422,7 @@ function LandingPage() {
             <BrowserFrame className="shadow-2xl shadow-primary/5">
               <img
                 src={uiScreenshot.url}
-                alt="Stackwise dashboard showing inventory metrics, stock levels chart, and recent activity"
+                alt="YOYO ERP dashboard showing inventory metrics, stock levels chart, and recent activity"
                 className="w-full"
                 loading="lazy"
               />
@@ -488,7 +488,7 @@ function LandingPage() {
               Ready to take control of your inventory?
             </h2>
             <p className="mx-auto mt-4 max-w-md text-base text-background/60">
-              Explore Stackwise with sample data. No signup required.
+              Explore YOYO ERP with sample data. No signup required.
             </p>
             <div className="mt-8">
               <button
@@ -508,7 +508,7 @@ function LandingPage() {
       <footer className="border-t border-border px-4 py-10 text-center">
         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
           <Package className="h-4 w-4 text-primary" />
-          <span>Built with Stackwise · {new Date().getFullYear()}</span>
+          <span>Built with YOYO ERP · {new Date().getFullYear()}</span>
         </div>
       </footer>
     </div>

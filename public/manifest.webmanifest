@@ -1,13 +1,13 @@
 {
-  "name": "Stackwise — Inventory Command Center",
-  "short_name": "Stackwise",
-  "description": "Real-time inventory management with stock tracking, suppliers, purchase orders, and AI-powered reorder forecasting.",
+  "name": "YOYO ERP — Industrial Operations Platform",
+  "short_name": "YOYO ERP",
+  "description": "YOYO ERP · industrial-grade inventory, suppliers, purchase orders, and AI reorder intelligence.",
   "start_url": "/app/dashboard",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f7f5ef",
-  "theme_color": "#0d9488",
+  "background_color": "#ffffff",
+  "theme_color": "#1E3A8A",
   "categories": ["business", "productivity", "utilities"],
   "icons": [
     {

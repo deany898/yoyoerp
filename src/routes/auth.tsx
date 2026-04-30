@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
-import { Package, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Logo } from "@/components/brand/Logo";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -15,8 +16,8 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
   head: () => ({
     meta: [
-      { title: "Sign in — Stackwise" },
-      { name: "description", content: "Sign in or create a Stackwise account to manage your inventory." },
+      { title: "Sign in — YOYO ERP" },
+      { name: "description", content: "Sign in or create a YOYO ERP account to manage your inventory." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -132,11 +133,8 @@ function AuthPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md">
-        <Link to="/" className="mb-8 flex items-center justify-center gap-2 text-foreground">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Package className="h-5 w-5" />
-          </div>
-          <span className="text-xl font-semibold tracking-tight">Stackwise</span>
+        <Link to="/" className="mb-8 flex items-center justify-center text-foreground">
+          <Logo size={44} />
         </Link>
 
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
