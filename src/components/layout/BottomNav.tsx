@@ -26,24 +26,32 @@ export function BottomNav() {
   return (
     <>
       <nav
-        className="fixed bottom-0 left-0 right-0 z-40 flex items-stretch border-t border-border bg-card md:hidden"
+        className="fixed bottom-0 left-0 right-0 z-40 flex items-stretch border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/85 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.12)] md:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {items.map((item) => {
           const Icon = item.icon!;
+          const active = isActive(item.href);
           return (
             <Link
               key={item.href}
               to={item.href}
               preload="intent"
               className={cn(
-                "flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors min-h-[56px]",
-                isActive(item.href)
-                  ? "text-primary"
-                  : "text-muted-foreground active:bg-muted",
+                "relative flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[10px] font-medium transition-colors min-h-[60px]",
+                active ? "text-primary" : "text-muted-foreground active:bg-muted/60",
               )}
             >
-              <Icon className="h-5 w-5" />
+              <span
+                className={cn(
+                  "flex h-9 w-9 items-center justify-center rounded-xl transition-all",
+                  active
+                    ? "bg-primary text-primary-foreground shadow-[0_6px_16px_-6px_oklch(0.55_0.20_261/0.55)]"
+                    : "text-muted-foreground",
+                )}
+              >
+                <Icon className="h-5 w-5" />
+              </span>
               <span className="truncate">{item.label}</span>
             </Link>
           );
@@ -51,10 +59,12 @@ export function BottomNav() {
         <button
           type="button"
           onClick={() => setMoreOpen(true)}
-          className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium text-muted-foreground active:bg-muted min-h-[56px]"
+          className="flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[10px] font-medium text-muted-foreground active:bg-muted/60 min-h-[60px]"
           aria-label="More navigation"
         >
-          <MoreHorizontal className="h-5 w-5" />
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl">
+            <MoreHorizontal className="h-5 w-5" />
+          </span>
           More
         </button>
       </nav>
