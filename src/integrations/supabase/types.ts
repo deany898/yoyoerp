@@ -50,6 +50,95 @@ export type Database = {
         }
         Relationships: []
       }
+      bom_lines: {
+        Row: {
+          bom_id: string
+          component_variant_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          qty_per: number
+          scrap_pct: number
+          uom: string
+        }
+        Insert: {
+          bom_id: string
+          component_variant_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          qty_per?: number
+          scrap_pct?: number
+          uom?: string
+        }
+        Update: {
+          bom_id?: string
+          component_variant_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          qty_per?: number
+          scrap_pct?: number
+          uom?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bom_lines_bom_id_fkey"
+            columns: ["bom_id"]
+            isOneToOne: false
+            referencedRelation: "bom_master"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bom_lines_component_variant_id_fkey"
+            columns: ["component_variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bom_master: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          updated_at: string
+          variant_id: string
+          version: number
+          yield_qty: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          updated_at?: string
+          variant_id: string
+          version?: number
+          yield_qty?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          updated_at?: string
+          variant_id?: string
+          version?: number
+          yield_qty?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bom_master_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
@@ -375,6 +464,53 @@ export type Database = {
         }
         Relationships: []
       }
+      product_cost_snapshots: {
+        Row: {
+          breakdown: Json
+          costing_method: Database["public"]["Enums"]["costing_method"]
+          delta_pct: number
+          effective_cost: number
+          id: string
+          manufacture_cost: number
+          purchase_cost: number
+          snapshot_at: string
+          sourcing_type: Database["public"]["Enums"]["sourcing_type"]
+          variant_id: string
+        }
+        Insert: {
+          breakdown?: Json
+          costing_method: Database["public"]["Enums"]["costing_method"]
+          delta_pct?: number
+          effective_cost?: number
+          id?: string
+          manufacture_cost?: number
+          purchase_cost?: number
+          snapshot_at?: string
+          sourcing_type: Database["public"]["Enums"]["sourcing_type"]
+          variant_id: string
+        }
+        Update: {
+          breakdown?: Json
+          costing_method?: Database["public"]["Enums"]["costing_method"]
+          delta_pct?: number
+          effective_cost?: number
+          id?: string
+          manufacture_cost?: number
+          purchase_cost?: number
+          snapshot_at?: string
+          sourcing_type?: Database["public"]["Enums"]["sourcing_type"]
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_cost_snapshots_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_images: {
         Row: {
           alt: string | null
@@ -514,11 +650,15 @@ export type Database = {
           avg_cost: number
           barcode: string | null
           cost_currency: string
+          cost_updated_at: string
           created_at: string
+          effective_cost: number
           id: string
           is_active: boolean
           last_cost: number
+          manufacture_cost: number
           product_id: string
+          purchase_cost: number
           reorder_point: number
           reorder_qty: number
           safety_stock: number
@@ -532,11 +672,15 @@ export type Database = {
           avg_cost?: number
           barcode?: string | null
           cost_currency?: string
+          cost_updated_at?: string
           created_at?: string
+          effective_cost?: number
           id?: string
           is_active?: boolean
           last_cost?: number
+          manufacture_cost?: number
           product_id: string
+          purchase_cost?: number
           reorder_point?: number
           reorder_qty?: number
           safety_stock?: number
@@ -550,11 +694,15 @@ export type Database = {
           avg_cost?: number
           barcode?: string | null
           cost_currency?: string
+          cost_updated_at?: string
           created_at?: string
+          effective_cost?: number
           id?: string
           is_active?: boolean
           last_cost?: number
+          manufacture_cost?: number
           product_id?: string
+          purchase_cost?: number
           reorder_point?: number
           reorder_qty?: number
           safety_stock?: number
@@ -573,10 +721,67 @@ export type Database = {
           },
         ]
       }
+      production_stages: {
+        Row: {
+          created_at: string
+          id: string
+          labour_cost: number
+          machine_cost: number
+          mould_cost: number
+          notes: string | null
+          overhead_cost: number
+          qc_cost: number
+          rejection_pct: number
+          sequence: number
+          stage_name: string
+          utility_cost: number
+          variant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          labour_cost?: number
+          machine_cost?: number
+          mould_cost?: number
+          notes?: string | null
+          overhead_cost?: number
+          qc_cost?: number
+          rejection_pct?: number
+          sequence?: number
+          stage_name: string
+          utility_cost?: number
+          variant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          labour_cost?: number
+          machine_cost?: number
+          mould_cost?: number
+          notes?: string | null
+          overhead_cost?: number
+          qc_cost?: number
+          rejection_pct?: number
+          sequence?: number
+          stage_name?: string
+          utility_cost?: number
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_stages_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category_id: string | null
           code: string
+          costing_method: Database["public"]["Enums"]["costing_method"]
           created_at: string
           created_by: string | null
           description: string | null
@@ -584,7 +789,13 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          preferred_cost_source: string | null
+          preferred_supplier_id: string | null
           product_type: Database["public"]["Enums"]["product_type"]
+          sourcing_type: Database["public"]["Enums"]["sourcing_type"]
+          sourcing_type_override:
+            | Database["public"]["Enums"]["sourcing_type"]
+            | null
           specifications: Json
           uom: string
           updated_at: string
@@ -592,6 +803,7 @@ export type Database = {
         Insert: {
           category_id?: string | null
           code: string
+          costing_method?: Database["public"]["Enums"]["costing_method"]
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -599,7 +811,13 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          preferred_cost_source?: string | null
+          preferred_supplier_id?: string | null
           product_type?: Database["public"]["Enums"]["product_type"]
+          sourcing_type?: Database["public"]["Enums"]["sourcing_type"]
+          sourcing_type_override?:
+            | Database["public"]["Enums"]["sourcing_type"]
+            | null
           specifications?: Json
           uom?: string
           updated_at?: string
@@ -607,6 +825,7 @@ export type Database = {
         Update: {
           category_id?: string | null
           code?: string
+          costing_method?: Database["public"]["Enums"]["costing_method"]
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -614,7 +833,13 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          preferred_cost_source?: string | null
+          preferred_supplier_id?: string | null
           product_type?: Database["public"]["Enums"]["product_type"]
+          sourcing_type?: Database["public"]["Enums"]["sourcing_type"]
+          sourcing_type_override?:
+            | Database["public"]["Enums"]["sourcing_type"]
+            | null
           specifications?: Json
           uom?: string
           updated_at?: string
@@ -625,6 +850,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_preferred_supplier_id_fkey"
+            columns: ["preferred_supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
             referencedColumns: ["id"]
           },
         ]
@@ -655,6 +887,61 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      purchase_cost_history: {
+        Row: {
+          id: string
+          landed_cost: number
+          po_id: string | null
+          qty: number
+          received_at: string
+          supplier_id: string | null
+          unit_cost: number
+          variant_id: string
+        }
+        Insert: {
+          id?: string
+          landed_cost: number
+          po_id?: string | null
+          qty: number
+          received_at?: string
+          supplier_id?: string | null
+          unit_cost: number
+          variant_id: string
+        }
+        Update: {
+          id?: string
+          landed_cost?: number
+          po_id?: string | null
+          qty?: number
+          received_at?: string
+          supplier_id?: string | null
+          unit_cost?: number
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_cost_history_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_cost_history_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_cost_history_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       purchase_order_lines: {
         Row: {
@@ -849,6 +1136,87 @@ export type Database = {
           },
         ]
       }
+      supplier_product_quotes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          currency: string
+          freight_cost: number
+          id: string
+          is_active: boolean
+          is_approved: boolean
+          landing_other: number
+          lead_time_days: number
+          moq: number
+          notes: string | null
+          pickup_cost: number
+          supplier_id: string
+          transport_cost: number
+          unit_price: number
+          updated_at: string
+          valid_from: string
+          valid_until: string | null
+          variant_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          freight_cost?: number
+          id?: string
+          is_active?: boolean
+          is_approved?: boolean
+          landing_other?: number
+          lead_time_days?: number
+          moq?: number
+          notes?: string | null
+          pickup_cost?: number
+          supplier_id: string
+          transport_cost?: number
+          unit_price: number
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+          variant_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          freight_cost?: number
+          id?: string
+          is_active?: boolean
+          is_approved?: boolean
+          landing_other?: number
+          lead_time_days?: number
+          moq?: number
+          notes?: string | null
+          pickup_cost?: number
+          supplier_id?: string
+          transport_cost?: number
+          unit_price?: number
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_product_quotes_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_product_quotes_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           address: string | null
@@ -1033,6 +1401,10 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      recalc_variant_cost: {
+        Args: { _depth?: number; _variant_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:
@@ -1044,6 +1416,13 @@ export type Database = {
         | "dispatch"
         | "worker"
         | "customer"
+      costing_method:
+        | "supplier_quote"
+        | "weighted_purchase"
+        | "bom_stage"
+        | "lowest"
+        | "preferred"
+        | "unset"
       movement_reason:
         | "receipt"
         | "consumption"
@@ -1073,6 +1452,7 @@ export type Database = {
         | "rejected"
         | "fulfilled"
         | "cancelled"
+      sourcing_type: "purchased" | "manufactured" | "hybrid"
       zone_kind:
         | "raw_material"
         | "wip"
@@ -1219,6 +1599,14 @@ export const Constants = {
         "worker",
         "customer",
       ],
+      costing_method: [
+        "supplier_quote",
+        "weighted_purchase",
+        "bom_stage",
+        "lowest",
+        "preferred",
+        "unset",
+      ],
       movement_reason: [
         "receipt",
         "consumption",
@@ -1251,6 +1639,7 @@ export const Constants = {
         "fulfilled",
         "cancelled",
       ],
+      sourcing_type: ["purchased", "manufactured", "hybrid"],
       zone_kind: [
         "raw_material",
         "wip",
