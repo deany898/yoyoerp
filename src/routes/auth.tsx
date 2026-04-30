@@ -1,16 +1,17 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
-import { Loader2, Mail, Lock, Eye, EyeOff, User as UserIcon } from "lucide-react";
+import { Loader2, Mail, Lock, User as UserIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand/Logo";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
+import { notify, friendlyAuthError } from "@/lib/notify";
+import { AuthIconInput } from "@/components/auth/AuthIconInput";
+import { GoogleIcon } from "@/components/auth/GoogleIcon";
+import { ForgotPasswordDialog } from "@/components/auth/ForgotPasswordDialog";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -37,8 +38,6 @@ function AuthPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<"signin" | "signup">("signin");
   const [submitting, setSubmitting] = useState(false);
-  const [showSigninPwd, setShowSigninPwd] = useState(false);
-  const [showSignupPwd, setShowSignupPwd] = useState(false);
 
   const [signinEmail, setSigninEmail] = useState("");
   const [signinPassword, setSigninPassword] = useState("");
@@ -57,7 +56,7 @@ function AuthPage() {
     e.preventDefault();
     const parsed = credentialsSchema.safeParse({ email: signinEmail, password: signinPassword });
     if (!parsed.success) {
-      toast.error(parsed.error.issues[0]?.message ?? "Invalid input");
+      notify.warning(parsed.error.issues[0]?.message ?? "Invalid input");
       return;
     }
     setSubmitting(true);
@@ -67,10 +66,10 @@ function AuthPage() {
     });
     setSubmitting(false);
     if (error) {
-      toast.error(error.message === "Invalid login credentials" ? "Wrong email or password" : error.message);
+      notify.error(friendlyAuthError(error.message), { retry: () => void handleSignIn(e) });
       return;
     }
-    toast.success("Welcome back");
+    notify.success("Welcome back");
     navigate({ to: "/app/dashboard" });
   };
 
@@ -82,7 +81,7 @@ function AuthPage() {
       password: signupPassword,
     });
     if (!parsed.success) {
-      toast.error(parsed.error.issues[0]?.message ?? "Invalid input");
+      notify.warning(parsed.error.issues[0]?.message ?? "Invalid input");
       return;
     }
     setSubmitting(true);
@@ -96,14 +95,10 @@ function AuthPage() {
     });
     setSubmitting(false);
     if (error) {
-      if (error.message.includes("already registered")) {
-        toast.error("An account with this email already exists. Try signing in.");
-      } else {
-        toast.error(error.message);
-      }
+      notify.error(friendlyAuthError(error.message));
       return;
     }
-    toast.success("Check your email to confirm your account");
+    notify.success("Check your email to confirm your account");
     setTab("signin");
   };
 
@@ -114,12 +109,15 @@ function AuthPage() {
     });
     if (result.error) {
       setSubmitting(false);
-      toast.error("Could not sign in with Google");
+      notify.error("Could not sign in with Google", { retry: () => void handleGoogle() });
       return;
     }
     if (result.redirected) return;
     navigate({ to: "/app/dashboard" });
   };
+
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
 
   if (loading) {
     return (
@@ -162,49 +160,31 @@ function AuthPage() {
 
                 <TabsContent value="signin" className="space-y-4">
                   <form onSubmit={handleSignIn} className="space-y-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="signin-email" className="text-sm font-medium">Email</Label>
-                      <div className="relative">
-                        <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                          id="signin-email"
-                          type="email"
-                          autoComplete="email"
-                          placeholder="you@company.com"
-                          value={signinEmail}
-                          onChange={(e) => setSigninEmail(e.target.value)}
-                          required
-                          className="h-11 pl-9"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="signin-password" className="text-sm font-medium">Password</Label>
-                      <div className="relative">
-                        <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                          id="signin-password"
-                          type={showSigninPwd ? "text" : "password"}
-                          autoComplete="current-password"
-                          placeholder="••••••••"
-                          value={signinPassword}
-                          onChange={(e) => setSigninPassword(e.target.value)}
-                          required
-                          className="h-11 pl-9 pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowSigninPwd((v) => !v)}
-                          aria-label={showSigninPwd ? "Hide password" : "Show password"}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                        >
-                          {showSigninPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                    </div>
+                    <AuthIconInput
+                      id="signin-email"
+                      label="Email"
+                      icon={Mail}
+                      type="email"
+                      autoComplete="email"
+                      placeholder="you@company.com"
+                      value={signinEmail}
+                      onChange={(e) => setSigninEmail(e.target.value)}
+                      required
+                    />
+                    <AuthIconInput
+                      id="signin-password"
+                      label="Password"
+                      icon={Lock}
+                      password
+                      autoComplete="current-password"
+                      placeholder="••••••••"
+                      value={signinPassword}
+                      onChange={(e) => setSigninPassword(e.target.value)}
+                      required
+                    />
                     <Button
                       type="submit"
-                      className="h-11 w-full bg-secondary text-secondary-foreground text-base font-semibold hover:bg-secondary/90"
+                      className="h-11 w-full bg-primary text-primary-foreground text-base font-semibold shadow-sm hover:bg-primary/90"
                       disabled={submitting}
                     >
                       {submitting ? (
@@ -212,75 +192,62 @@ function AuthPage() {
                           <Loader2 className="h-4 w-4 animate-spin" /> Opening dashboard…
                         </span>
                       ) : (
-                        "Sign in"
+                        <span className="flex items-center gap-2">
+                          <Lock className="h-4 w-4" /> Sign in
+                        </span>
                       )}
                     </Button>
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={() => { setForgotEmail(signinEmail); setForgotOpen(true); }}
+                        className="text-xs font-medium text-primary hover:underline"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
                   </form>
                 </TabsContent>
 
                 <TabsContent value="signup" className="space-y-4">
                   <form onSubmit={handleSignUp} className="space-y-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="signup-name" className="text-sm font-medium">Name</Label>
-                      <div className="relative">
-                        <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                          id="signup-name"
-                          type="text"
-                          autoComplete="name"
-                          placeholder="Jane Doe"
-                          value={signupName}
-                          onChange={(e) => setSignupName(e.target.value)}
-                          required
-                          className="h-11 pl-9"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="signup-email" className="text-sm font-medium">Email</Label>
-                      <div className="relative">
-                        <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                          id="signup-email"
-                          type="email"
-                          autoComplete="email"
-                          placeholder="you@company.com"
-                          value={signupEmail}
-                          onChange={(e) => setSignupEmail(e.target.value)}
-                          required
-                          className="h-11 pl-9"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="signup-password" className="text-sm font-medium">Password</Label>
-                      <div className="relative">
-                        <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                          id="signup-password"
-                          type={showSignupPwd ? "text" : "password"}
-                          autoComplete="new-password"
-                          placeholder="At least 8 characters"
-                          value={signupPassword}
-                          onChange={(e) => setSignupPassword(e.target.value)}
-                          required
-                          minLength={8}
-                          className="h-11 pl-9 pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowSignupPwd((v) => !v)}
-                          aria-label={showSignupPwd ? "Hide password" : "Show password"}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                        >
-                          {showSignupPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Minimum 8 characters.</p>
-                    </div>
+                    <AuthIconInput
+                      id="signup-name"
+                      label="Name"
+                      icon={UserIcon}
+                      autoComplete="name"
+                      placeholder="Jane Doe"
+                      value={signupName}
+                      onChange={(e) => setSignupName(e.target.value)}
+                      required
+                    />
+                    <AuthIconInput
+                      id="signup-email"
+                      label="Email"
+                      icon={Mail}
+                      type="email"
+                      autoComplete="email"
+                      placeholder="you@company.com"
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
+                      required
+                    />
+                    <AuthIconInput
+                      id="signup-password"
+                      label="Password"
+                      icon={Lock}
+                      password
+                      autoComplete="new-password"
+                      placeholder="At least 8 characters"
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
+                      required
+                      minLength={8}
+                    />
+                    <p className="-mt-2 text-xs text-muted-foreground">Minimum 8 characters.</p>
                     <Button
                       type="submit"
-                      className="h-11 w-full bg-secondary text-secondary-foreground text-base font-semibold hover:bg-secondary/90"
+                      className="h-11 w-full bg-primary text-primary-foreground text-base font-semibold shadow-sm hover:bg-primary/90"
                       disabled={submitting}
                     >
                       {submitting ? (
@@ -321,17 +288,12 @@ function AuthPage() {
       <footer className="relative z-10 mt-8 text-center text-xs text-muted-foreground">
         © {new Date().getFullYear()} YOYO · All rights reserved.
       </footer>
-    </div>
-  );
-}
 
-function GoogleIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
-      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-      <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.83z" />
-      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.83C6.71 7.31 9.14 5.38 12 5.38z" />
-    </svg>
+      <ForgotPasswordDialog
+        open={forgotOpen}
+        onOpenChange={setForgotOpen}
+        defaultEmail={forgotEmail}
+      />
+    </div>
   );
 }
