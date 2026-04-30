@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useDemo } from "@/hooks/useDemo";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { useState, useEffect } from "react";
@@ -199,14 +199,22 @@ function StickyNav({ onTryDemo }: { onTryDemo: () => void }) {
           ))}
         </div>
 
-        {/* Desktop CTA - secondary style */}
-        <button
-          type="button"
-          onClick={onTryDemo}
-          className="hidden items-center gap-2 rounded-lg border border-border bg-muted/60 px-5 py-2 text-sm font-medium text-foreground transition-all hover:bg-muted md:inline-flex"
-        >
-          Try demo
-        </button>
+        {/* Desktop CTAs */}
+        <div className="hidden items-center gap-2 md:flex">
+          <Link
+            to="/auth"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Sign in
+          </Link>
+          <button
+            type="button"
+            onClick={onTryDemo}
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-muted/60 px-5 py-2 text-sm font-medium text-foreground transition-all hover:bg-muted"
+          >
+            Try demo
+          </button>
+        </div>
 
         {/* Mobile hamburger */}
         <button
@@ -246,6 +254,13 @@ function StickyNav({ onTryDemo }: { onTryDemo: () => void }) {
           >
             Try demo
           </button>
+          <Link
+            to="/auth"
+            onClick={() => setMobileOpen(false)}
+            className="mt-2 block w-full rounded-lg bg-primary px-5 py-2.5 text-center text-sm font-medium text-primary-foreground"
+          >
+            Sign in
+          </Link>
         </div>
       )}
     </nav>
