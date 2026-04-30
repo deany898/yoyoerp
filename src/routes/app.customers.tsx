@@ -15,9 +15,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+import { SmartSelect } from "@/components/forms/SmartSelect";
 import { useRole } from "@/hooks/useRole";
 
 export const Route = createFileRoute("/app/customers")({
@@ -179,15 +177,17 @@ function CustomersPage() {
                 <div><Label>Email</Label><Input type="email" value={draft.email ?? ""} onChange={(e) => setDraft({ ...draft, email: e.target.value })} /></div>
                 <div>
                   <Label>Pricing tier</Label>
-                  <Select value={draft.pricing_tier ?? "standard"} onValueChange={(v) => setDraft({ ...draft, pricing_tier: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="standard">Standard</SelectItem>
-                      <SelectItem value="silver">Silver</SelectItem>
-                      <SelectItem value="gold">Gold</SelectItem>
-                      <SelectItem value="platinum">Platinum</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <SmartSelect
+                    options={[
+                      { value: "standard", label: "Standard" },
+                      { value: "silver", label: "Silver" },
+                      { value: "gold", label: "Gold" },
+                      { value: "platinum", label: "Platinum" },
+                    ]}
+                    value={draft.pricing_tier ?? "standard"}
+                    onChange={(v) => setDraft({ ...draft, pricing_tier: v ?? "standard" })}
+                    searchPlaceholder="Search tier…"
+                  />
                 </div>
                 <div><Label>GST number</Label><Input value={draft.gst_number ?? ""} onChange={(e) => setDraft({ ...draft, gst_number: e.target.value })} /></div>
                 <div><Label>PAN</Label><Input value={draft.pan_number ?? ""} onChange={(e) => setDraft({ ...draft, pan_number: e.target.value })} /></div>

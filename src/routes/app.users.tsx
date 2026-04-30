@@ -8,7 +8,7 @@ import { useRole } from "@/hooks/useRole";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SmartSelect } from "@/components/forms/SmartSelect";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -174,20 +174,15 @@ function UserManagementPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Select
+                        <SmartSelect
+                          options={ROLE_ORDER.map((r) => ({ value: r, label: ROLE_LABEL[r] }))}
                           value={u.role}
+                          onChange={(v) => v && changeRole(u, v as AppRole)}
                           disabled={savingId === u.user_id}
-                          onValueChange={(v) => changeRole(u, v as AppRole)}
-                        >
-                          <SelectTrigger className="h-8 w-[180px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {ROLE_ORDER.map((r) => (
-                              <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          searchPlaceholder="Search role…"
+                          size="sm"
+                          triggerClassName="w-[200px]"
+                        />
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {format(new Date(u.created_at), "MMM d, yyyy")}

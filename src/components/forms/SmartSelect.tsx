@@ -41,6 +41,10 @@ interface SmartSelectProps {
   /** Custom render for the selected value pill. */
   renderValue?: (opt: SmartSelectOption) => ReactNode;
   className?: string;
+  /** Compact trigger height (matches sm Select trigger). */
+  size?: "default" | "sm";
+  /** Optional class applied to the trigger only (overrides height etc.). */
+  triggerClassName?: string;
 }
 
 /**
@@ -62,6 +66,8 @@ export function SmartSelect({
   inline,
   renderValue,
   className,
+  size = "default",
+  triggerClassName,
 }: SmartSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -100,7 +106,9 @@ export function SmartSelect({
           className={cn(
             "w-full justify-between font-normal",
             !selected && "text-muted-foreground",
+            size === "sm" && "h-9 text-sm",
             className,
+            triggerClassName,
           )}
         >
           <span className="flex min-w-0 items-center gap-2 truncate">

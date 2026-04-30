@@ -14,9 +14,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+import { SmartSelect } from "@/components/forms/SmartSelect";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -280,28 +278,29 @@ function POPage() {
                 <div><Label>PO number</Label><Input value={draft.po_number} onChange={(e) => setDraft({ ...draft, po_number: e.target.value })} /></div>
                 <div>
                   <Label>Status</Label>
-                  <Select value={draft.status} onValueChange={(v) => setDraft({ ...draft, status: v as POStatus })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {(["draft","submitted","approved","partial","received","cancelled","closed"] as POStatus[]).map((s) => (
-                        <SelectItem key={s} value={s}>{s.replace(/_/g, " ")}</SelectItem>
-                      ))}
-                      <SelectItem value="supplier_confirmed">supplier confirmed</SelectItem>
-                      <SelectItem value="supplier_dispatched">supplier dispatched</SelectItem>
-                      <SelectItem value="in_transit">in transit</SelectItem>
-                      <SelectItem value="grn_completed">grn completed</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <SmartSelect
+                    options={[
+                      ...(["draft","submitted","approved","partial","received","cancelled","closed"] as POStatus[]).map((s) => ({ value: s, label: s.replace(/_/g, " ") })),
+                      { value: "supplier_confirmed", label: "supplier confirmed" },
+                      { value: "supplier_dispatched", label: "supplier dispatched" },
+                      { value: "in_transit", label: "in transit" },
+                      { value: "grn_completed", label: "grn completed" },
+                    ]}
+                    value={draft.status}
+                    onChange={(v) => v && setDraft({ ...draft, status: v as POStatus })}
+                    searchPlaceholder="Search status…"
+                  />
                 </div>
               </div>
               <div>
                 <Label>Supplier</Label>
-                <Select value={draft.supplier_id} onValueChange={(v) => setDraft({ ...draft, supplier_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Choose supplier" /></SelectTrigger>
-                  <SelectContent>
-                    {suppliers.map((s) => <SelectItem key={s.id} value={s.id}>{s.code} · {s.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <SmartSelect
+                  options={suppliers.map((s) => ({ value: s.id, label: s.name, hint: s.code }))}
+                  value={draft.supplier_id || null}
+                  onChange={(v) => setDraft({ ...draft, supplier_id: v ?? "" })}
+                  placeholder="Choose supplier"
+                  searchPlaceholder="Search supplier…"
+                />
               </div>
               <div>
                 <Label>Expected delivery</Label>
@@ -334,15 +333,16 @@ function POPage() {
                   <div className="space-y-2">
                     {draft.lines.map((l, i) => (
                       <div key={i} className="grid grid-cols-[1fr_80px_100px_36px] gap-2 items-center">
-                        <Select value={l.variant_id} onValueChange={(v) => {
-                          const opt = variantOptions.find((o) => o.id === v);
-                          updateLine(i, { variant_id: v, unit_cost: l.unit_cost || (opt?.cost ?? 0) });
-                        }}>
-                          <SelectTrigger><SelectValue placeholder="Pick variant" /></SelectTrigger>
-                          <SelectContent>
-                            {variantOptions.map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
+                        <SmartSelect
+                          options={variantOptions.map((o) => ({ value: o.id, label: o.label }))}
+                          value={l.variant_id || null}
+                          onChange={(v) => {
+                            const opt = variantOptions.find((o) => o.id === v);
+                            updateLine(i, { variant_id: v ?? "", unit_cost: l.unit_cost || (opt?.cost ?? 0) });
+                          }}
+                          placeholder="Pick variant"
+                          searchPlaceholder="Search product or SKU…"
+                        />
                         <Input type="number" min={0} step="0.01" value={l.qty_ordered} onChange={(e) => updateLine(i, { qty_ordered: Number(e.target.value) })} />
                         <Input type="number" min={0} step="0.01" value={l.unit_cost} onChange={(e) => updateLine(i, { unit_cost: Number(e.target.value) })} />
                         <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => removeLine(i)}><X className="h-3.5 w-3.5" /></Button>
