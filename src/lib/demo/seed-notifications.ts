@@ -67,7 +67,7 @@ export function generateNotifications(): Notification[] {
     {
       id: "notif-007",
       type: "system",
-      title: "Welcome to Stackwise",
+      title: "Welcome to YOYO ERP",
       message: "Your inventory management system is ready. Explore the dashboard to get started.",
       isRead: true,
       link: "/app/dashboard",

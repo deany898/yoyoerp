@@ -15,8 +15,8 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
   head: () => ({
     meta: [
-      { title: "Sign in — Stackwise" },
-      { name: "description", content: "Sign in or create a Stackwise account to manage your inventory." },
+      { title: "Sign in — YOYO ERP" },
+      { name: "description", content: "Sign in or create a YOYO ERP account to manage your inventory." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -136,7 +136,7 @@ function AuthPage() {
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Package className="h-5 w-5" />
           </div>
-          <span className="text-xl font-semibold tracking-tight">Stackwise</span>
+          <span className="text-xl font-semibold tracking-tight">YOYO ERP</span>
         </Link>
 
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">

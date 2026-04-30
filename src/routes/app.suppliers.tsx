@@ -20,7 +20,7 @@ interface SuppliersSearch {
 
 export const Route = createFileRoute("/app/suppliers")({
   component: SuppliersPage,
-  head: () => ({ meta: [{ title: "Suppliers — Stackwise" }] }),
+  head: () => ({ meta: [{ title: "Suppliers — YOYO ERP" }] }),
   validateSearch: (search: Record<string, unknown>): SuppliersSearch => ({
     supplier: typeof search.supplier === "string" ? search.supplier : undefined,
   }),
@@ -108,7 +108,7 @@ function SuppliersPage() {
           <CSVExportButton
             data={suppliers}
             columns={supplierCsvColumns}
-            filename="stackwise-suppliers"
+            filename="yoyo-suppliers"
           />
           {canManageSuppliers && (
             <Button size="sm" onClick={openCreate}>
