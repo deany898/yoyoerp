@@ -1772,6 +1772,13 @@ export type Database = {
             referencedRelation: "suppliers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "products_preferred_supplier_id_fkey"
+            columns: ["preferred_supplier_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_scorecard"
+            referencedColumns: ["supplier_id"]
+          },
         ]
       }
       profiles: {
@@ -1846,6 +1853,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "suppliers"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_cost_history_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_scorecard"
+            referencedColumns: ["supplier_id"]
           },
           {
             foreignKeyName: "purchase_cost_history_variant_id_fkey"
@@ -1999,6 +2013,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "suppliers"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_scorecard"
+            referencedColumns: ["supplier_id"]
           },
           {
             foreignKeyName: "purchase_orders_warehouse_id_fkey"
@@ -2310,6 +2331,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "supplier_product_quotes_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_scorecard"
+            referencedColumns: ["supplier_id"]
+          },
+          {
             foreignKeyName: "supplier_product_quotes_variant_id_fkey"
             columns: ["variant_id"]
             isOneToOne: false
@@ -2321,12 +2349,14 @@ export type Database = {
       suppliers: {
         Row: {
           address: string | null
+          category: Database["public"]["Enums"]["vendor_category"]
           city: string | null
           code: string
           contact_name: string | null
           country: string
           created_at: string
           created_by: string | null
+          credit_days: number
           email: string | null
           gst_number: string | null
           id: string
@@ -2334,6 +2364,7 @@ export type Database = {
           lead_time_days: number
           name: string
           notes: string | null
+          opening_balance: number
           payment_terms: string | null
           phone: string | null
           state: string | null
@@ -2341,12 +2372,14 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          category?: Database["public"]["Enums"]["vendor_category"]
           city?: string | null
           code: string
           contact_name?: string | null
           country?: string
           created_at?: string
           created_by?: string | null
+          credit_days?: number
           email?: string | null
           gst_number?: string | null
           id?: string
@@ -2354,6 +2387,7 @@ export type Database = {
           lead_time_days?: number
           name: string
           notes?: string | null
+          opening_balance?: number
           payment_terms?: string | null
           phone?: string | null
           state?: string | null
@@ -2361,12 +2395,14 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          category?: Database["public"]["Enums"]["vendor_category"]
           city?: string | null
           code?: string
           contact_name?: string | null
           country?: string
           created_at?: string
           created_by?: string | null
+          credit_days?: number
           email?: string | null
           gst_number?: string | null
           id?: string
@@ -2374,6 +2410,7 @@ export type Database = {
           lead_time_days?: number
           name?: string
           notes?: string | null
+          opening_balance?: number
           payment_terms?: string | null
           phone?: string | null
           state?: string | null
@@ -2401,6 +2438,70 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      vendor_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          mode: Database["public"]["Enums"]["vendor_payment_mode"]
+          notes: string | null
+          payment_date: string
+          po_id: string | null
+          reference: string | null
+          supplier_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          mode?: Database["public"]["Enums"]["vendor_payment_mode"]
+          notes?: string | null
+          payment_date?: string
+          po_id?: string | null
+          reference?: string | null
+          supplier_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          mode?: Database["public"]["Enums"]["vendor_payment_mode"]
+          notes?: string | null
+          payment_date?: string
+          po_id?: string | null
+          reference?: string | null
+          supplier_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_payments_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_payments_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_payments_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_scorecard"
+            referencedColumns: ["supplier_id"]
+          },
+        ]
       }
       warehouse_zones: {
         Row: {
@@ -2531,7 +2632,26 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      vendor_scorecard: {
+        Row: {
+          avg_lead_time_actual: number | null
+          billed_total: number | null
+          category: Database["public"]["Enums"]["vendor_category"] | null
+          credit_days: number | null
+          delivered_pos: number | null
+          last_received_date: string | null
+          lifetime_spend: number | null
+          name: string | null
+          on_time_pct: number | null
+          on_time_pos: number | null
+          opening_balance: number | null
+          outstanding_balance: number | null
+          paid_total: number | null
+          planned_lead_time: number | null
+          supplier_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_any_role: {
@@ -2643,6 +2763,28 @@ export type Database = {
       stage_kind: "moulding" | "assembly" | "packing" | "qc" | "other"
       stage_pay_mode: "salary" | "per_unit"
       variant_kind: "base" | "variation" | "component"
+      vendor_category:
+        | "raw_material"
+        | "plastic_granule"
+        | "electronic_component"
+        | "packaging"
+        | "carton"
+        | "poly"
+        | "label"
+        | "machine_part"
+        | "mould_repair"
+        | "consumable"
+        | "transport"
+        | "other"
+      vendor_payment_mode:
+        | "cash"
+        | "bank_transfer"
+        | "upi"
+        | "cheque"
+        | "rtgs"
+        | "neft"
+        | "adjustment"
+        | "other"
       zone_kind:
         | "raw_material"
         | "wip"
@@ -2875,6 +3017,30 @@ export const Constants = {
       stage_kind: ["moulding", "assembly", "packing", "qc", "other"],
       stage_pay_mode: ["salary", "per_unit"],
       variant_kind: ["base", "variation", "component"],
+      vendor_category: [
+        "raw_material",
+        "plastic_granule",
+        "electronic_component",
+        "packaging",
+        "carton",
+        "poly",
+        "label",
+        "machine_part",
+        "mould_repair",
+        "consumable",
+        "transport",
+        "other",
+      ],
+      vendor_payment_mode: [
+        "cash",
+        "bank_transfer",
+        "upi",
+        "cheque",
+        "rtgs",
+        "neft",
+        "adjustment",
+        "other",
+      ],
       zone_kind: [
         "raw_material",
         "wip",

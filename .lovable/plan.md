@@ -31,3 +31,16 @@ admin/manager · full write. supervisor/sales/dispatch/worker · read only. cust
 3. category filter works
 4. payment button hidden for `sales` user
 5. zero new typecheck errors
+
+---
+
+## Sprint 1 · STATUS · shipped
+
+- Migration applied · `vendor_category` enum, `vendor_payment_mode` enum, suppliers + category/credit_days/opening_balance, `vendor_payments` table with RLS, `vendor_scorecard` view (security_invoker).
+- New components · `vendor-constants.ts`, `VendorPaymentDialog`, `Vendor360Sheet` (Overview · Payments · Scorecard tabs), `SupplierFormSheet`.
+- `app.suppliers.tsx` · category filter chips, category column, credit-days column, row click opens Vendor 360, payment record/delete gated by `manage_suppliers`.
+- Linter · only pre-existing warnings remain (security definer functions on existing helpers + 1 unrelated RLS-no-policy info).
+
+### Next · Sprint 2 · Workforce + payroll
+- Schema · `workers` (pay_mode, payroll_cycle weekly/monthly, base rate), `worker_attendance`, `worker_advances`, `stage_piece_rates` (per-stage), `payroll_runs` + `payroll_lines`.
+- UI · /app/workforce, attendance entry, advance ledger, payroll run sheet.

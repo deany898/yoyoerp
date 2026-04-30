@@ -1,0 +1,1 @@
+ALTER VIEW public.vendor_scorecard SET (security_invoker = true);
