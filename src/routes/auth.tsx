@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { Loader2, Mail, Lock, Eye, EyeOff, User as UserIcon } from "lucide-react";
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Sign in — YOYO ERP" },
-      { name: "description", content: "Sign in or create a YOYO ERP account to manage your inventory." },
+      { name: "description", content: "Sign in to YOYO ERP to manage your operations." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -40,16 +40,13 @@ function AuthPage() {
   const [showSigninPwd, setShowSigninPwd] = useState(false);
   const [showSignupPwd, setShowSignupPwd] = useState(false);
 
-  // Sign-in form state
   const [signinEmail, setSigninEmail] = useState("");
   const [signinPassword, setSigninPassword] = useState("");
 
-  // Sign-up form state
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
 
-  // Already signed in? Send to app.
   useEffect(() => {
     if (!loading && user) {
       navigate({ to: "/app/dashboard" });
@@ -120,208 +117,240 @@ function AuthPage() {
       toast.error("Could not sign in with Google");
       return;
     }
-    if (result.redirected) return; // browser redirects
+    if (result.redirected) return;
     navigate({ to: "/app/dashboard" });
   };
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="flex min-h-screen items-center justify-center bg-sidebar">
+        <Loader2 className="h-6 w-6 animate-spin text-sidebar-foreground/60" />
       </div>
     );
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center px-4 py-10
-                    bg-[radial-gradient(ellipse_at_top_left,theme(colors.sky.100),transparent_55%),radial-gradient(ellipse_at_bottom_right,theme(colors.cyan.100),transparent_55%)]
-                    bg-background">
-      <div className="w-full max-w-md">
-        {/* Brand mark */}
-        <div className="mb-8 flex flex-col items-center text-center">
-          <Link to="/" aria-label="YOYO ERP home" className="mb-5">
-            <Logo size={88} showWordmark={false} />
-          </Link>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">YOYO ERP</h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            YOYO Internal Operations Platform
-          </p>
+    <div className="flex min-h-screen flex-col bg-sidebar text-sidebar-foreground">
+      {/* Top header — matches app header style */}
+      <header className="flex h-16 items-center gap-3 border-b border-sidebar-border bg-sidebar px-4 sm:px-6">
+        <Logo size={36} variant="light" showWordmark={false} />
+        <div className="flex flex-col leading-tight">
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-sidebar-primary">
+            YOYO
+          </span>
+          <span className="text-sm font-semibold text-sidebar-foreground">
+            ERP Platform
+          </span>
         </div>
+      </header>
 
-        {/* Auth card */}
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-[0_8px_30px_-12px_rgba(15,23,42,0.12)] md:p-8">
-          <Tabs value={tab} onValueChange={(v) => setTab(v as "signin" | "signup")} className="w-full">
-            <div className="mb-5 text-center">
-              <h2 className="text-xl font-semibold text-foreground">
-                {tab === "signin" ? "Welcome back" : "Create your account"}
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {tab === "signin"
-                  ? "Sign in to continue to YOYO"
-                  : "Set up your YOYO ERP workspace access"}
-              </p>
-            </div>
-
-            <TabsList className="mb-6 grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Sign in</TabsTrigger>
-              <TabsTrigger value="signup">Create account</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="signin" className="space-y-4">
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="signin-email" className="text-sm font-medium">Email</Label>
-                  <div className="relative">
-                    <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="signin-email"
-                      type="email"
-                      autoComplete="email"
-                      placeholder="you@company.com"
-                      value={signinEmail}
-                      onChange={(e) => setSigninEmail(e.target.value)}
-                      required
-                      className="h-11 pl-9"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="signin-password" className="text-sm font-medium">Password</Label>
-                  <div className="relative">
-                    <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="signin-password"
-                      type={showSigninPwd ? "text" : "password"}
-                      autoComplete="current-password"
-                      placeholder="••••••••"
-                      value={signinPassword}
-                      onChange={(e) => setSigninPassword(e.target.value)}
-                      required
-                      className="h-11 pl-9 pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowSigninPwd((v) => !v)}
-                      aria-label={showSigninPwd ? "Hide password" : "Show password"}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                    >
-                      {showSigninPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-                <Button type="submit" className="h-11 w-full text-base font-semibold" disabled={submitting}>
-                  {submitting ? (
-                    <span className="flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" /> Opening dashboard…
-                    </span>
-                  ) : (
-                    "Sign in"
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="signup" className="space-y-4">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="signup-name" className="text-sm font-medium">Name</Label>
-                  <div className="relative">
-                    <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="signup-name"
-                      type="text"
-                      autoComplete="name"
-                      placeholder="Jane Doe"
-                      value={signupName}
-                      onChange={(e) => setSignupName(e.target.value)}
-                      required
-                      className="h-11 pl-9"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="signup-email" className="text-sm font-medium">Email</Label>
-                  <div className="relative">
-                    <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      autoComplete="email"
-                      placeholder="you@company.com"
-                      value={signupEmail}
-                      onChange={(e) => setSignupEmail(e.target.value)}
-                      required
-                      className="h-11 pl-9"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="signup-password" className="text-sm font-medium">Password</Label>
-                  <div className="relative">
-                    <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="signup-password"
-                      type={showSignupPwd ? "text" : "password"}
-                      autoComplete="new-password"
-                      placeholder="At least 8 characters"
-                      value={signupPassword}
-                      onChange={(e) => setSignupPassword(e.target.value)}
-                      required
-                      minLength={8}
-                      className="h-11 pl-9 pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowSignupPwd((v) => !v)}
-                      aria-label={showSignupPwd ? "Hide password" : "Show password"}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                    >
-                      {showSignupPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Minimum 8 characters.</p>
-                </div>
-                <Button type="submit" className="h-11 w-full text-base font-semibold" disabled={submitting}>
-                  {submitting ? (
-                    <span className="flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" /> Creating account…
-                    </span>
-                  ) : (
-                    "Create account"
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
-
-            <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
-              <div className="h-px flex-1 bg-border" />
-              <span>OR</span>
-              <div className="h-px flex-1 bg-border" />
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              className="h-11 w-full"
-              onClick={handleGoogle}
-              disabled={submitting}
-            >
-              <GoogleIcon className="mr-2 h-4 w-4" />
-              Continue with Google
-            </Button>
-
-            <p className="mt-6 text-center text-xs text-muted-foreground">
-              Authorized personnel only · Accounts are managed by administrators.
+      {/* Main split: sidebar-style brand panel + auth card */}
+      <div className="flex flex-1 flex-col lg:flex-row">
+        {/* Left brand panel — mimics sidebar */}
+        <aside className="hidden lg:flex lg:w-[420px] flex-col justify-between border-r border-sidebar-border px-10 py-12">
+          <div>
+            <span className="inline-flex items-center rounded-md bg-sidebar-accent px-2.5 py-1 text-[11px] font-semibold uppercase tracking-widest text-sidebar-primary">
+              Internal access
+            </span>
+            <h1 className="mt-6 text-3xl font-semibold leading-tight text-sidebar-foreground">
+              Welcome to the YOYO operations platform
+            </h1>
+            <p className="mt-4 text-sm leading-relaxed text-sidebar-foreground/70">
+              Sign in to manage products, inventory, dispatch, procurement and the full wholesale workflow.
             </p>
-          </Tabs>
-        </div>
+          </div>
+          <div className="space-y-2 text-xs text-sidebar-foreground/50">
+            <div className="h-px bg-sidebar-border" />
+            <p>Authorized personnel only · Accounts are managed by administrators.</p>
+            <p>© {new Date().getFullYear()} YOYO · All rights reserved.</p>
+          </div>
+        </aside>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} YOYO · All rights reserved ·{" "}
-          <Link to="/" className="font-medium text-foreground underline-offset-2 hover:underline">
-            Try the demo
-          </Link>
-        </p>
+        {/* Right auth card on light surface */}
+        <main className="flex flex-1 items-center justify-center bg-background px-4 py-10 text-foreground">
+          <div className="w-full max-w-md">
+            <div className="mb-8 flex flex-col items-center text-center lg:hidden">
+              <Logo size={64} showWordmark={false} />
+              <h1 className="mt-4 text-2xl font-bold tracking-tight">YOYO ERP</h1>
+              <p className="mt-1 text-sm text-muted-foreground">Internal operations platform</p>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card p-6 shadow-[0_8px_30px_-12px_rgba(15,23,42,0.18)] md:p-8">
+              <Tabs value={tab} onValueChange={(v) => setTab(v as "signin" | "signup")} className="w-full">
+                <div className="mb-5 text-center">
+                  <h2 className="text-xl font-semibold text-foreground">
+                    {tab === "signin" ? "Welcome back" : "Create your account"}
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {tab === "signin"
+                      ? "Sign in to continue to YOYO"
+                      : "Set up your YOYO ERP workspace access"}
+                  </p>
+                </div>
+
+                <TabsList className="mb-6 grid w-full grid-cols-2">
+                  <TabsTrigger value="signin">Sign in</TabsTrigger>
+                  <TabsTrigger value="signup">Create account</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="signin" className="space-y-4">
+                  <form onSubmit={handleSignIn} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="signin-email" className="text-sm font-medium">Email</Label>
+                      <div className="relative">
+                        <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          id="signin-email"
+                          type="email"
+                          autoComplete="email"
+                          placeholder="you@company.com"
+                          value={signinEmail}
+                          onChange={(e) => setSigninEmail(e.target.value)}
+                          required
+                          className="h-11 pl-9"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="signin-password" className="text-sm font-medium">Password</Label>
+                      <div className="relative">
+                        <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          id="signin-password"
+                          type={showSigninPwd ? "text" : "password"}
+                          autoComplete="current-password"
+                          placeholder="••••••••"
+                          value={signinPassword}
+                          onChange={(e) => setSigninPassword(e.target.value)}
+                          required
+                          className="h-11 pl-9 pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowSigninPwd((v) => !v)}
+                          aria-label={showSigninPwd ? "Hide password" : "Show password"}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                        >
+                          {showSigninPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+                    <Button
+                      type="submit"
+                      className="h-11 w-full bg-secondary text-secondary-foreground text-base font-semibold hover:bg-secondary/90"
+                      disabled={submitting}
+                    >
+                      {submitting ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" /> Opening dashboard…
+                        </span>
+                      ) : (
+                        "Sign in"
+                      )}
+                    </Button>
+                  </form>
+                </TabsContent>
+
+                <TabsContent value="signup" className="space-y-4">
+                  <form onSubmit={handleSignUp} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="signup-name" className="text-sm font-medium">Name</Label>
+                      <div className="relative">
+                        <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          id="signup-name"
+                          type="text"
+                          autoComplete="name"
+                          placeholder="Jane Doe"
+                          value={signupName}
+                          onChange={(e) => setSignupName(e.target.value)}
+                          required
+                          className="h-11 pl-9"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="signup-email" className="text-sm font-medium">Email</Label>
+                      <div className="relative">
+                        <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          id="signup-email"
+                          type="email"
+                          autoComplete="email"
+                          placeholder="you@company.com"
+                          value={signupEmail}
+                          onChange={(e) => setSignupEmail(e.target.value)}
+                          required
+                          className="h-11 pl-9"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="signup-password" className="text-sm font-medium">Password</Label>
+                      <div className="relative">
+                        <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          id="signup-password"
+                          type={showSignupPwd ? "text" : "password"}
+                          autoComplete="new-password"
+                          placeholder="At least 8 characters"
+                          value={signupPassword}
+                          onChange={(e) => setSignupPassword(e.target.value)}
+                          required
+                          minLength={8}
+                          className="h-11 pl-9 pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowSignupPwd((v) => !v)}
+                          aria-label={showSignupPwd ? "Hide password" : "Show password"}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                        >
+                          {showSignupPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Minimum 8 characters.</p>
+                    </div>
+                    <Button
+                      type="submit"
+                      className="h-11 w-full bg-secondary text-secondary-foreground text-base font-semibold hover:bg-secondary/90"
+                      disabled={submitting}
+                    >
+                      {submitting ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" /> Creating account…
+                        </span>
+                      ) : (
+                        "Create account"
+                      )}
+                    </Button>
+                  </form>
+                </TabsContent>
+
+                <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
+                  <div className="h-px flex-1 bg-border" />
+                  <span>OR</span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 w-full"
+                  onClick={handleGoogle}
+                  disabled={submitting}
+                >
+                  <GoogleIcon className="mr-2 h-4 w-4" />
+                  Continue with Google
+                </Button>
+
+                <p className="mt-6 text-center text-xs text-muted-foreground">
+                  Authorized personnel only · Accounts are managed by administrators.
+                </p>
+              </Tabs>
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   );
