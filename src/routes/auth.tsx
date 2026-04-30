@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { notify, friendlyAuthError } from "@/lib/notify";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -57,7 +58,7 @@ function AuthPage() {
     e.preventDefault();
     const parsed = credentialsSchema.safeParse({ email: signinEmail, password: signinPassword });
     if (!parsed.success) {
-      toast.error(parsed.error.issues[0]?.message ?? "Invalid input");
+      notify.warning(parsed.error.issues[0]?.message ?? "Invalid input");
       return;
     }
     setSubmitting(true);
@@ -67,10 +68,10 @@ function AuthPage() {
     });
     setSubmitting(false);
     if (error) {
-      toast.error(error.message === "Invalid login credentials" ? "Wrong email or password" : error.message);
+      notify.error(friendlyAuthError(error.message), { retry: () => void handleSignIn(e) });
       return;
     }
-    toast.success("Welcome back");
+    notify.success("Welcome back");
     navigate({ to: "/app/dashboard" });
   };
 
@@ -82,7 +83,7 @@ function AuthPage() {
       password: signupPassword,
     });
     if (!parsed.success) {
-      toast.error(parsed.error.issues[0]?.message ?? "Invalid input");
+      notify.warning(parsed.error.issues[0]?.message ?? "Invalid input");
       return;
     }
     setSubmitting(true);
@@ -96,14 +97,10 @@ function AuthPage() {
     });
     setSubmitting(false);
     if (error) {
-      if (error.message.includes("already registered")) {
-        toast.error("An account with this email already exists. Try signing in.");
-      } else {
-        toast.error(error.message);
-      }
+      notify.error(friendlyAuthError(error.message));
       return;
     }
-    toast.success("Check your email to confirm your account");
+    notify.success("Check your email to confirm your account");
     setTab("signin");
   };
 
@@ -114,11 +111,36 @@ function AuthPage() {
     });
     if (result.error) {
       setSubmitting(false);
-      toast.error("Could not sign in with Google");
+      notify.error("Could not sign in with Google", { retry: () => void handleGoogle() });
       return;
     }
     if (result.redirected) return;
     navigate({ to: "/app/dashboard" });
+  };
+
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSending, setForgotSending] = useState(false);
+
+  const handleForgot = async (e: FormEvent) => {
+    e.preventDefault();
+    const parsed = z.string().trim().email().safeParse(forgotEmail);
+    if (!parsed.success) {
+      notify.warning("Enter a valid email");
+      return;
+    }
+    setForgotSending(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+    setForgotSending(false);
+    if (error) {
+      notify.error(friendlyAuthError(error.message));
+      return;
+    }
+    notify.success("Reset link sent. Check your inbox.");
+    setForgotOpen(false);
+    setForgotEmail("");
   };
 
   if (loading) {
@@ -204,7 +226,7 @@ function AuthPage() {
                     </div>
                     <Button
                       type="submit"
-                      className="h-11 w-full bg-secondary text-secondary-foreground text-base font-semibold hover:bg-secondary/90"
+                      className="h-11 w-full bg-primary text-primary-foreground text-base font-semibold shadow-sm hover:bg-primary/90"
                       disabled={submitting}
                     >
                       {submitting ? (
@@ -212,9 +234,20 @@ function AuthPage() {
                           <Loader2 className="h-4 w-4 animate-spin" /> Opening dashboard…
                         </span>
                       ) : (
-                        "Sign in"
+                        <span className="flex items-center gap-2">
+                          <Lock className="h-4 w-4" /> Sign in
+                        </span>
                       )}
                     </Button>
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={() => { setForgotEmail(signinEmail); setForgotOpen(true); }}
+                        className="text-xs font-medium text-primary hover:underline"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
                   </form>
                 </TabsContent>
 
@@ -280,7 +313,7 @@ function AuthPage() {
                     </div>
                     <Button
                       type="submit"
-                      className="h-11 w-full bg-secondary text-secondary-foreground text-base font-semibold hover:bg-secondary/90"
+                      className="h-11 w-full bg-primary text-primary-foreground text-base font-semibold shadow-sm hover:bg-primary/90"
                       disabled={submitting}
                     >
                       {submitting ? (
@@ -321,6 +354,44 @@ function AuthPage() {
       <footer className="relative z-10 mt-8 text-center text-xs text-muted-foreground">
         © {new Date().getFullYear()} YOYO · All rights reserved.
       </footer>
+
+      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Reset password</DialogTitle>
+            <DialogDescription>
+              We'll email you a link to set a new password.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleForgot} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="forgot-email" className="text-sm font-medium">Email</Label>
+              <div className="relative">
+                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="forgot-email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@company.com"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  required
+                  className="h-10 pl-9"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => setForgotOpen(false)} disabled={forgotSending}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={forgotSending} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                {forgotSending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Send reset link
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
