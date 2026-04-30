@@ -96,6 +96,107 @@ export type StockRow = Database["public"]["Tables"]["inventory_stock"]["Row"];
 export type MovementRow = Database["public"]["Tables"]["stock_movements"]["Row"];
 export type MovementInsert = Database["public"]["Tables"]["stock_movements"]["Insert"];
 
+// ===================== Suppliers =====================
+export type SupplierRow = Database["public"]["Tables"]["suppliers"]["Row"];
+export type SupplierInsert = Database["public"]["Tables"]["suppliers"]["Insert"];
+
+export function useSuppliers() {
+  const [data, setData] = useState<SupplierRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    const { data: rows, error } = await supabase
+      .from("suppliers").select("*").order("name");
+    if (error) toast.error("Failed to load suppliers", { description: error.message });
+    setData(rows ?? []);
+    setLoading(false);
+  }, []);
+  useEffect(() => { refresh(); }, [refresh]);
+  return { suppliers: data, loading, refresh };
+}
+
+// ===================== Purchase Orders =====================
+export type POStatus = Database["public"]["Enums"]["po_status"];
+export type PORow = Database["public"]["Tables"]["purchase_orders"]["Row"];
+export type POLineRow = Database["public"]["Tables"]["purchase_order_lines"]["Row"];
+
+export interface POWithLines extends PORow {
+  lines: POLineRow[];
+  supplier: { id: string; name: string; code: string } | null;
+}
+
+export function usePurchaseOrders() {
+  const [data, setData] = useState<POWithLines[]>([]);
+  const [loading, setLoading] = useState(true);
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    const { data: rows, error } = await supabase
+      .from("purchase_orders")
+      .select("*, lines:purchase_order_lines(*), supplier:suppliers(id,name,code)")
+      .order("created_at", { ascending: false });
+    if (error) toast.error("Failed to load purchase orders", { description: error.message });
+    setData((rows ?? []) as unknown as POWithLines[]);
+    setLoading(false);
+  }, []);
+  useEffect(() => { refresh(); }, [refresh]);
+  return { purchaseOrders: data, loading, refresh };
+}
+
+// ===================== Inventory Requests =====================
+export type RequestStatusEnum = Database["public"]["Enums"]["request_status"];
+export type RequestRow = Database["public"]["Tables"]["inventory_requests"]["Row"];
+export type RequestLineRow = Database["public"]["Tables"]["inventory_request_lines"]["Row"];
+
+export interface RequestWithLines extends RequestRow {
+  lines: RequestLineRow[];
+}
+
+export function useInventoryRequests() {
+  const [data, setData] = useState<RequestWithLines[]>([]);
+  const [loading, setLoading] = useState(true);
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    const { data: rows, error } = await supabase
+      .from("inventory_requests")
+      .select("*, lines:inventory_request_lines(*)")
+      .order("created_at", { ascending: false });
+    if (error) toast.error("Failed to load requests", { description: error.message });
+    setData((rows ?? []) as unknown as RequestWithLines[]);
+    setLoading(false);
+  }, []);
+  useEffect(() => { refresh(); }, [refresh]);
+  return { requests: data, loading, refresh };
+}
+
+// ===================== Notifications =====================
+export type NotificationRow = Database["public"]["Tables"]["notifications"]["Row"];
+
+export function useCloudNotifications() {
+  const [data, setData] = useState<NotificationRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setData([]); setLoading(false); return; }
+    const { data: rows } = await supabase
+      .from("notifications").select("*").eq("user_id", user.id)
+      .order("created_at", { ascending: false }).limit(100);
+    setData(rows ?? []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    const channel = supabase
+      .channel("notifications-stream")
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => refresh())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [refresh]);
+
+  return { notifications: data, loading, refresh };
+}
+
 export interface InventoryLine {
   id: string;
   variant_id: string;

@@ -1,228 +1,307 @@
-import { useState, useMemo, useEffect } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, FileText } from "lucide-react";
+import { useMemo, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { Plus, FileText, Pencil, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { RequestFormSheet } from "@/components/requests/RequestFormSheet";
-import { RequestsTable } from "@/components/requests/RequestsTable";
-import { RequestsFilters } from "@/components/requests/RequestsFilters";
-import { RequestDetailSheet } from "@/components/requests/RequestDetailSheet";
-import { useApprovalActions } from "@/components/requests/ApprovalActions";
-import { useItems, useRequests } from "@/hooks/useInventoryData";
-import { useRole } from "@/hooks/useRole";
+  useInventoryRequests, useProducts, useWarehouses,
+  type RequestWithLines, type RequestStatusEnum,
+} from "@/hooks/useErpData";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useDemo } from "@/hooks/useDemo";
-import { RequestStatus } from "@/types/inventory";
-import type { InventoryRequest } from "@/types/inventory";
-import type { RequestFilters } from "@/components/requests/request-filter-types";
-import { EMPTY_REQUEST_FILTERS } from "@/components/requests/request-filter-types";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
+} from "@/components/ui/sheet";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/app/requests")({
   component: RequestsPage,
-  head: () => ({ meta: [{ title: "Requests — YOYO ERP" }] }),
-  validateSearch: (search: Record<string, unknown>) => ({
-    request: (search.request as string) || undefined,
-  }),
+  head: () => ({ meta: [{ title: "Requests · YOYO ERP" }] }),
 });
 
-function applyFilters(requests: InventoryRequest[], filters: RequestFilters): InventoryRequest[] {
-  return requests.filter((r) => {
-    if (filters.statuses.length > 0 && !filters.statuses.includes(r.status)) return false;
-    if (filters.requestor && !r.requestedBy.toLowerCase().includes(filters.requestor.toLowerCase())) return false;
-    if (filters.dateFrom && r.createdAt < new Date(filters.dateFrom).toISOString()) return false;
-    if (filters.dateTo) {
-      const toEnd = new Date(filters.dateTo);
-      toEnd.setDate(toEnd.getDate() + 1);
-      if (r.createdAt >= toEnd.toISOString()) return false;
-    }
-    return true;
-  });
+const STATUS_COLORS: Record<RequestStatusEnum, string> = {
+  draft: "bg-muted text-muted-foreground",
+  submitted: "bg-sky-500/10 text-sky-700",
+  approved: "bg-blue-500/10 text-blue-700",
+  rejected: "bg-destructive/10 text-destructive",
+  fulfilled: "bg-emerald-500/10 text-emerald-700",
+  cancelled: "bg-slate-500/10 text-slate-700",
+};
+
+interface DraftLine { variant_id: string; qty_requested: number; }
+interface DraftReq {
+  id?: string;
+  request_number: string;
+  status: RequestStatusEnum;
+  warehouse_id: string;
+  reason: string;
+  notes: string;
+  lines: DraftLine[];
+}
+
+function emptyDraft(): DraftReq {
+  const yymm = new Date().toISOString().slice(2, 7).replace("-", "");
+  return {
+    request_number: `REQ-${yymm}-${Math.floor(Math.random() * 9000 + 1000)}`,
+    status: "draft", warehouse_id: "", reason: "", notes: "", lines: [],
+  };
 }
 
 function RequestsPage() {
-  const { data: catalogItems } = useItems();
-  const { data: requests } = useRequests();
-  const { role } = useRole();
+  const { requests, loading, refresh } = useInventoryRequests();
+  const { products } = useProducts();
+  const { warehouses } = useWarehouses();
   const { can } = usePermissions();
-  const { demoStore, bumpVersion } = useDemo();
-  const navigate = useNavigate();
-  const { request: requestParam } = Route.useSearch();
-  const isManagerOrAdmin = role === "admin" || role === "manager";
-  const canApproveReq = can("approve_request");
-  const [formOpen, setFormOpen] = useState(false);
-  const [filters, setFilters] = useState<RequestFilters>(EMPTY_REQUEST_FILTERS);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [detailRequest, setDetailRequest] = useState<InventoryRequest | null>(null);
-  const [cancelTarget, setCancelTarget] = useState<InventoryRequest | null>(null);
+  const { user } = useAuth();
+  const canApprove = can("approve_request");
 
-  // Open detail from URL param on load
-  useEffect(() => {
-    if (requestParam && requests.length > 0 && !detailRequest) {
-      const found = requests.find((r) => r.id === requestParam);
-      if (found) {
-        setDetailRequest(found);
-        setDetailOpen(true);
-      }
-    }
-  }, [requestParam, requests, detailRequest]);
+  const variantOptions = useMemo(() =>
+    products.flatMap((p) => p.variants.map((v) => ({
+      id: v.id, label: `${p.name} · ${v.variant_name} (${v.sku})`,
+    }))), [products]);
 
-  const approval = useApprovalActions({ items: catalogItems });
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState<DraftReq | null>(null);
+  const [deleting, setDeleting] = useState<RequestWithLines | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const pendingCount = useMemo(
-    () => requests.filter((r) => r.status === RequestStatus.Pending).length,
-    [requests],
-  );
-
-  const pendingRequests = useMemo(
-    () =>
-      applyFilters(
-        requests.filter((r) => r.status === RequestStatus.Pending),
-        filters,
-      ).sort((a, b) => {
-        if (a.priority === "urgent" && b.priority !== "urgent") return -1;
-        if (b.priority === "urgent" && a.priority !== "urgent") return 1;
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      }),
-    [requests, filters],
-  );
-
-  const allFiltered = useMemo(() => applyFilters(requests, filters), [requests, filters]);
-
-  const currentDetail = useMemo(
-    () => (detailRequest ? requests.find((r) => r.id === detailRequest.id) ?? detailRequest : null),
-    [requests, detailRequest],
-  );
-
-  function handleRowClick(req: InventoryRequest) {
-    setDetailRequest(req);
-    setDetailOpen(true);
-    navigate({ to: "/app/requests", search: { request: req.id }, replace: true });
-  }
-
-  function handleDetailClose(open: boolean) {
-    setDetailOpen(open);
-    if (!open) {
-      navigate({ to: "/app/requests", search: { request: undefined }, replace: true });
-    }
-  }
-
-  function handleCancel(req: InventoryRequest) {
-    setCancelTarget(req);
-  }
-
-  function confirmCancel() {
-    if (!cancelTarget || !demoStore) return;
-    demoStore.updateRequest(cancelTarget.id, {
-      status: RequestStatus.Cancelled,
-      updatedAt: new Date().toISOString(),
+  function openCreate() { setDraft(emptyDraft()); setOpen(true); }
+  function openEdit(r: RequestWithLines) {
+    setDraft({
+      id: r.id, request_number: r.request_number, status: r.status,
+      warehouse_id: r.warehouse_id ?? "", reason: r.reason ?? "", notes: r.notes ?? "",
+      lines: r.lines.map((l) => ({ variant_id: l.variant_id, qty_requested: Number(l.qty_requested) })),
     });
-    bumpVersion();
-    toast.success(`${cancelTarget.requestNumber} cancelled`);
-    setCancelTarget(null);
+    setOpen(true);
+  }
+
+  function addLine() {
+    if (!draft) return;
+    setDraft({ ...draft, lines: [...draft.lines, { variant_id: "", qty_requested: 1 }] });
+  }
+  function updateLine(i: number, patch: Partial<DraftLine>) {
+    if (!draft) return;
+    const lines = [...draft.lines]; lines[i] = { ...lines[i], ...patch };
+    setDraft({ ...draft, lines });
+  }
+  function removeLine(i: number) {
+    if (!draft) return;
+    setDraft({ ...draft, lines: draft.lines.filter((_, idx) => idx !== i) });
+  }
+
+  async function handleSave() {
+    if (!draft) return;
+    if (draft.lines.length === 0) { toast.error("Add at least one line"); return; }
+    if (draft.lines.some((l) => !l.variant_id || l.qty_requested <= 0)) {
+      toast.error("Each line needs a variant and qty > 0"); return;
+    }
+    setSaving(true);
+    const headerPayload = {
+      request_number: draft.request_number, status: draft.status,
+      warehouse_id: draft.warehouse_id || null,
+      reason: draft.reason || null, notes: draft.notes || null,
+      requested_by: user?.id ?? null,
+    };
+    let reqId = draft.id;
+    if (reqId) {
+      const { error } = await supabase.from("inventory_requests").update(headerPayload).eq("id", reqId);
+      if (error) { setSaving(false); toast.error("Save failed", { description: error.message }); return; }
+      await supabase.from("inventory_request_lines").delete().eq("request_id", reqId);
+    } else {
+      const { data, error } = await supabase.from("inventory_requests").insert(headerPayload).select("id").single();
+      if (error || !data) { setSaving(false); toast.error("Save failed", { description: error?.message }); return; }
+      reqId = data.id;
+    }
+    const linesPayload = draft.lines.map((l) => ({
+      request_id: reqId!, variant_id: l.variant_id, qty_requested: l.qty_requested,
+    }));
+    const { error: lErr } = await supabase.from("inventory_request_lines").insert(linesPayload);
+    setSaving(false);
+    if (lErr) { toast.error("Lines failed", { description: lErr.message }); return; }
+    toast.success(draft.id ? "Request updated" : "Request created");
+    setOpen(false); setDraft(null); await refresh();
+  }
+
+  async function quickStatus(r: RequestWithLines, status: RequestStatusEnum) {
+    const patch: {
+      status: RequestStatusEnum;
+      approved_by?: string | null;
+      approved_at?: string | null;
+      fulfilled_at?: string | null;
+    } = { status };
+    if (status === "approved") { patch.approved_by = user?.id ?? null; patch.approved_at = new Date().toISOString(); }
+    if (status === "fulfilled") { patch.fulfilled_at = new Date().toISOString(); }
+    const { error } = await supabase.from("inventory_requests").update(patch).eq("id", r.id);
+    if (error) { toast.error("Update failed", { description: error.message }); return; }
+    toast.success(`Marked ${status}`);
+    await refresh();
+  }
+
+  async function handleDelete() {
+    if (!deleting) return;
+    const { error } = await supabase.from("inventory_requests").delete().eq("id", deleting.id);
+    if (error) { toast.error("Delete failed", { description: error.message }); return; }
+    toast.success("Request deleted");
+    setDeleting(null); await refresh();
   }
 
   return (
     <div className="mx-auto max-w-[1400px] space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Inventory Requests</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Inventory requests</h1>
           <p className="text-sm text-muted-foreground">{requests.length} requests</p>
         </div>
-        <Button size="sm" onClick={() => setFormOpen(true)}>
-          <Plus className="mr-1.5 h-4 w-4" />
-          New Request
+        <Button size="sm" onClick={openCreate}>
+          <Plus className="mr-1.5 h-4 w-4" /> New request
         </Button>
       </div>
 
-      <ErrorBoundary>
-      {requests.length === 0 ? (
-        <EmptyState
-          icon={FileText}
-          title="No requests submitted"
-          description="Inventory requests let team members request stock for their departments."
-          actionLabel="New Request"
-          onAction={() => setFormOpen(true)}
-        />
-      ) : isManagerOrAdmin ? (
-        <Tabs defaultValue="all">
-          <TabsList>
-            <TabsTrigger value="all">All Requests</TabsTrigger>
-            <TabsTrigger value="pending" className="gap-1.5">
-              Pending Approval
-              {pendingCount > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5 text-xs">
-                  {pendingCount}
-                </Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
-
-          <div className="mt-4">
-            <RequestsFilters filters={filters} onChange={setFilters} />
-          </div>
-
-          <TabsContent value="all" className="mt-4">
-            <RequestsTable requests={allFiltered} onRowClick={handleRowClick} showRequestor />
-          </TabsContent>
-          <TabsContent value="pending" className="mt-4">
-            <RequestsTable requests={pendingRequests} onRowClick={handleRowClick} showRequestor preSorted />
-          </TabsContent>
-        </Tabs>
+      {loading ? (
+        <div className="rounded-xl border border-border bg-white p-8 text-sm text-muted-foreground">Loading…</div>
+      ) : requests.length === 0 ? (
+        <EmptyState icon={FileText} title="No requests yet"
+          description="Submit an internal stock request from production, dispatch, or any zone."
+          actionLabel="New request" onAction={openCreate} />
       ) : (
-        <RequestsTable requests={requests} onRowClick={handleRowClick} />
+        <div className="overflow-x-auto rounded-xl border border-border bg-white">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Request #</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Lines</TableHead>
+                <TableHead>Reason</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead className="w-56"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {requests.map((r) => (
+                <TableRow key={r.id}>
+                  <TableCell className="font-mono text-xs">{r.request_number}</TableCell>
+                  <TableCell><Badge className={STATUS_COLORS[r.status]} variant="outline">{r.status}</Badge></TableCell>
+                  <TableCell className="font-mono">{r.lines.length}</TableCell>
+                  <TableCell className="text-muted-foreground">{r.reason ?? "—"}</TableCell>
+                  <TableCell className="text-muted-foreground text-xs">{new Date(r.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <div className="flex justify-end gap-1">
+                      {canApprove && r.status === "submitted" && (
+                        <>
+                          <Button size="sm" variant="outline" className="h-8" onClick={() => quickStatus(r, "approved")}>Approve</Button>
+                          <Button size="sm" variant="ghost" className="h-8 text-destructive" onClick={() => quickStatus(r, "rejected")}>Reject</Button>
+                        </>
+                      )}
+                      {canApprove && r.status === "approved" && (
+                        <Button size="sm" variant="outline" className="h-8" onClick={() => quickStatus(r, "fulfilled")}>Fulfill</Button>
+                      )}
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(r)}><Pencil className="h-3.5 w-3.5" /></Button>
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => setDeleting(r)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
-      </ErrorBoundary>
 
-      <RequestDetailSheet
-        open={detailOpen}
-        onOpenChange={handleDetailClose}
-        request={currentDetail}
-        items={catalogItems}
-        canApprove={canApproveReq}
-        onApprove={approval.openApprove}
-        onDecline={approval.openDecline}
-        onPartial={approval.openPartial}
-        onCancel={handleCancel}
-      />
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>{draft?.id ? "Edit request" : "New request"}</SheetTitle>
+            <SheetDescription>Internal stock request.</SheetDescription>
+          </SheetHeader>
+          {draft && (
+            <div className="mt-6 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Request #</Label><Input value={draft.request_number} onChange={(e) => setDraft({ ...draft, request_number: e.target.value })} /></div>
+                <div>
+                  <Label>Status</Label>
+                  <Select value={draft.status} onValueChange={(v) => setDraft({ ...draft, status: v as RequestStatusEnum })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {(["draft","submitted","approved","rejected","fulfilled","cancelled"] as RequestStatusEnum[]).map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <Label>Warehouse</Label>
+                <Select value={draft.warehouse_id} onValueChange={(v) => setDraft({ ...draft, warehouse_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Choose warehouse" /></SelectTrigger>
+                  <SelectContent>
+                    {warehouses.map((w) => <SelectItem key={w.id} value={w.id}>{w.code} · {w.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Reason</Label><Input value={draft.reason} onChange={(e) => setDraft({ ...draft, reason: e.target.value })} placeholder="Production batch, dispatch, etc." /></div>
 
-      {approval.renderDialogs()}
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center justify-between">
+                  <Label>Items</Label>
+                  <Button size="sm" variant="outline" onClick={addLine}><Plus className="mr-1 h-3.5 w-3.5" /> Add item</Button>
+                </div>
+                {draft.lines.length === 0 ? (
+                  <p className="rounded border border-dashed border-border py-4 text-center text-xs text-muted-foreground">No items yet</p>
+                ) : (
+                  <div className="space-y-2">
+                    {draft.lines.map((l, i) => (
+                      <div key={i} className="grid grid-cols-[1fr_100px_36px] gap-2 items-center">
+                        <Select value={l.variant_id} onValueChange={(v) => updateLine(i, { variant_id: v })}>
+                          <SelectTrigger><SelectValue placeholder="Pick variant" /></SelectTrigger>
+                          <SelectContent>
+                            {variantOptions.map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                        <Input type="number" min={0} step="0.01" value={l.qty_requested} onChange={(e) => updateLine(i, { qty_requested: Number(e.target.value) })} />
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => removeLine(i)}><X className="h-3.5 w-3.5" /></Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-      {/* Cancel confirmation */}
-      <AlertDialog open={!!cancelTarget} onOpenChange={(o) => !o && setCancelTarget(null)}>
+              <div><Label>Notes</Label><Textarea rows={2} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+                <Button onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save request"}</Button>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel {cancelTarget?.requestNumber}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. The request will be marked as cancelled.
-            </AlertDialogDescription>
+            <AlertDialogTitle>Delete {deleting?.request_number}?</AlertDialogTitle>
+            <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Keep Request</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={confirmCancel}
-            >
-              Confirm Cancel
-            </AlertDialogAction>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={handleDelete}>Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <RequestFormSheet open={formOpen} onOpenChange={setFormOpen} items={catalogItems} />
     </div>
   );
 }

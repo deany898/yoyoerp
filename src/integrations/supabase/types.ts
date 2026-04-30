@@ -91,6 +91,152 @@ export type Database = {
           },
         ]
       }
+      custom_field_definitions: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          field_type: string
+          id: string
+          is_required: boolean
+          name: string
+          options: Json | null
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          field_type: string
+          id?: string
+          is_required?: boolean
+          name: string
+          options?: Json | null
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          field_type?: string
+          id?: string
+          is_required?: boolean
+          name?: string
+          options?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_field_definitions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_request_lines: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          qty_fulfilled: number
+          qty_requested: number
+          request_id: string
+          variant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          qty_fulfilled?: number
+          qty_requested: number
+          request_id: string
+          variant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          qty_fulfilled?: number
+          qty_requested?: number
+          request_id?: string
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_request_lines_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_request_lines_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_requests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          fulfilled_at: string | null
+          id: string
+          notes: string | null
+          reason: string | null
+          request_number: string
+          requested_by: string | null
+          status: Database["public"]["Enums"]["request_status"]
+          updated_at: string
+          warehouse_id: string | null
+          zone_id: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          fulfilled_at?: string | null
+          id?: string
+          notes?: string | null
+          reason?: string | null
+          request_number: string
+          requested_by?: string | null
+          status?: Database["public"]["Enums"]["request_status"]
+          updated_at?: string
+          warehouse_id?: string | null
+          zone_id?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          fulfilled_at?: string | null
+          id?: string
+          notes?: string | null
+          reason?: string | null
+          request_number?: string
+          requested_by?: string | null
+          status?: Database["public"]["Enums"]["request_status"]
+          updated_at?: string
+          warehouse_id?: string | null
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_requests_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_requests_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "warehouse_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_snapshots: {
         Row: {
           avg_cost: number
@@ -192,6 +338,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string | null
+          reference_id: string | null
+          reference_type: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       product_images: {
         Row: {
@@ -474,6 +656,132 @@ export type Database = {
         }
         Relationships: []
       }
+      purchase_order_lines: {
+        Row: {
+          created_at: string
+          id: string
+          line_total: number
+          notes: string | null
+          po_id: string
+          qty_ordered: number
+          qty_received: number
+          tax_rate: number
+          unit_cost: number
+          variant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          line_total?: number
+          notes?: string | null
+          po_id: string
+          qty_ordered: number
+          qty_received?: number
+          tax_rate?: number
+          unit_cost?: number
+          variant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          line_total?: number
+          notes?: string | null
+          po_id?: string
+          qty_ordered?: number
+          qty_received?: number
+          tax_rate?: number
+          unit_cost?: number
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_lines_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_lines_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_orders: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          currency: string
+          expected_date: string | null
+          id: string
+          notes: string | null
+          order_date: string
+          po_number: string
+          received_date: string | null
+          status: Database["public"]["Enums"]["po_status"]
+          subtotal: number
+          supplier_id: string
+          tax_total: number
+          total: number
+          updated_at: string
+          warehouse_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          expected_date?: string | null
+          id?: string
+          notes?: string | null
+          order_date?: string
+          po_number: string
+          received_date?: string | null
+          status?: Database["public"]["Enums"]["po_status"]
+          subtotal?: number
+          supplier_id: string
+          tax_total?: number
+          total?: number
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          expected_date?: string | null
+          id?: string
+          notes?: string | null
+          order_date?: string
+          po_number?: string
+          received_date?: string | null
+          status?: Database["public"]["Enums"]["po_status"]
+          subtotal?: number
+          supplier_id?: string
+          tax_total?: number
+          total?: number
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_movements: {
         Row: {
           from_zone_id: string | null
@@ -540,6 +848,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      suppliers: {
+        Row: {
+          address: string | null
+          city: string | null
+          code: string
+          contact_name: string | null
+          country: string
+          created_at: string
+          created_by: string | null
+          email: string | null
+          gst_number: string | null
+          id: string
+          is_active: boolean
+          lead_time_days: number
+          name: string
+          notes: string | null
+          payment_terms: string | null
+          phone: string | null
+          state: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          code: string
+          contact_name?: string | null
+          country?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          gst_number?: string | null
+          id?: string
+          is_active?: boolean
+          lead_time_days?: number
+          name: string
+          notes?: string | null
+          payment_terms?: string | null
+          phone?: string | null
+          state?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          code?: string
+          contact_name?: string | null
+          country?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          gst_number?: string | null
+          id?: string
+          is_active?: boolean
+          lead_time_days?: number
+          name?: string
+          notes?: string | null
+          payment_terms?: string | null
+          phone?: string | null
+          state?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -686,7 +1057,22 @@ export type Database = {
         | "scrap"
         | "opening_balance"
       packaging_kind: "poly" | "carton" | "box" | "label" | "pallet" | "other"
+      po_status:
+        | "draft"
+        | "submitted"
+        | "approved"
+        | "partial"
+        | "received"
+        | "cancelled"
+        | "closed"
       product_type: "raw_material" | "packaging" | "finished_good" | "wip"
+      request_status:
+        | "draft"
+        | "submitted"
+        | "approved"
+        | "rejected"
+        | "fulfilled"
+        | "cancelled"
       zone_kind:
         | "raw_material"
         | "wip"
@@ -847,7 +1233,24 @@ export const Constants = {
         "opening_balance",
       ],
       packaging_kind: ["poly", "carton", "box", "label", "pallet", "other"],
+      po_status: [
+        "draft",
+        "submitted",
+        "approved",
+        "partial",
+        "received",
+        "cancelled",
+        "closed",
+      ],
       product_type: ["raw_material", "packaging", "finished_good", "wip"],
+      request_status: [
+        "draft",
+        "submitted",
+        "approved",
+        "rejected",
+        "fulfilled",
+        "cancelled",
+      ],
       zone_kind: [
         "raw_material",
         "wip",
