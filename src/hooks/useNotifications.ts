@@ -1,6 +1,7 @@
-import { useMemo, useCallback } from "react";
-import { useDemo } from "@/hooks/useDemo";
-import type { Notification } from "@/types/inventory";
+import { useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useCloudNotifications, type NotificationRow } from "@/hooks/useErpData";
+import type { Notification, NotificationType } from "@/types/inventory";
 
 interface QueryResult<T> {
   data: T;
@@ -8,51 +9,45 @@ interface QueryResult<T> {
   error: Error | null;
 }
 
+function toLegacy(n: NotificationRow): Notification {
+  return {
+    id: n.id,
+    type: (n.type as NotificationType) ?? "system",
+    title: n.title,
+    message: n.message ?? "",
+    isRead: n.is_read,
+    link: null,
+    referenceId: n.reference_id ?? null,
+    createdAt: n.created_at,
+  };
+}
+
 export function useNotifications(): QueryResult<Notification[]> {
-  const { isDemo, demoStore, version } = useDemo();
-  return useMemo(() => {
-    if (isDemo && demoStore) {
-      return { data: demoStore.getNotifications(), isLoading: false, error: null };
-    }
-    return { data: [] as Notification[], isLoading: false, error: null };
-  }, [isDemo, demoStore, version]);
+  const { notifications, loading } = useCloudNotifications();
+  return { data: notifications.map(toLegacy), isLoading: loading, error: null };
 }
 
 export function useUnreadCount(): number {
-  const { isDemo, demoStore, version } = useDemo();
-  return useMemo(() => {
-    if (isDemo && demoStore) return demoStore.getUnreadCount();
-    return 0;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDemo, demoStore, version]);
+  const { notifications } = useCloudNotifications();
+  return notifications.filter((n) => !n.is_read).length;
 }
 
 export function useMarkAsRead() {
-  const { demoStore, bumpVersion } = useDemo();
-  return useCallback(
-    (id: string) => {
-      demoStore?.markAsRead(id);
-      bumpVersion();
-    },
-    [demoStore, bumpVersion],
-  );
+  return useCallback(async (id: string) => {
+    await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+  }, []);
 }
 
 export function useMarkAllAsRead() {
-  const { demoStore, bumpVersion } = useDemo();
-  return useCallback(() => {
-    demoStore?.markAllAsRead();
-    bumpVersion();
-  }, [demoStore, bumpVersion]);
+  return useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from("notifications").update({ is_read: true }).eq("user_id", user.id).eq("is_read", false);
+  }, []);
 }
 
 export function useDismissNotification() {
-  const { demoStore, bumpVersion } = useDemo();
-  return useCallback(
-    (id: string) => {
-      demoStore?.dismissNotification(id);
-      bumpVersion();
-    },
-    [demoStore, bumpVersion],
-  );
+  return useCallback(async (id: string) => {
+    await supabase.from("notifications").delete().eq("id", id);
+  }, []);
 }
