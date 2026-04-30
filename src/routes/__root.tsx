@@ -4,6 +4,7 @@ import { RoleProvider } from "@/contexts/RoleContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { ConfirmProvider } from "@/components/forms/ConfirmDialog";
 
 import appCss from "../styles.css?url";
 
@@ -65,10 +66,18 @@ function RootComponent() {
     <AuthProvider>
       <DemoProvider>
         <RoleProvider>
-          <ErrorBoundary>
-            <Outlet />
-          </ErrorBoundary>
-          <Toaster position="bottom-right" richColors />
+          <ConfirmProvider>
+            <ErrorBoundary>
+              <Outlet />
+            </ErrorBoundary>
+          </ConfirmProvider>
+          <Toaster
+            position="top-right"
+            richColors
+            closeButton
+            expand
+            toastOptions={{ duration: 4000 }}
+          />
         </RoleProvider>
       </DemoProvider>
     </AuthProvider>
