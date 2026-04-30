@@ -197,30 +197,31 @@ function GoodsReturnsPage() {
     return dispatchOrders.filter((d) => d.customer_id === draft.customer_id);
   }, [dispatchOrders, draft?.customer_id]);
 
-  async function persist(): Promise<string | null> {
-    if (!draft) return null;
-    if (!draft.customer_id) { toast.error("Pick a customer"); return null; }
-    if (draft.lines.length === 0) { toast.error("Add at least one line"); return null; }
-    if (draft.lines.some((l) => !l.variant_id || l.qty <= 0)) {
+  async function persist(override?: DraftGR): Promise<string | null> {
+    const src = override ?? draft;
+    if (!src) return null;
+    if (!src.customer_id) { toast.error("Pick a customer"); return null; }
+    if (src.lines.length === 0) { toast.error("Add at least one line"); return null; }
+    if (src.lines.some((l) => !l.variant_id || l.qty <= 0)) {
       toast.error("Each line needs a product and qty > 0"); return null;
     }
-    let grNumber = draft.gr_number;
+    let grNumber = src.gr_number;
     if (!grNumber) {
       const { data, error } = await supabase.rpc("next_doc_number", { _doc_type: "GR" });
       if (error || !data) { toast.error("Could not generate GR number"); return null; }
       grNumber = data as string;
     }
     const header = {
-      gr_number: grNumber, customer_id: draft.customer_id,
-      dispatch_order_id: draft.dispatch_order_id || null,
-      warehouse_id: draft.warehouse_id || null,
-      status: draft.status,
-      return_date: draft.return_date,
-      reason: draft.reason || null,
-      refund_amount: draft.refund_amount || refundAuto,
-      notes: draft.notes || null,
+      gr_number: grNumber, customer_id: src.customer_id,
+      dispatch_order_id: src.dispatch_order_id || null,
+      warehouse_id: src.warehouse_id || null,
+      status: src.status,
+      return_date: src.return_date,
+      reason: src.reason || null,
+      refund_amount: src.refund_amount || src.lines.reduce((s, l) => s + l.qty * l.unit_price, 0),
+      notes: src.notes || null,
     };
-    let id = draft.id;
+    let id = src.id;
     if (id) {
       const { error } = await supabase.from("goods_returns").update(header).eq("id", id);
       if (error) { toast.error("Save failed", { description: error.message }); return null; }
@@ -230,7 +231,7 @@ function GoodsReturnsPage() {
       if (error || !data) { toast.error("Save failed", { description: error?.message }); return null; }
       id = data.id;
     }
-    const lines = draft.lines.map((l) => ({
+    const lines = src.lines.map((l) => ({
       goods_return_id: id!, variant_id: l.variant_id, qty: l.qty,
       unit_price: l.unit_price, line_total: l.qty * l.unit_price,
       reason: l.reason, condition: l.condition,
@@ -238,6 +239,7 @@ function GoodsReturnsPage() {
     }));
     const { error: lErr } = await supabase.from("goods_return_lines").insert(lines);
     if (lErr) { toast.error("Lines failed", { description: lErr.message }); return null; }
+    setDraft({ ...src, id });
     return id!;
   }
 
