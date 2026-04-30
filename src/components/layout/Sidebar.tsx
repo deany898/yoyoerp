@@ -15,6 +15,7 @@ import {
   Send,
   Users,
   ShieldCheck,
+  Undo2,
   LogOut,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
@@ -71,6 +72,7 @@ const navGroups: NavGroup[] = [
     items: [
       { label: "Customers", href: "/app/customers", icon: Users },
       { label: "Dispatch orders", href: "/app/dispatch-orders", icon: Send },
+      { label: "Goods returns", href: "/app/goods-returns", icon: Undo2 },
     ],
   },
   {
