@@ -188,7 +188,7 @@ export function useCloudNotifications() {
   useEffect(() => {
     refresh();
     const channel = supabase
-      .channel("notifications-stream")
+      .channel(`notifications-stream-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => refresh())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
