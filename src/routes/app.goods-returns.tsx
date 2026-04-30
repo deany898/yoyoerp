@@ -15,6 +15,7 @@ import { SmartSelect } from "@/components/forms/SmartSelect";
 import { GRStatusStepper, type GRStatus } from "@/components/goods-returns/GRStatusStepper";
 import { GRLifecycleActions, type GRTransition } from "@/components/goods-returns/GRLifecycleActions";
 import { GRMovementsTimeline } from "@/components/goods-returns/GRMovementsTimeline";
+import { GRLineImpacts } from "@/components/goods-returns/GRLineImpacts";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
@@ -562,6 +563,13 @@ function GoodsReturnsPage() {
 
               {draft.id && (
                 <div className="space-y-2 border-t border-border pt-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Inventory impact per line</Label>
+                    <span className="text-[11px] text-muted-foreground">
+                      {draft.status === "received" ? "Posted to inventory" : "Will post on receive"}
+                    </span>
+                  </div>
+                  <GRLineImpacts goodsReturnId={draft.id} />
                   <div className="flex items-center justify-between">
                     <Label>Posted stock movements</Label>
                     <span className="text-[11px] text-muted-foreground">Audit trail · linked to this GR</span>
