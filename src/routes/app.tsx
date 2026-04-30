@@ -57,7 +57,7 @@ function AppLayout() {
     <div className="flex h-screen flex-col overflow-hidden bg-background">
       <DemoBanner />
       <div className="flex flex-1 overflow-hidden">
-        <aside className="hidden w-[260px] shrink-0 md:block">
+        <aside className="hidden w-[264px] shrink-0 border-r border-border bg-sidebar md:block">
           <Sidebar />
         </aside>
         <div className="flex flex-1 flex-col overflow-hidden">
