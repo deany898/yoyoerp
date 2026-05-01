@@ -2198,6 +2198,67 @@ export type Database = {
           },
         ]
       }
+      semi_finished_inventory: {
+        Row: {
+          created_at: string
+          id: string
+          last_movement_at: string | null
+          qty: number
+          quality_status: Database["public"]["Enums"]["sf_quality_status"]
+          stage_id: string
+          unit_cost: number
+          updated_at: string
+          variant_id: string
+          zone_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_movement_at?: string | null
+          qty?: number
+          quality_status?: Database["public"]["Enums"]["sf_quality_status"]
+          stage_id: string
+          unit_cost?: number
+          updated_at?: string
+          variant_id: string
+          zone_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_movement_at?: string | null
+          qty?: number
+          quality_status?: Database["public"]["Enums"]["sf_quality_status"]
+          stage_id?: string
+          unit_cost?: number
+          updated_at?: string
+          variant_id?: string
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "semi_finished_inventory_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "production_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "semi_finished_inventory_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "semi_finished_inventory_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "warehouse_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stage_group_lines: {
         Row: {
           created_at: string
@@ -2328,6 +2389,195 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      stage_handoff_lines: {
+        Row: {
+          component_variant_id: string
+          created_at: string
+          handoff_id: string
+          id: string
+          notes: string | null
+          qty: number
+          unit_cost: number
+          zone_id: string | null
+        }
+        Insert: {
+          component_variant_id: string
+          created_at?: string
+          handoff_id: string
+          id?: string
+          notes?: string | null
+          qty?: number
+          unit_cost?: number
+          zone_id?: string | null
+        }
+        Update: {
+          component_variant_id?: string
+          created_at?: string
+          handoff_id?: string
+          id?: string
+          notes?: string | null
+          qty?: number
+          unit_cost?: number
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stage_handoff_lines_component_variant_id_fkey"
+            columns: ["component_variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stage_handoff_lines_handoff_id_fkey"
+            columns: ["handoff_id"]
+            isOneToOne: false
+            referencedRelation: "stage_handoffs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stage_handoff_lines_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "warehouse_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stage_handoffs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          from_stage_id: string | null
+          from_zone_id: string | null
+          ho_number: string
+          id: string
+          is_final_stage: boolean
+          is_first_stage: boolean
+          machine_id: string | null
+          mo_id: string | null
+          mould_id: string | null
+          notes: string | null
+          qty_good: number
+          qty_hold: number
+          qty_in: number
+          qty_rework: number
+          qty_scrap: number
+          status: string
+          to_stage_id: string | null
+          to_zone_id: string | null
+          unit_cost: number
+          updated_at: string
+          variant_id: string
+          work_log_id: string | null
+          worker_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          from_stage_id?: string | null
+          from_zone_id?: string | null
+          ho_number: string
+          id?: string
+          is_final_stage?: boolean
+          is_first_stage?: boolean
+          machine_id?: string | null
+          mo_id?: string | null
+          mould_id?: string | null
+          notes?: string | null
+          qty_good?: number
+          qty_hold?: number
+          qty_in?: number
+          qty_rework?: number
+          qty_scrap?: number
+          status?: string
+          to_stage_id?: string | null
+          to_zone_id?: string | null
+          unit_cost?: number
+          updated_at?: string
+          variant_id: string
+          work_log_id?: string | null
+          worker_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          from_stage_id?: string | null
+          from_zone_id?: string | null
+          ho_number?: string
+          id?: string
+          is_final_stage?: boolean
+          is_first_stage?: boolean
+          machine_id?: string | null
+          mo_id?: string | null
+          mould_id?: string | null
+          notes?: string | null
+          qty_good?: number
+          qty_hold?: number
+          qty_in?: number
+          qty_rework?: number
+          qty_scrap?: number
+          status?: string
+          to_stage_id?: string | null
+          to_zone_id?: string | null
+          unit_cost?: number
+          updated_at?: string
+          variant_id?: string
+          work_log_id?: string | null
+          worker_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stage_handoffs_from_stage_id_fkey"
+            columns: ["from_stage_id"]
+            isOneToOne: false
+            referencedRelation: "production_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stage_handoffs_from_zone_id_fkey"
+            columns: ["from_zone_id"]
+            isOneToOne: false
+            referencedRelation: "warehouse_zones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stage_handoffs_mould_id_fkey"
+            columns: ["mould_id"]
+            isOneToOne: false
+            referencedRelation: "moulds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stage_handoffs_to_stage_id_fkey"
+            columns: ["to_stage_id"]
+            isOneToOne: false
+            referencedRelation: "production_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stage_handoffs_to_zone_id_fkey"
+            columns: ["to_zone_id"]
+            isOneToOne: false
+            referencedRelation: "warehouse_zones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stage_handoffs_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stage_handoffs_work_log_id_fkey"
+            columns: ["work_log_id"]
+            isOneToOne: false
+            referencedRelation: "work_logs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stations: {
         Row: {
@@ -3327,6 +3577,17 @@ export type Database = {
         Args: { _identifier: string }
         Returns: string
       }
+      sfi_apply_delta: {
+        Args: {
+          _delta: number
+          _quality: Database["public"]["Enums"]["sf_quality_status"]
+          _stage_id: string
+          _unit_cost: number
+          _variant_id: string
+          _zone_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:
@@ -3431,6 +3692,7 @@ export type Database = {
         | "rejected"
         | "fulfilled"
         | "cancelled"
+      sf_quality_status: "good" | "hold" | "rework" | "scrap"
       shift_code: "day" | "night" | "general" | "split"
       sourcing_type: "purchased" | "manufactured" | "hybrid"
       stage_kind:
@@ -3726,6 +3988,7 @@ export const Constants = {
         "fulfilled",
         "cancelled",
       ],
+      sf_quality_status: ["good", "hold", "rework", "scrap"],
       shift_code: ["day", "night", "general", "split"],
       sourcing_type: ["purchased", "manufactured", "hybrid"],
       stage_kind: [
