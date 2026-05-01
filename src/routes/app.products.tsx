@@ -28,9 +28,9 @@ export const Route = createFileRoute("/app/products")({
 });
 
 const TYPE_LABEL: Record<string, string> = {
-  raw_material: "Raw material",
+  raw_material: "Raw",
   packaging: "Packaging",
-  wip: "WIP",
+  wip: "Semi-finished",
   finished_good: "Finished good",
 };
 
