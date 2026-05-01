@@ -17,6 +17,7 @@ import { Route as AppWorkersRouteImport } from './routes/app.workers'
 import { Route as AppWorkLogsRouteImport } from './routes/app.work-logs'
 import { Route as AppWipRouteImport } from './routes/app.wip'
 import { Route as AppWarehousesRouteImport } from './routes/app.warehouses'
+import { Route as AppUtilitiesRouteImport } from './routes/app.utilities'
 import { Route as AppUsersRouteImport } from './routes/app.users'
 import { Route as AppSuppliersRouteImport } from './routes/app.suppliers'
 import { Route as AppStationsRouteImport } from './routes/app.stations'
@@ -38,6 +39,7 @@ import { Route as AppDispatchOrdersRouteImport } from './routes/app.dispatch-ord
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppCustomersRouteImport } from './routes/app.customers'
 import { Route as AppCommandCenterRouteImport } from './routes/app.command-center'
+import { Route as AppCategoriesRouteImport } from './routes/app.categories'
 import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
 import { Route as AppAiInsightsRouteImport } from './routes/app.ai-insights'
 import { Route as AppWorkersIdRouteImport } from './routes/app.workers.$id'
@@ -83,6 +85,11 @@ const AppWipRoute = AppWipRouteImport.update({
 const AppWarehousesRoute = AppWarehousesRouteImport.update({
   id: '/warehouses',
   path: '/warehouses',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppUtilitiesRoute = AppUtilitiesRouteImport.update({
+  id: '/utilities',
+  path: '/utilities',
   getParentRoute: () => AppRoute,
 } as any)
 const AppUsersRoute = AppUsersRouteImport.update({
@@ -190,6 +197,11 @@ const AppCommandCenterRoute = AppCommandCenterRouteImport.update({
   path: '/command-center',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCategoriesRoute = AppCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -227,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/app/ai-insights': typeof AppAiInsightsRoute
   '/app/analytics': typeof AppAnalyticsRoute
+  '/app/categories': typeof AppCategoriesRoute
   '/app/command-center': typeof AppCommandCenterRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/dashboard': typeof AppDashboardRoute
@@ -248,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/app/stations': typeof AppStationsRoute
   '/app/suppliers': typeof AppSuppliersRoute
   '/app/users': typeof AppUsersRoute
+  '/app/utilities': typeof AppUtilitiesRoute
   '/app/warehouses': typeof AppWarehousesRoute
   '/app/wip': typeof AppWipRoute
   '/app/work-logs': typeof AppWorkLogsRoute
@@ -263,6 +277,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/app/ai-insights': typeof AppAiInsightsRoute
   '/app/analytics': typeof AppAnalyticsRoute
+  '/app/categories': typeof AppCategoriesRoute
   '/app/command-center': typeof AppCommandCenterRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/dashboard': typeof AppDashboardRoute
@@ -284,6 +299,7 @@ export interface FileRoutesByTo {
   '/app/stations': typeof AppStationsRoute
   '/app/suppliers': typeof AppSuppliersRoute
   '/app/users': typeof AppUsersRoute
+  '/app/utilities': typeof AppUtilitiesRoute
   '/app/warehouses': typeof AppWarehousesRoute
   '/app/wip': typeof AppWipRoute
   '/app/work-logs': typeof AppWorkLogsRoute
@@ -301,6 +317,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/app/ai-insights': typeof AppAiInsightsRoute
   '/app/analytics': typeof AppAnalyticsRoute
+  '/app/categories': typeof AppCategoriesRoute
   '/app/command-center': typeof AppCommandCenterRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/dashboard': typeof AppDashboardRoute
@@ -322,6 +339,7 @@ export interface FileRoutesById {
   '/app/stations': typeof AppStationsRoute
   '/app/suppliers': typeof AppSuppliersRoute
   '/app/users': typeof AppUsersRoute
+  '/app/utilities': typeof AppUtilitiesRoute
   '/app/warehouses': typeof AppWarehousesRoute
   '/app/wip': typeof AppWipRoute
   '/app/work-logs': typeof AppWorkLogsRoute
@@ -340,6 +358,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/app/ai-insights'
     | '/app/analytics'
+    | '/app/categories'
     | '/app/command-center'
     | '/app/customers'
     | '/app/dashboard'
@@ -361,6 +380,7 @@ export interface FileRouteTypes {
     | '/app/stations'
     | '/app/suppliers'
     | '/app/users'
+    | '/app/utilities'
     | '/app/warehouses'
     | '/app/wip'
     | '/app/work-logs'
@@ -376,6 +396,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/app/ai-insights'
     | '/app/analytics'
+    | '/app/categories'
     | '/app/command-center'
     | '/app/customers'
     | '/app/dashboard'
@@ -397,6 +418,7 @@ export interface FileRouteTypes {
     | '/app/stations'
     | '/app/suppliers'
     | '/app/users'
+    | '/app/utilities'
     | '/app/warehouses'
     | '/app/wip'
     | '/app/work-logs'
@@ -413,6 +435,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/app/ai-insights'
     | '/app/analytics'
+    | '/app/categories'
     | '/app/command-center'
     | '/app/customers'
     | '/app/dashboard'
@@ -434,6 +457,7 @@ export interface FileRouteTypes {
     | '/app/stations'
     | '/app/suppliers'
     | '/app/users'
+    | '/app/utilities'
     | '/app/warehouses'
     | '/app/wip'
     | '/app/work-logs'
@@ -507,6 +531,13 @@ declare module '@tanstack/react-router' {
       path: '/warehouses'
       fullPath: '/app/warehouses'
       preLoaderRoute: typeof AppWarehousesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/utilities': {
+      id: '/app/utilities'
+      path: '/utilities'
+      fullPath: '/app/utilities'
+      preLoaderRoute: typeof AppUtilitiesRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/users': {
@@ -656,6 +687,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCommandCenterRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/categories': {
+      id: '/app/categories'
+      path: '/categories'
+      fullPath: '/app/categories'
+      preLoaderRoute: typeof AppCategoriesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/analytics': {
       id: '/app/analytics'
       path: '/analytics'
@@ -751,6 +789,7 @@ const AppWorkersRouteWithChildren = AppWorkersRoute._addFileChildren(
 interface AppRouteChildren {
   AppAiInsightsRoute: typeof AppAiInsightsRoute
   AppAnalyticsRoute: typeof AppAnalyticsRoute
+  AppCategoriesRoute: typeof AppCategoriesRoute
   AppCommandCenterRoute: typeof AppCommandCenterRoute
   AppCustomersRoute: typeof AppCustomersRoute
   AppDashboardRoute: typeof AppDashboardRoute
@@ -772,6 +811,7 @@ interface AppRouteChildren {
   AppStationsRoute: typeof AppStationsRoute
   AppSuppliersRoute: typeof AppSuppliersRoute
   AppUsersRoute: typeof AppUsersRoute
+  AppUtilitiesRoute: typeof AppUtilitiesRoute
   AppWarehousesRoute: typeof AppWarehousesRoute
   AppWipRoute: typeof AppWipRoute
   AppWorkLogsRoute: typeof AppWorkLogsRoute
@@ -782,6 +822,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAiInsightsRoute: AppAiInsightsRoute,
   AppAnalyticsRoute: AppAnalyticsRoute,
+  AppCategoriesRoute: AppCategoriesRoute,
   AppCommandCenterRoute: AppCommandCenterRoute,
   AppCustomersRoute: AppCustomersRoute,
   AppDashboardRoute: AppDashboardRoute,
@@ -803,6 +844,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppStationsRoute: AppStationsRoute,
   AppSuppliersRoute: AppSuppliersRoute,
   AppUsersRoute: AppUsersRoute,
+  AppUtilitiesRoute: AppUtilitiesRoute,
   AppWarehousesRoute: AppWarehousesRoute,
   AppWipRoute: AppWipRoute,
   AppWorkLogsRoute: AppWorkLogsRoute,

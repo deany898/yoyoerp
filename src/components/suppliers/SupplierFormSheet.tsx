@@ -31,9 +31,6 @@ const schema = z.object({
   phone: z.string(),
   address: z.string(),
   notes: z.string(),
-  paymentTerms: z.string(),
-  leadTimeDays: z.coerce.number().int().min(0, "Must be 0 or more"),
-  minOrderQuantity: z.coerce.number().int().min(0, "Must be 0 or more"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -58,9 +55,6 @@ export function SupplierFormSheet({ open, onOpenChange, supplier }: SupplierForm
       phone: "",
       address: "",
       notes: "",
-      paymentTerms: "",
-      leadTimeDays: 0,
-      minOrderQuantity: 0,
     },
   });
 
@@ -74,9 +68,6 @@ export function SupplierFormSheet({ open, onOpenChange, supplier }: SupplierForm
           phone: supplier.phone ?? "",
           address: supplier.address ?? "",
           notes: supplier.notes ?? "",
-          paymentTerms: "",
-          leadTimeDays: supplier.leadTimeDays ?? 0,
-          minOrderQuantity: 0,
         });
       } else {
         form.reset();
@@ -98,7 +89,6 @@ export function SupplierFormSheet({ open, onOpenChange, supplier }: SupplierForm
             phone: values.phone ?? "",
             address: values.address ?? "",
             notes: values.notes ?? "",
-            leadTimeDays: values.leadTimeDays ?? 0,
             updatedAt: now,
           },
         },
@@ -119,7 +109,7 @@ export function SupplierFormSheet({ open, onOpenChange, supplier }: SupplierForm
         phone: values.phone ?? "",
         address: values.address ?? "",
         notes: values.notes ?? "",
-        leadTimeDays: values.leadTimeDays ?? 0,
+        leadTimeDays: 0,
         rating: 0,
         isActive: true,
         createdAt: now,
@@ -203,43 +193,6 @@ export function SupplierFormSheet({ open, onOpenChange, supplier }: SupplierForm
                 <FormItem>
                   <FormLabel>Address</FormLabel>
                   <FormControl><Textarea {...field} rows={2} placeholder="Street, City, State" /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="leadTimeDays"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Lead Time (days)</FormLabel>
-                    <FormControl><Input type="number" min={0} {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="minOrderQuantity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Min Order Qty</FormLabel>
-                    <FormControl><Input type="number" min={0} {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="paymentTerms"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Payment Terms</FormLabel>
-                  <FormControl><Input {...field} placeholder="Net 30, COD, etc." /></FormControl>
                   <FormMessage />
                 </FormItem>
               )}

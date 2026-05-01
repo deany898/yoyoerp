@@ -884,38 +884,44 @@ export type Database = {
         Row: {
           code: string
           created_at: string
-          hourly_rate: number
           id: string
           is_active: boolean
           name: string
           notes: string | null
           station_id: string | null
           status: Database["public"]["Enums"]["machine_status"]
+          type: string | null
           updated_at: string
+          usage_volume: number
+          warehouse_id: string | null
         }
         Insert: {
           code: string
           created_at?: string
-          hourly_rate?: number
           id?: string
           is_active?: boolean
           name: string
           notes?: string | null
           station_id?: string | null
           status?: Database["public"]["Enums"]["machine_status"]
+          type?: string | null
           updated_at?: string
+          usage_volume?: number
+          warehouse_id?: string | null
         }
         Update: {
           code?: string
           created_at?: string
-          hourly_rate?: number
           id?: string
           is_active?: boolean
           name?: string
           notes?: string | null
           station_id?: string | null
           status?: Database["public"]["Enums"]["machine_status"]
+          type?: string | null
           updated_at?: string
+          usage_volume?: number
+          warehouse_id?: string | null
         }
         Relationships: [
           {
@@ -923,6 +929,13 @@ export type Database = {
             columns: ["station_id"]
             isOneToOne: false
             referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "machines_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
             referencedColumns: ["id"]
           },
         ]
@@ -1214,6 +1227,13 @@ export type Database = {
             foreignKeyName: "mo_stage_runs_machine_id_fkey"
             columns: ["machine_id"]
             isOneToOne: false
+            referencedRelation: "machine_effective_rate"
+            referencedColumns: ["machine_id"]
+          },
+          {
+            foreignKeyName: "mo_stage_runs_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
             referencedRelation: "machines"
             referencedColumns: ["id"]
           },
@@ -1271,6 +1291,13 @@ export type Database = {
           mould_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "mould_machine_compat_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machine_effective_rate"
+            referencedColumns: ["machine_id"]
+          },
           {
             foreignKeyName: "mould_machine_compat_machine_id_fkey"
             columns: ["machine_id"]
@@ -3165,6 +3192,53 @@ export type Database = {
           },
         ]
       }
+      warehouse_utilities: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          label: string | null
+          notes: string | null
+          period_month: string
+          updated_at: string
+          warehouse_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          label?: string | null
+          notes?: string | null
+          period_month?: string
+          updated_at?: string
+          warehouse_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          label?: string | null
+          notes?: string | null
+          period_month?: string
+          updated_at?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warehouse_utilities_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       warehouse_zones: {
         Row: {
           code: string
@@ -3434,6 +3508,13 @@ export type Database = {
           work_log_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "wl_moulding_details_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machine_effective_rate"
+            referencedColumns: ["machine_id"]
+          },
           {
             foreignKeyName: "wl_moulding_details_machine_id_fkey"
             columns: ["machine_id"]
@@ -3775,6 +3856,25 @@ export type Database = {
       }
     }
     Views: {
+      machine_effective_rate: {
+        Row: {
+          effective_hourly_rate: number | null
+          machine_id: string | null
+          usage_volume: number | null
+          warehouse_id: string | null
+          warehouse_month_total: number | null
+          warehouse_total_volume: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "machines_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendor_scorecard: {
         Row: {
           avg_lead_time_actual: number | null

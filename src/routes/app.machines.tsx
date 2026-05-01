@@ -1,9 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { Cpu } from "lucide-react";
 import { MasterListPage } from "@/components/manufacturing/MasterListPage";
-import { useMachines, useStations } from "@/hooks/useMfgData";
+import { useMachines } from "@/hooks/useMfgData";
+import { useWarehouses } from "@/hooks/useErpData";
 import { SmartSelect } from "@/components/forms/SmartSelect";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/app/machines")({
   head: () => ({
@@ -16,80 +19,116 @@ export const Route = createFileRoute("/app/machines")({
 });
 
 const STATUS_TONE: Record<string, string> = {
-  idle: "bg-slate-100 text-slate-900",
-  running: "bg-emerald-100 text-emerald-900",
-  maintenance: "bg-amber-100 text-amber-900",
+  online: "bg-emerald-100 text-emerald-900",
   offline: "bg-red-100 text-red-900",
 };
 
 function MachinesPage() {
   const { machines, loading, refresh } = useMachines();
-  const { stations } = useStations();
-  const stationOpts = stations.map((s) => ({ value: s.id, label: s.name, hint: s.code }));
-  const stationName = (id: string | null) => stations.find((s) => s.id === id)?.name ?? "—";
+  const { warehouses } = useWarehouses();
+  const warehouseOpts = warehouses.map((w) => ({ value: w.id, label: w.name, hint: w.code }));
+  const warehouseName = (id: string | null | undefined) =>
+    warehouses.find((w) => w.id === id)?.name ?? "—";
+
+  // Distinct machine types for autocomplete suggestions
+  const knownTypes = useMemo(() => {
+    const set = new Set<string>();
+    for (const m of machines) {
+      const t = (m as { type?: string | null }).type;
+      if (t && t.trim()) set.add(t.trim());
+    }
+    return Array.from(set).sort();
+  }, [machines]);
+
+  // Live status: machine is "online" if any open work_log references its station_id today.
+  const [liveOnline, setLiveOnline] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const { data } = await supabase
+        .from("work_logs")
+        .select("station_id, log_in_at, log_out_at")
+        .is("log_out_at", null)
+        .gte("log_in_at", today.toISOString());
+      if (cancelled) return;
+      const stationIds = new Set<string>();
+      (data ?? []).forEach((r) => { if (r.station_id) stationIds.add(r.station_id); });
+      // Map station -> machine via shared station_id field on machines
+      const onMach = new Set<string>();
+      machines.forEach((m) => {
+        if (m.station_id && stationIds.has(m.station_id)) onMach.add(m.id);
+      });
+      setLiveOnline(onMach);
+    })();
+    return () => { cancelled = true; };
+  }, [machines]);
+
+  const liveStatus = (id: string) => (liveOnline.has(id) ? "online" : "offline");
 
   return (
     <MasterListPage
       title="Machines"
       entityLabel="Machine"
       entityLabelPlural="Machines"
-      description="Equipment registry with hourly cost and status."
+      description="Equipment registry. Status is live based on today's open work logs. Hourly rate is derived from warehouse utilities and machine usage volume."
       table="machines"
       icon={Cpu}
       rows={machines}
       loading={loading}
       refresh={refresh}
       fields={[
-        { key: "code", label: "Code", required: true, placeholder: "e.g. MCH-01" },
         { key: "name", label: "Name", required: true, placeholder: "e.g. Press 200T" },
         {
-          key: "station_id",
-          label: "Station",
+          key: "type",
+          label: "Type",
           render: (v, set) => (
             <SmartSelect
-              options={stationOpts}
-              value={v as string | null}
-              onChange={(val) => set(val)}
-              placeholder="Select station"
-              emptyText="No stations yet"
+              options={knownTypes.map((t) => ({ value: t, label: t }))}
+              value={(v as string) ?? null}
+              onChange={(val) => set(val ?? "")}
+              onCreate={(q) => set(q.trim())}
+              placeholder="Pick or type a machine type"
+              emptyText="No types yet · type to add"
             />
           ),
         },
         {
-          key: "status",
-          label: "Status",
+          key: "warehouse_id",
+          label: "Warehouse",
           render: (v, set) => (
             <SmartSelect
-              options={[
-                { value: "idle", label: "Idle" },
-                { value: "running", label: "Running" },
-                { value: "maintenance", label: "Maintenance" },
-                { value: "offline", label: "Offline" },
-              ]}
-              value={(v as string) ?? "idle"}
-              onChange={(val) => set(val ?? "idle")}
-              placeholder="Status"
+              options={warehouseOpts}
+              value={v as string | null}
+              onChange={(val) => set(val)}
+              placeholder="Assign warehouse"
+              emptyText="No warehouses"
             />
           ),
         },
-        { key: "hourly_rate", label: "Hourly rate (₹/hr)", kind: "number", step: "0.01" },
+        { key: "usage_volume", label: "Usage volume (share of warehouse cost)", kind: "number", step: "0.1" },
         { key: "notes", label: "Notes" },
         { key: "is_active", label: "Active", kind: "switch" },
       ]}
       columns={[
         { key: "code", label: "Code", className: "font-mono text-xs" },
         { key: "name", label: "Name" },
-        { key: "station_id", label: "Station", render: (r) => stationName(r.station_id) },
+        { key: "type", label: "Type", render: (r) => (r as { type?: string | null }).type ?? "—" },
+        { key: "warehouse_id", label: "Warehouse", render: (r) => warehouseName(r.warehouse_id) },
         {
-          key: "status",
+          key: "live_status",
           label: "Status",
-          render: (r) => (
-            <span className={`inline-flex items-center rounded px-2 py-0.5 text-[10px] font-semibold uppercase ${STATUS_TONE[r.status] ?? ""}`}>
-              {r.status}
-            </span>
-          ),
+          render: (r) => {
+            const s = liveStatus(r.id);
+            return (
+              <span className={`inline-flex items-center rounded px-2 py-0.5 text-[10px] font-semibold uppercase ${STATUS_TONE[s]}`}>
+                {s}
+              </span>
+            );
+          },
         },
-        { key: "hourly_rate", label: "₹/hr", className: "font-mono text-right tabular-nums", render: (r) => Number(r.hourly_rate).toFixed(2) },
+        { key: "usage_volume", label: "Volume", className: "font-mono text-right tabular-nums", render: (r) => Number(r.usage_volume ?? 1).toFixed(2) },
         { key: "is_active", label: "", render: (r) => <Badge variant={r.is_active ? "secondary" : "outline"} className="text-[10px]">{r.is_active ? "Active" : "Inactive"}</Badge> },
       ]}
     />
