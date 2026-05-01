@@ -4,7 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAppConfig } from "@/contexts/AppConfigContext";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { Loader2, Search, ChevronDown, ChevronRight } from "lucide-react";
+import { Loader2, Search, ChevronDown, ChevronRight, Lock, Radio } from "lucide-react";
+import { useRole } from "@/hooks/useRole";
+import { canToggleFlag, ADMIN_ONLY_FLAGS } from "@/lib/flag-constraints";
 
 const CATEGORY_LABELS: Record<string, string> = {
   modules: "Modules",
@@ -24,6 +26,7 @@ const CATEGORY_LABELS: Record<string, string> = {
  */
 export function ModuleToggles() {
   const { flags, loading } = useAppConfig();
+  const { role } = useRole();
   const [busy, setBusy] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -43,6 +46,15 @@ export function ModuleToggles() {
   }, [flags, query]);
 
   const toggle = async (key: string, next: boolean) => {
+    const f = flags[key];
+    if (!f || !canToggleFlag(role, f.category, key)) {
+      toast.error("Not allowed", {
+        description: ADMIN_ONLY_FLAGS.has(key)
+          ? "This flag is admin-only."
+          : "Your role can't change this category.",
+      });
+      return;
+    }
     setBusy(key);
     const { error } = await supabase
       .from("app_config_flags")
@@ -71,9 +83,19 @@ export function ModuleToggles() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <p className="text-xs text-muted-foreground">
-          Turn modules and features on or off across the app. Changes apply immediately for everyone.
-        </p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground">
+            Turn modules and features on or off across the app. Changes apply immediately for everyone.
+          </p>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+            <Radio className="h-3 w-3 animate-pulse" /> Live sync
+          </span>
+        </div>
+        {role !== "admin" && (
+          <p className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[11px] text-amber-800">
+            You're signed in as <b>{role}</b>. Some flags are locked to admins.
+          </p>
+        )}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -115,22 +137,33 @@ export function ModuleToggles() {
           </header>
           {!collapsed[cat] && (
           <ul className="divide-y divide-border">
-            {grouped[cat].map((f) => (
-              <li key={f.key} className="flex items-start justify-between gap-4 px-4 py-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground">{f.label}</p>
-                  {f.description && (
-                    <p className="text-xs text-muted-foreground">{f.description}</p>
-                  )}
-                  <code className="mt-0.5 block text-[10px] text-muted-foreground/70 font-mono">{f.key}</code>
-                </div>
-                <Switch
-                  checked={f.enabled}
-                  disabled={busy === f.key}
-                  onCheckedChange={(v) => toggle(f.key, v)}
-                />
-              </li>
-            ))}
+            {grouped[cat].map((f) => {
+              const allowed = canToggleFlag(role, f.category, f.key);
+              return (
+                <li key={f.key} className="flex items-start justify-between gap-4 px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                      {f.label}
+                      {!allowed && <Lock className="h-3 w-3 text-muted-foreground" />}
+                    </p>
+                    {f.description && (
+                      <p className="text-xs text-muted-foreground">{f.description}</p>
+                    )}
+                    <code className="mt-0.5 block text-[10px] text-muted-foreground/70 font-mono">{f.key}</code>
+                    {!allowed && (
+                      <p className="mt-0.5 text-[10px] text-amber-700">
+                        {ADMIN_ONLY_FLAGS.has(f.key) ? "Admin-only flag" : `Locked for role · ${role}`}
+                      </p>
+                    )}
+                  </div>
+                  <Switch
+                    checked={f.enabled}
+                    disabled={busy === f.key || !allowed}
+                    onCheckedChange={(v) => toggle(f.key, v)}
+                  />
+                </li>
+              );
+            })}
           </ul>
           )}
         </section>
