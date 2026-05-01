@@ -3,7 +3,7 @@ import { Minus, Plus, Trash2, ChevronDown, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { uomFactor, UOM_OPTIONS, type PickerVariant } from "./types";
+import { uomFactor, getUomOptions, type PickerVariant, type PackagingRow } from "./types";
 import { lineMath } from "@/lib/quick-order-pricing";
 import type { DraftLine } from "@/lib/quick-order-store";
 import {
@@ -14,17 +14,20 @@ interface Props {
   index: number;
   line: DraftLine;
   variant: PickerVariant | null;
+  packaging: PackagingRow[];
   showCost: boolean;
   onChange: (p: Partial<DraftLine>) => void;
   onRemove: () => void;
 }
 
-export function MobileLineCard({ index, line, variant, showCost, onChange, onRemove }: Props) {
+export function MobileLineCard({ index, line, variant, packaging, showCost, onChange, onRemove }: Props) {
   const [open, setOpen] = useState(false);
-  const factor = uomFactor(line.uom, line.units_per_pack);
+  const uomOptions = getUomOptions(variant, packaging);
+  const factor = uomFactor(line.uom, line.units_per_pack, uomOptions);
   const m = lineMath({
     qty: line.qty, unitPrice: line.unit_price, factor,
-    discountPct: line.discount_pct, taxRate: line.tax_rate,
+    discountPct: line.discount_pct, taxRate: 0,
+    discountMode: line.discount_mode, discountAmt: line.discount_amt,
   });
   const cost = variant?.cost ?? 0;
   const margin = line.unit_price > 0 ? ((line.unit_price - cost) / line.unit_price) * 100 : 0;
@@ -65,22 +68,40 @@ export function MobileLineCard({ index, line, variant, showCost, onChange, onRem
               className="h-8 text-right font-mono text-xs" />
           </Field>
           <Field label="UOM">
-            <Select value={line.uom} onValueChange={(v) => onChange({ uom: v })}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {UOM_OPTIONS.map((u) => <SelectItem key={u.value} value={u.value} className="text-xs">{u.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            {uomOptions.length <= 1 ? (
+              <div className="flex h-8 items-center rounded-md border border-input bg-muted/40 px-2 text-xs text-muted-foreground">
+                {uomOptions[0]?.label ?? "Each"}
+              </div>
+            ) : (
+              <Select value={line.uom} onValueChange={(v) => onChange({ uom: v })}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {uomOptions.map((u) => <SelectItem key={u.value} value={u.value} className="text-xs">{u.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
           </Field>
-          <Field label="Discount %">
-            <Input type="number" step="0.5" inputMode="decimal" value={line.discount_pct}
-              onChange={(e) => onChange({ discount_pct: Math.max(0, Math.min(100, Number(e.target.value) || 0)) })}
-              className="h-8 text-right font-mono text-xs" />
-          </Field>
-          <Field label="Tax %">
-            <Input type="number" step="0.5" inputMode="decimal" value={line.tax_rate}
-              onChange={(e) => onChange({ tax_rate: Math.max(0, Math.min(50, Number(e.target.value) || 0)) })}
-              className="h-8 text-right font-mono text-xs" />
+          <Field label={`Discount ${line.discount_mode === "amt" ? "₹" : "%"}`}>
+            <div className="flex h-8 items-stretch rounded-md border border-input">
+              {line.discount_mode === "amt" ? (
+                <Input type="number" step="0.01" inputMode="decimal" value={line.discount_amt}
+                  onChange={(e) => onChange({ discount_amt: Math.max(0, Number(e.target.value) || 0) })}
+                  className="h-full flex-1 border-0 px-1.5 text-right font-mono text-xs shadow-none focus-visible:ring-0" />
+              ) : (
+                <Input type="number" step="0.5" inputMode="decimal" value={line.discount_pct}
+                  onChange={(e) => onChange({ discount_pct: Math.max(0, Math.min(100, Number(e.target.value) || 0)) })}
+                  className="h-full flex-1 border-0 px-1.5 text-right font-mono text-xs shadow-none focus-visible:ring-0" />
+              )}
+              <Select value={line.discount_mode} onValueChange={(v) => onChange({ discount_mode: v as "pct" | "amt" })}>
+                <SelectTrigger className="h-full w-10 rounded-l-none border-0 border-l border-input bg-muted/40 px-1.5 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pct" className="text-xs">%</SelectItem>
+                  <SelectItem value="amt" className="text-xs">₹</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </Field>
           <div className="col-span-2 flex items-center justify-between pt-1">
             {showCost && cost > 0 ? (

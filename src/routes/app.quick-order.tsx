@@ -14,7 +14,7 @@ import { QuickOrderCustomerCard } from "@/components/quick-order/QuickOrderCusto
 import { ProductSearchBox } from "@/components/quick-order/ProductSearchBox";
 import { StickyTotals } from "@/components/quick-order/StickyTotals";
 import type { ExtraCharge } from "@/components/quick-order/StickyTotals";
-import { uomFactor, type PickerVariant } from "@/components/quick-order/types";
+import { uomFactor, getUomOptions, type PickerVariant, type PackagingRow } from "@/components/quick-order/types";
 import { lineMath, loadTierPrices, resolvePrice, type TierPriceMap } from "@/lib/quick-order-pricing";
 import {
   saveDraft, loadDraft, clearDraft, trackPick, getRecent, getFrequent,
@@ -32,7 +32,8 @@ function newLine(): DraftLine {
     uid: crypto.randomUUID(),
     variant_id: "", qty: 1, uom: "each",
     unit_price: 0, units_per_pack: 1,
-    discount_pct: 0, tax_rate: 5,
+    discount_mode: "pct", discount_pct: 0, discount_amt: 0,
+    tax_rate: 0,
   };
 }
 
@@ -55,6 +56,7 @@ function QuickOrderPage() {
   const [shippingAddress, setShippingAddress] = useState("");
   const [paymentTerms, setPaymentTerms] = useState("");
   const [extraCharges, setExtraCharges] = useState<ExtraCharge[]>([]);
+  const [packaging, setPackaging] = useState<PackagingRow[]>([]);
   const [lines, setLines] = useState<DraftLine[]>([newLine()]);
   const [tierMap, setTierMap] = useState<TierPriceMap>({});
   const [stockMap, setStockMap] = useState<Record<string, number>>({});
@@ -66,7 +68,7 @@ function QuickOrderPage() {
   // Bootstrap
   useEffect(() => {
     (async () => {
-      const [custRes, numRes, tiers, imgs, stocks] = await Promise.all([
+      const [custRes, numRes, tiers, imgs, stocks, pkg] = await Promise.all([
         supabase.from("customers")
           .select("id,code,name,contact_name,phone,city,delivery_address,billing_address,payment_terms,pricing_tier")
           .eq("is_active", true).order("name"),
@@ -74,6 +76,7 @@ function QuickOrderPage() {
         loadTierPrices(),
         supabase.from("product_images").select("product_id,url,is_primary,sort_order"),
         supabase.from("inventory_stock").select("variant_id,available,on_hand"),
+        supabase.from("product_packaging").select("product_id,kind,name,units_per_pack"),
       ]);
       if (custRes.error) toast.error("Failed to load customers", { description: custRes.error.message });
       setCustomers((custRes.data ?? []) as CustomerLite[]);
@@ -90,6 +93,8 @@ function QuickOrderPage() {
       ((stocks.data ?? []) as Array<{ variant_id: string; available: number | null; on_hand: number }>)
         .forEach((r) => { sm[r.variant_id] = (sm[r.variant_id] ?? 0) + Number(r.available ?? r.on_hand ?? 0); });
       setStockMap(sm);
+
+      setPackaging((pkg.data ?? []) as PackagingRow[]);
 
       // Restore draft
       const draft = loadDraft();
@@ -189,9 +194,13 @@ function QuickOrderPage() {
   function pickInRow(uid: string, v: PickerVariant) {
     trackPick(v.id);
     setRecentIds(getRecent()); setFrequentIds(getFrequent());
+    // Reset UOM to the first valid option for this product so a stale value
+    // (e.g. "case_24" from the prior product) can never carry over.
+    const opts = getUomOptions(v, packaging);
     patchLine(uid, {
       variant_id: v.id, unit_price: v.tier_price,
-      units_per_pack: v.units_per_pack, uom: "each",
+      units_per_pack: v.units_per_pack,
+      uom: opts[0]?.value ?? "each",
     });
   }
   function appendVariant(v: PickerVariant) {
@@ -199,10 +208,12 @@ function QuickOrderPage() {
     setRecentIds(getRecent()); setFrequentIds(getFrequent());
     setLines((prev) => {
       const blankIdx = prev.findIndex((l) => !l.variant_id);
+      const opts = getUomOptions(v, packaging);
       const filled: DraftLine = {
         ...newLine(),
         variant_id: v.id, unit_price: v.tier_price,
         units_per_pack: v.units_per_pack,
+        uom: opts[0]?.value ?? "each",
       };
       if (blankIdx >= 0) {
         const next = [...prev];
@@ -236,12 +247,19 @@ function QuickOrderPage() {
   const totals = useMemo(() => {
     let subtotal = 0, discount = 0, tax = 0, units = 0;
     for (const l of filled) {
-      const factor = uomFactor(l.uom, l.units_per_pack);
-      const m = lineMath({ qty: l.qty, unitPrice: l.unit_price, factor, discountPct: l.discount_pct, taxRate: l.tax_rate });
+      const v = variantsById.get(l.variant_id) ?? null;
+      const opts = getUomOptions(v, packaging);
+      const factor = uomFactor(l.uom, l.units_per_pack, opts);
+      const m = lineMath({
+        qty: l.qty, unitPrice: l.unit_price, factor,
+        discountPct: l.discount_pct, taxRate: 0,
+        discountMode: l.discount_mode, discountAmt: l.discount_amt,
+      });
       subtotal += m.gross; discount += m.discount; tax += m.tax;
       units += l.qty * factor;
     }
     const net = subtotal - discount;
+    // Charges: positive amounts add (gst, shipping, custom), negative subtract (discount).
     const chargesTotal = extraCharges.reduce((s, c) => s + (Number(c.amount) || 0), 0);
     return {
       subtotal,
@@ -252,7 +270,7 @@ function QuickOrderPage() {
       total: net + tax + chargesTotal,
       chargesTotal,
     };
-  }, [filled, extraCharges]);
+  }, [filled, extraCharges, packaging, variantsById]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -327,16 +345,22 @@ function QuickOrderPage() {
     if (insErr || !ins) { setSaving(false); toast.error("Save failed", { description: insErr?.message }); return; }
 
     const linePayload = filled.map((l) => {
-      const factor = uomFactor(l.uom, l.units_per_pack);
-      const m = lineMath({ qty: l.qty, unitPrice: l.unit_price, factor, discountPct: l.discount_pct, taxRate: l.tax_rate });
       const v = variantsById.get(l.variant_id);
+      const opts = getUomOptions(v ?? null, packaging);
+      const factor = uomFactor(l.uom, l.units_per_pack, opts);
+      const m = lineMath({
+        qty: l.qty, unitPrice: l.unit_price, factor,
+        discountPct: l.discount_pct, taxRate: 0,
+        discountMode: l.discount_mode, discountAmt: l.discount_amt,
+      });
       return {
         dispatch_order_id: ins.id, variant_id: l.variant_id,
         qty: l.qty * factor, uom: l.uom,
         unit_price: l.unit_price, wholesale_price: v?.tier_price ?? l.unit_price,
         unit_cost: v?.cost ?? 0,
-        discount_type: "percent" as const, discount_value: l.discount_pct,
-        tax_rate: l.tax_rate, line_total: m.total,
+        discount_type: (l.discount_mode === "amt" ? "amount" : "percent") as "amount" | "percent",
+        discount_value: l.discount_mode === "amt" ? l.discount_amt : l.discount_pct,
+        tax_rate: 0, line_total: m.total,
       };
     });
     const { error: linesErr } = await supabase.from("dispatch_order_lines").insert(linePayload);
@@ -419,10 +443,9 @@ function QuickOrderPage() {
             <col className="w-8" />
             <col />
             <col className="w-[110px]" />
+            <col className="w-[120px]" />
             <col className="w-[110px]" />
-            <col className="w-[110px]" />
-            <col className="w-[80px]" />
-            <col className="w-[80px]" />
+            <col className="w-[130px]" />
             <col className="w-[120px]" />
             <col className="w-[60px]" />
           </colgroup>
@@ -434,7 +457,6 @@ function QuickOrderPage() {
               <th className="px-1.5 text-left">UOM</th>
               <th className="px-1.5 text-right">Price ₹</th>
               <th className="px-1.5 text-right">Disc</th>
-              <th className="px-1.5 text-right">Tax</th>
               <th className="px-1.5 text-right">Total</th>
               <th className="px-1.5"></th>
             </tr>
@@ -444,6 +466,7 @@ function QuickOrderPage() {
               <ProductGridRow
                 key={line.uid} index={idx} line={line}
                 variants={variants} variantsById={variantsById}
+                packaging={packaging}
                 recentIds={recentIds} frequentIds={frequentIds}
                 showCost={showCost}
                 onChange={(p) => patchLine(line.uid, p)}
@@ -474,6 +497,7 @@ function QuickOrderPage() {
           <MobileLineCard
             key={line.uid} index={idx} line={line}
             variant={variantsById.get(line.variant_id) ?? null}
+            packaging={packaging}
             showCost={showCost}
             onChange={(p) => patchLine(line.uid, p)}
             onRemove={() => removeLine(line.uid)}
@@ -489,6 +513,7 @@ function QuickOrderPage() {
       </section>
 
       <StickyTotals
+        subtotal={totals.subtotal - totals.discount}
         total={totals.total}
         charges={extraCharges}
         onAddCharge={(label, amount) =>

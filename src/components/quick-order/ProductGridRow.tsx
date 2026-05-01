@@ -6,7 +6,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { ProductInlinePicker } from "./ProductInlinePicker";
-import { UOM_OPTIONS, uomFactor, type PickerVariant } from "./types";
+import { getUomOptions, uomFactor, type PickerVariant, type PackagingRow } from "./types";
 import { lineMath } from "@/lib/quick-order-pricing";
 import type { DraftLine } from "@/lib/quick-order-store";
 
@@ -15,6 +15,7 @@ interface Props {
   line: DraftLine;
   variants: PickerVariant[];
   variantsById: Map<string, PickerVariant>;
+  packaging: PackagingRow[];
   recentIds: string[];
   frequentIds: string[];
   showCost: boolean;
@@ -25,14 +26,16 @@ interface Props {
 }
 
 export function ProductGridRow({
-  index, line, variants, variantsById, recentIds, frequentIds, showCost,
+  index, line, variants, variantsById, packaging, recentIds, frequentIds, showCost,
   onChange, onPick, onDuplicate, onRemove,
 }: Props) {
   const v = line.variant_id ? variantsById.get(line.variant_id) ?? null : null;
-  const factor = uomFactor(line.uom, line.units_per_pack);
+  const uomOptions = getUomOptions(v, packaging);
+  const factor = uomFactor(line.uom, line.units_per_pack, uomOptions);
   const m = lineMath({
     qty: line.qty, unitPrice: line.unit_price, factor,
-    discountPct: line.discount_pct, taxRate: line.tax_rate,
+    discountPct: line.discount_pct, taxRate: 0,
+    discountMode: line.discount_mode, discountAmt: line.discount_amt,
   });
   const cost = v?.cost ?? 0;
   const margin = line.unit_price > 0 ? ((line.unit_price - cost) / line.unit_price) * 100 : 0;
@@ -78,15 +81,21 @@ export function ProductGridRow({
       </td>
 
       {/* UOM */}
-      <td className="w-[110px] px-1.5 py-1.5">
-        <Select value={line.uom} onValueChange={(val) => onChange({ uom: val })}>
-          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {UOM_OPTIONS.map((u) => (
-              <SelectItem key={u.value} value={u.value} className="text-xs">{u.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <td className="w-[120px] px-1.5 py-1.5">
+        {uomOptions.length <= 1 ? (
+          <div className="flex h-8 items-center rounded-md border border-input bg-muted/40 px-2 text-xs text-muted-foreground">
+            {uomOptions[0]?.label ?? "Each"}
+          </div>
+        ) : (
+          <Select value={line.uom} onValueChange={(val) => onChange({ uom: val })}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {uomOptions.map((u) => (
+                <SelectItem key={u.value} value={u.value} className="text-xs">{u.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </td>
 
       {/* Price */}
@@ -99,26 +108,34 @@ export function ProductGridRow({
       </td>
 
       {/* Discount */}
-      <td className="w-[80px] px-1.5 py-1.5">
-        <div className="relative">
-          <Input
-            type="number" step="0.5" min={0} max={100} inputMode="decimal" value={line.discount_pct}
-            onChange={(e) => onChange({ discount_pct: Math.max(0, Math.min(100, Number(e.target.value) || 0)) })}
-            className="h-8 pr-5 text-right font-mono text-xs tabular-nums"
-          />
-          <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">%</span>
-        </div>
-      </td>
-
-      {/* Tax */}
-      <td className="w-[80px] px-1.5 py-1.5">
-        <div className="relative">
-          <Input
-            type="number" step="0.5" min={0} max={50} inputMode="decimal" value={line.tax_rate}
-            onChange={(e) => onChange({ tax_rate: Math.max(0, Math.min(50, Number(e.target.value) || 0)) })}
-            className="h-8 pr-5 text-right font-mono text-xs tabular-nums"
-          />
-          <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">%</span>
+      {/* Discount with %/₹ toggle */}
+      <td className="w-[130px] px-1.5 py-1.5">
+        <div className="flex h-8 items-stretch rounded-md border border-input">
+          {line.discount_mode === "amt" ? (
+            <Input
+              type="number" step="0.01" min={0} inputMode="decimal" value={line.discount_amt}
+              onChange={(e) => onChange({ discount_amt: Math.max(0, Number(e.target.value) || 0) })}
+              className="h-full flex-1 border-0 px-1.5 text-right font-mono text-xs tabular-nums shadow-none focus-visible:ring-0"
+            />
+          ) : (
+            <Input
+              type="number" step="0.5" min={0} max={100} inputMode="decimal" value={line.discount_pct}
+              onChange={(e) => onChange({ discount_pct: Math.max(0, Math.min(100, Number(e.target.value) || 0)) })}
+              className="h-full flex-1 border-0 px-1.5 text-right font-mono text-xs tabular-nums shadow-none focus-visible:ring-0"
+            />
+          )}
+          <Select
+            value={line.discount_mode}
+            onValueChange={(val) => onChange({ discount_mode: val as "pct" | "amt" })}
+          >
+            <SelectTrigger className="h-full w-10 rounded-l-none border-0 border-l border-input bg-muted/40 px-1.5 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pct" className="text-xs">%</SelectItem>
+              <SelectItem value="amt" className="text-xs">₹</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </td>
 
