@@ -1,10 +1,11 @@
 import { useEffect, useState, useMemo } from "react";
-import { Loader2, Check, X, RotateCcw, Search } from "lucide-react";
+import { Loader2, RotateCcw, Search, Pencil, Check as CheckIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { type UserRoleType } from "@/lib/roles";
 import { ALL_CAPABILITIES, MODULE_LABEL, type Capability } from "@/lib/capabilities";
 import { notify } from "@/lib/notify";
@@ -30,6 +31,7 @@ export function PermissionMatrix() {
   const [filter, setFilter] = useState("");
   const [tab, setTab] = useState<"roles" | "users">("roles");
   const [selectedUser, setSelectedUser] = useState<string>("");
+  const [editing, setEditing] = useState(false);
 
   const reload = async () => {
     setLoading(true);
@@ -117,9 +119,19 @@ export function PermissionMatrix() {
           <h2 className="text-lg font-semibold">Permissions</h2>
           <p className="text-xs text-muted-foreground">Role defaults · per-user overrides</p>
         </div>
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-          <Input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter capabilities…" className="h-9 pl-7 text-sm" />
+        <div className="flex items-center gap-2">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+            <Input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter capabilities…" className="h-9 pl-7 text-sm" />
+          </div>
+          <Button
+            size="sm"
+            variant={editing ? "default" : "outline"}
+            onClick={() => setEditing((v) => !v)}
+            className="h-9 gap-1.5"
+          >
+            {editing ? <><CheckIcon className="h-3.5 w-3.5" /> Done</> : <><Pencil className="h-3.5 w-3.5" /> Edit</>}
+          </Button>
         </div>
       </div>
 
@@ -153,17 +165,22 @@ export function PermissionMatrix() {
                           const granted = isGranted(role, cap);
                           const isSaving = saving === `${role}:${cap}`;
                           return (
-                            <td key={role} className="p-1.5 text-center">
-                              <button
-                                onClick={() => toggleRole(role, cap)}
-                                disabled={isSaving}
-                                className={`inline-flex h-6 w-6 items-center justify-center rounded border transition ${
-                                  granted ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600" : "border-border bg-muted/40 text-muted-foreground hover:bg-muted"
-                                }`}
-                              >
-                                {isSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : granted ? <Check className="h-3 w-3" /> : <X className="h-3 w-3 opacity-40" />}
-                              </button>
-                            </td>
+                                <td key={role} className="p-1.5 text-center">
+                                  {isSaving ? (
+                                    <Loader2 className="mx-auto h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                                  ) : editing ? (
+                                    <Switch
+                                      checked={granted}
+                                      onCheckedChange={() => toggleRole(role, cap)}
+                                      className="mx-auto data-[state=checked]:bg-emerald-500"
+                                    />
+                                  ) : (
+                                    <span
+                                      className={`mx-auto inline-block h-2.5 w-2.5 rounded-full ${granted ? "bg-emerald-500" : "bg-muted-foreground/20"}`}
+                                      title={granted ? "Granted" : "Denied"}
+                                    />
+                                  )}
+                                </td>
                           );
                         })}
                       </tr>
