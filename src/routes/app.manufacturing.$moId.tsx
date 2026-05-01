@@ -169,7 +169,9 @@ function MoDetailPage() {
         <div className="flex flex-wrap gap-2">
           {(mo.status === "released" || mo.status === "in_progress") && mo.variant && (
             <>
-              <Button onClick={() => setMouldOpen(true)} variant="outline" className="gap-2"><Hammer className="h-4 w-4" /> Moulding run</Button>
+              {showMoulds && (
+                <Button onClick={() => setMouldOpen(true)} variant="outline" className="gap-2"><Hammer className="h-4 w-4" /> Moulding run</Button>
+              )}
               <Button onClick={() => setPackOpen(true)} variant="outline" className="gap-2"><PackageOpen className="h-4 w-4" /> Packing run</Button>
             </>
           )}
@@ -240,15 +242,17 @@ function MoDetailPage() {
                         </div>
                       </td>
                       <td className="px-3 py-3 text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="gap-1"
-                          disabled={mo.status === "draft" || mo.status === "cancelled" || mo.status === "done"}
-                          onClick={() => { setIssueComponent(line); setIssueOpen(true); }}
-                        >
-                          <Package className="h-3.5 w-3.5" /> Issue
-                        </Button>
+                        {showMaterialIssues && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1"
+                            disabled={mo.status === "draft" || mo.status === "cancelled" || mo.status === "done"}
+                            onClick={() => { setIssueComponent(line); setIssueOpen(true); }}
+                          >
+                            <Package className="h-3.5 w-3.5" /> Issue
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   );
