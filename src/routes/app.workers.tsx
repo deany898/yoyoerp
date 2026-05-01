@@ -64,7 +64,12 @@ function WorkersPage() {
         { key: "job_role", label: "Role" },
         { key: "station_id", label: "Station", render: (r) => stationName(r.station_id) },
         ...(showPayroll
-          ? [{ key: "hourly_rate", label: "₹/hr", className: "font-mono text-right tabular-nums", render: (r: { hourly_rate: number }) => Number(r.hourly_rate).toFixed(2) }]
+          ? [{
+              key: "hourly_rate",
+              label: "₹/hr",
+              className: "font-mono text-right tabular-nums",
+              render: (r: typeof workers[number]) => Number(r.hourly_rate).toFixed(2),
+            }]
           : []),
         { key: "is_active", label: "Status" },
       ]}
