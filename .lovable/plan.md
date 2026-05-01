@@ -1,138 +1,181 @@
-## Goal
+# Fast Loading + Live Sync Plan
 
-Make Products the single source of truth for everything tied to a product (images, variants, packaging, stages, BOM, tiered prices), turn Workers into a richer Team module, and remove the standalone Stages page from the side menu. Cost stays admin-only. Whole flow optimised for one-handed mobile use.
+Goal: make YOYO ERP feel instant for your team — pages open without spinners, teammates' changes appear live, and the installed app works on flaky shop-floor WiFi.
 
-## Scope summary (what changes, what stays)
+Scope confirmed: **all three tiers**, realtime on **inventory + production + sales/dispatch + procurement**, optimistic UI errors **shown as toast + red-highlighted row until retry/dismiss**.
 
-Already in DB · reuse as-is:
-- `product_images`, `product_packaging`, `product_pricing_tiers`, `production_stages`, `stage_groups` / `stage_group_lines` / `stage_group_products`, `bom_master` / `bom_lines`, `workers`, `worker_attendance`, `payroll_runs`, `payroll_ledger_entries`, `payroll_config`.
+---
 
-New / migrated:
-1. Public storage bucket `product-images` (RLS · staff read, manager write) for image uploads + a similar bucket for category covers (or reuse).
-2. Add `cover_image_url text` to `categories` (single image is enough for a category).
-3. Add `qty_pricing_tiers jsonb` is NOT needed · `product_pricing_tiers.min_qty` already gives qty-tiered pricing per tier name.
-4. Add a `team_advances` table (worker_id, amount, paid_at, note, created_by) for advance payments under each team member, and reuse `worker_attendance` + `payroll_*` for the rest.
-5. Rename UI label "Workers" → "Team" everywhere · DB table name stays `workers` (avoid breaking FKs / RLS).
+## What's in place today (verified)
 
-## Product Detail Sheet · single-screen control center
+- React Query: `staleTime 5min`, `refetchOnWindowFocus: false`, `retry 1` — good defaults.
+- Router: `defaultPreload: false`, `defaultPreloadStaleTime: 0`, `RouteSkeleton` already wired.
+- Realtime: only `notifications` and `app_config_flags` subscribed. `notifications` table has `REPLICA IDENTITY FULL`.
+- PWA: manifest only, **no service worker** (per Lovable PWA guidance — we'll add one carefully).
+- 37 `/app/*` route files, all flat, none using TanStack `loader` yet — every page fetches on mount.
 
-Replace the current 3-tab sheet with a tabbed product **detail sheet** that opens on row click. Tabs (mobile-first, swipe-able):
+---
+
+## Tier A · Perf foundation
+
+### A1. Route loaders + `ensureQueryData`
+Convert the 12 highest-traffic routes to fetch in their `loader` so data starts streaming during navigation, not after mount:
+
+`dashboard, inventory, products, suppliers, customers, purchase-orders, dispatch-orders, work-logs, manufacturing.$moId, workers, movements, requests`
+
+Each gets a `queryOptions` factory + `loader: ({ context }) => context.queryClient.ensureQueryData(...)`. Components switch from `useQuery` to `useSuspenseQuery` so cached data renders synchronously.
+
+### A2. Smart prefetch on Sidebar + BottomNav
+Already using `preload="intent"` on links per the router comment. Extend to **table rows** in Inventory/Products/Workers/POs lists — `onMouseEnter`/`onTouchStart` calls `queryClient.prefetchQuery(detailQueryOptions(id))`. Detail pages then open with zero spinner.
+
+### A3. Per-resource `staleTime` tiers
+- Master data (UOMs, warehouses, zones, categories, machines, stages, presets): `staleTime: Infinity`, only invalidated by realtime or explicit mutation.
+- Lists (products, suppliers, customers): `5 min` (current default — keep).
+- Live ops (stock, work-logs, MOs, handoffs): `30s` — realtime will invalidate, this is just a safety net.
+
+### A4. Code-split heavy editors
+Route-level lazy chunks for: `BomEditor`, `CostBreakdownSheet`, `StockMovementSheet`, `ManufacturingOrderDetail`, `WorkLogDetail`, charts on `/app/analytics` and `/app/ai-insights` (Recharts is ~120KB). Use dynamic `import()` inside the route component, not at module top.
+
+### A5. Bundle audit
+- Move Recharts, html5-qrcode, jsbarcode, jsPDF to lazy imports at point-of-use.
+- Verify Geist font subset is local (`/public/fonts/`) — already is.
+- Add `<link rel="preconnect" href="{SUPABASE_URL}">` in `__root.tsx` head.
+
+**Expected:** TTI on `/app/dashboard` drops 40-50% on cold load, sub-second on warm.
+
+---
+
+## Tier B · Live sync (Supabase Realtime)
+
+### B1. Database — enable replication
+Migration: `ALTER PUBLICATION supabase_realtime ADD TABLE` and `ALTER TABLE ... REPLICA IDENTITY FULL` for:
 
 ```text
-┌──────────────────────────────────────────┐
-│ Dimmer Knob · PRD-000123        [Edit]  │  Header
-│ ₹ 35.00 sale · ₹ 22.50 dealer (admin)    │
-├──────────────────────────────────────────┤
-│ Overview │ Variants │ Stages │ BOM │ +  │  Tabs
-└──────────────────────────────────────────┘
+stock_movements          stage_handoffs          work_logs
+worker_attendance        manufacturing_orders    delivery_orders
+sales_orders             customer_payments       purchase_orders
+goods_receipts           supplier_product_quotes inventory_stock
+semi_finished_inventory  product_variants        (cost spike pings)
 ```
 
-1. **Overview** · multi-image gallery (drag to reorder, mark primary), name, description, category, UoM, HSN, type badge ("Auto from BOM" · read-only), is_active toggle.
-2. **Variants** · list of variants with attributes JSON (size/colour/etc), packaging variants shown inline (badge "Pack of 100"), tiered prices per variant. Tap a variant → variant editor (see below).
-3. **Stages** · per-product stage list (currently `production_stages` is per-variant · we'll let admin pick "applies to all variants" or "specific variants"). Sequence drag-to-reorder. Each row shows pay mode + cost.
-4. **BOM** · was "Cost Engine" · same UI, renamed tab + heading. Existing `CostEnginePanel` stays for the read-out, plus an editable BOM lines section above (currently BOM editing is on the manufacturing screen · move it here).
-5. **+ More** (overflow) · Supplier prices (existing), Cost snapshot (admin-only).
+### B2. Single global invalidator
+New file `src/hooks/useRealtimeInvalidator.tsx` mounted **once** at `/app` layout root. One Supabase channel, one subscription per table, mapping table → query keys to invalidate:
 
-Empty-tab fallback: variant fields not filled → fall back to product-level (name, description, image) when displaying anywhere (catalog, dispatch, MO). This matches the QuickSell pattern shown in the upload.
+```ts
+const TABLE_TO_KEYS: Record<string, string[][]> = {
+  stock_movements: [["movements"], ["inventory"], ["dashboard-kpis"]],
+  stage_handoffs:  [["handoffs"], ["wip"], ["mo-detail"]],
+  work_logs:       [["work-logs"], ["worker-detail"]],
+  // ...
+};
+```
 
-## Variant editor · packaging is a variant
+On payload, `queryClient.invalidateQueries({ queryKey, refetchType: "active" })` — only refetches what's currently mounted; off-screen data is just marked stale.
 
-Variant editor (sheet inside the product sheet) handles three kinds:
+**Filtering for scale**: subscriptions filter by `warehouse_id` or `assigned_to_user_id` where applicable so a worker doesn't receive every movement company-wide.
 
-- `base` · the regular SKU.
-- `pack` · packaging variant (links via `packaging_variant_id` and `units_per_pack`). User picks "Pack of 1 / 100 / Bag of 5000" inline · creating a variant_kind=`pack` row + a `product_packaging` row in one save.
-- `variation` · attribute-style variant (size, colour). Inherits images/description from the parent if blank.
+### B3. Optimistic UI on hot mutations
+Three hooks get full optimistic treatment with the **error UX you chose**:
 
-Inside the variant editor:
-- **Tiered pricing list** (existing `product_pricing_tiers`): rows of `tier_name`, `min_qty`, `price`. UI lets admin add "Retail · qty 1+ · ₹35", "Dealer · qty 50+ · ₹22.50", "Wholesale · qty 500+ · ₹19" etc · this gives both tier-name pricing and qty-wise tiered pricing in one structure.
-- **Stages applied** · checkbox list of which product stages apply to this variant.
+- `usePostStockMovement` (Inventory + Quick Order)
+- `useCloseWorkLog` (Work Logs + Worker Detail)
+- `useSubmitHandoff` (Manufacturing MO Detail)
 
-## Product card · only Price + Dealer Price visible
+Pattern (TanStack Query `useMutation`):
+1. `onMutate`: snapshot cache, write optimistic row with `__optimistic: true, __status: "pending"`.
+2. `onSuccess`: replace with server row.
+3. `onError`: keep the row but set `__status: "error", __errorMsg`. Render with **red border + "Retry" / "Dismiss" buttons inline**. Toast also fires with the reason.
+4. Retry re-runs the mutation against the same payload; Dismiss reverts to snapshot.
 
-Mobile card and desktop table show:
-- Product name + code (always)
-- Type badge (always)
-- **Sale price** (always)
-- **Dealer price** (always · just another tier from `product_pricing_tiers`)
-- Cost / margin · admin only (`showCost` already gated)
+A small `<OptimisticRow>` wrapper in `src/components/shared/` standardizes the red-highlight + retry/dismiss affordance.
 
-Click anywhere on the card / row → opens the product detail sheet (above), with an "Edit" affordance.
+### B4. Presence indicator (small bonus)
+At top of MO detail and Inventory pages, show "3 teammates viewing" using Supabase Presence on the same channel. Free to add since the channel is already open. Skip if you'd rather keep it minimal — say so when reviewing.
 
-## Stages · removed from sidebar, kept as a Group helper inside Products
+**Expected:** worker posts a movement → supervisor's stock card updates within ~300 ms without refresh.
 
-- Drop the `/app/stages` link from the sidebar.
-- Keep the route file but redirect it to `/app/products` so old bookmarks don't break.
-- Group functionality (reusable templates) moves into Products → "Stages" tab → "Manage groups" link, opening the group manager in a sheet. Linking products to a group now happens from the product's Stages tab via "Apply group" → picks a group and copies its lines into `production_stages` for selected variants. This satisfies "remove the group / can be added directly inside the product / or keep groups as a helper."
-- Stage rules unchanged at the engine level: sequence is enforced (drag-to-reorder updates `sequence`), pay mode is `salary` or `per_unit`, all per-hour calculations remain in payroll.
+---
 
-## Categories · multi-image becomes single cover + better detail
+## Tier C · Service worker (offline shell + background sync)
 
-- Categories rarely need a gallery, but request says "multiple images in products **and categories**". Plan: add a `cover_image_url` (single) **plus** allow multiple images via reusing the `product_images` pattern with a new `category_images` table only if needed. To stay compact, ship just `cover_image_url` first; mention that category galleries can be added later if asked. (We'll surface this trade-off in the build.)
-- Image upload uses the same uploader component as products.
+This is the risky tier. Following the Lovable PWA guidance strictly.
 
-## Workers → Team module
+### C1. Install vite-plugin-pwa with iframe guards
+- `devOptions.enabled: false` — SW never runs in dev/preview.
+- Registration helper in `src/main.tsx` checks `window.self !== window.top` and Lovable preview hostnames; **unregisters** existing SWs if detected.
+- `registerType: "autoUpdate"` + `skipWaiting: false` (we'll prompt the user instead — see C3).
 
-Rename UI to **Team**:
-- Sidebar item "Workers" → "Team", icon stays.
-- Team list keeps current table; tap a team member → **Team detail** page (new) with three tabs:
-  1. **Profile** · contact, hourly rate, station, role.
-  2. **Attendance** · existing `worker_attendance` table · calendar + per-day hours.
-  3. **Payroll** · existing `payroll_runs` + new "Advances" section (`team_advances`). Payroll computed hourly (already is) and shows `gross − advances = net`.
-- All advance payments and payroll handled here, not in stages or work-logs.
+### C2. Workbox runtime caching strategy
+- HTML navigations: `NetworkFirst` with 3s timeout → fallback to cached shell.
+- JS/CSS hashed assets: `CacheFirst` with 30-day expiry (safe — filenames change per build).
+- Images (`/icons/*`, product images): `StaleWhileRevalidate`, 7-day cap, max 100 entries.
+- Supabase API calls: **NetworkOnly** (no caching — RLS + freshness matter more than offline reads).
+- `navigateFallbackDenylist: [/^\/api/, /^\/~oauth/]`.
 
-## Mobile / responsive polish
+### C3. "Update available" prompt
+When a new SW activates, broadcast a custom event. A small `<UpdateAvailableToast>` in the root shell shows: "New version ready · Reload". User clicks → `skipWaiting` + `window.location.reload()`. Prevents the infamous "stale shell forever" PWA bug.
 
-- Detail sheet uses bottom sheet on mobile (`sm:max-w-2xl` on desktop, full screen on `<sm`).
-- Tab bar gets horizontal scroll-snap on `<sm` so 5 tabs fit comfortably.
-- Replace the per-row pencil in the products table with a full-row tap target (already partly done) and a sticky bottom action bar inside the detail sheet ("Save changes · Discard").
-- Mobile bottom-nav already exists · ensure Team replaces Workers in `BottomNav.tsx`.
+### C4. Background sync queue for offline movements
+Workbox `BackgroundSyncPlugin` queue named `stock-movement-queue`. The `usePostStockMovement` hook detects `navigator.onLine === false`, writes to a local IndexedDB queue with the row marked `__pending_sync`. SW retries the POST when network returns. UI shows a small cloud-arrow icon next to queued rows.
 
-## Cost visibility (admin-only)
+This only activates for stock movements (the highest-frequency shop-floor action). Other writes still require network.
 
-- "Cost engine" / BOM tab: the Effective cost, supplier landed breakdown and snapshot stay behind `role === "admin"` (manager currently sees them too · tighten to admin-only per the request "boost cost can only be view by admin"). Manager keeps full edit on master data, just not the cost read-out.
-- Margin badge on product cards already hidden behind `showCost`; tighten to admin only.
+### C5. Kill-switch SW
+Ship `public/sw-cleanup.js` (the unregister-all template from PWA docs) at `/sw.js` and `/service-worker.js` paths from day one. If we ever need to nuke the SW remotely, we just swap one line in `vite.config.ts`. Costs nothing and saves us from a brick scenario.
 
-## Technical changes (detail · for engineers)
+**Caveats called out:**
+- SW **does not work in the Lovable preview iframe** — only after publish + install.
+- First install after this change requires one extra reload to register.
+- iOS PWA caches `start_url` at install time — existing installs may need to be removed/re-added once.
 
-DB (one migration):
-- Create storage bucket `product-images` (public read · authenticated write via RLS using `has_any_role(... admin, manager)`).
-- `ALTER TABLE public.categories ADD COLUMN cover_image_url text;`
-- `CREATE TABLE public.team_advances (id uuid PK default gen_random_uuid(), worker_id uuid NOT NULL REFERENCES workers(id) ON DELETE CASCADE, amount numeric(12,2) NOT NULL CHECK (amount > 0), paid_at date NOT NULL DEFAULT current_date, note text, created_by uuid REFERENCES auth.users(id), created_at timestamptz NOT NULL DEFAULT now());` · enable RLS · staff read, manager write.
-- No schema change needed for tiered pricing · `product_pricing_tiers` already has `tier_name` + `min_qty` + `price`.
-- No schema change for packaging-as-variant · `variant_kind` enum already includes `pack` and `product_packaging.packaging_variant_id` already wires it.
+---
 
-Frontend:
-- New file `src/components/products/ProductDetailSheet.tsx` (≤ 250 lines, splits into sub-components per tab).
-- New `src/components/products/tabs/{OverviewTab,VariantsTab,StagesTab,BomTab,MoreTab}.tsx`, plus `VariantEditorSheet.tsx`, `PricingTiersEditor.tsx`, `ImageGallery.tsx`.
-- Refactor existing `ProductFormSheet.tsx` into the new `OverviewTab` (delete the old sheet wrapper · keep `Edit` button on the detail sheet that flips Overview into edit mode).
-- Update `ProductCard.tsx` and the products table to show Sale + Dealer price (read top two rows of `product_pricing_tiers`).
-- New `src/components/categories/CategoryFormSheet.tsx` adds the cover image upload (or update the existing inline editor).
-- Rename `src/routes/app.workers.tsx` → keep file, change page title to "Team"; new `src/routes/app.team.$id.tsx` for the per-team-member detail with the three tabs (move out of `app.workers.$id.tsx` and rename via redirect).
-- Sidebar: replace "Workers" with "Team" label; remove "Stages" entry.
-- `src/routes/app.stages.tsx` → keep file but `loader` redirects to `/app/products`.
-- Tighten cost gating: `CostEnginePanel`, margin in `ProductCard.tsx`, BOM tab → check `role === "admin"` only.
+## File-level changes
 
-Memory updates after build:
-- Update `mem://ui/auto-codes.md` (no change needed, just verify).
-- New `mem://features/products-hub.md` describing tabs, packaging-as-variant, tier pricing, and admin-only cost.
-- New `mem://features/team-module.md` covering rename and advances.
-- Update Core to mention "Stages live inside products · Team replaces Workers."
+```text
+NEW
+  src/hooks/useRealtimeInvalidator.tsx       (Tier B core)
+  src/hooks/useOptimisticMovement.ts         (Tier B B3)
+  src/hooks/useOptimisticWorkLog.ts          (Tier B B3)
+  src/hooks/useOptimisticHandoff.ts          (Tier B B3)
+  src/components/shared/OptimisticRow.tsx    (Tier B B3 UI)
+  src/components/shared/UpdateAvailableToast.tsx (Tier C C3)
+  src/lib/queryOptions/                      (queryOptions factories per resource)
+    inventory.ts, products.ts, workers.ts, manufacturing.ts, ...
+  public/sw-cleanup.js                       (Tier C C5)
+  supabase/migrations/<ts>_realtime_publication.sql (Tier B B1)
 
-## Out of scope (will ask before adding)
+EDIT
+  src/router.tsx                             (defaultPreloadStaleTime stays 0; queryClient via context)
+  src/routes/__root.tsx                      (move QueryClient to router context, preconnect link)
+  src/routes/app.tsx                         (mount useRealtimeInvalidator)
+  ~12 src/routes/app.*.tsx                   (add loader + ensureQueryData + useSuspenseQuery)
+  src/components/layout/Sidebar.tsx + BottomNav.tsx (already preload=intent — no change)
+  inventory/products list components         (prefetch on row hover/touch)
+  vite.config.ts                             (add VitePWA with strict guards)
+  src/main.tsx                               (SW registration with iframe/preview guards)
+```
 
-- Multi-image gallery for categories (start with single cover; gallery can follow if needed).
-- Custom per-team-member payslip PDF export.
-- A separate "Bulk image upload" tool · uploads are handled per-product for now.
+All files stay under the 250-line rule. Heavy editors get split into sub-components when they grow.
 
-## Build order
+---
 
-1. DB migration (bucket, `categories.cover_image_url`, `team_advances`).
-2. Image gallery + category cover upload.
-3. ProductDetailSheet shell + Overview / Variants tabs (incl. packaging-as-variant + tiered pricing).
-4. Stages tab (with group helper) + remove sidebar entry + redirect old route.
-5. BOM tab (rename + bring editor inline) + tighten admin-only cost.
-6. Card / table redesign with Sale + Dealer prices.
-7. Team rename + Team detail page (Profile / Attendance / Payroll incl. advances).
-8. Mobile polish + bottom-nav update + responsive QA at 375 / 414 / 768.
+## Verification checklist (I'll run this before declaring done)
 
-Each step ships in its own commit so we can verify on the preview before moving on.
+1. Cold-load `/app/dashboard` on throttled 3G — TTI under 2s.
+2. Open `/app/inventory` in two browser tabs · post a movement in tab A · row appears in tab B within 1s, no manual refresh.
+3. Force a movement to fail (e.g. negative stock) · optimistic row turns red, Retry button works, Dismiss reverts.
+4. Build production bundle · install PWA on a phone · go airplane mode · app shell still loads · log a movement · re-enable network · movement syncs.
+5. Lighthouse PWA + Performance audit on published URL — targets: Perf ≥ 85, PWA installable ✓.
+6. Verify SW does **not** register in Lovable preview iframe (DevTools → Application → Service Workers should be empty).
+
+---
+
+## Honest risks
+
+- **Realtime cost**: ~15 tables × N concurrent users. At 20 users it's free-tier comfortable; at 200 users we'll need to revisit filters and possibly batch invalidations.
+- **SW + OAuth**: Google sign-in flow uses `/~oauth` — already in denylist, but I'll specifically test the auth callback after install.
+- **Optimistic + RLS**: if a user lacks permission, the write fails fast — they see the red row immediately. This is correct behaviour but I'll write tests for the worker role since they have the narrowest grants.
+- **Scope reality**: this is ~3 focused engineering days. I'll ship Tier A in turn 1, Tier B in turn 2, Tier C in turn 3 so you can validate each layer before stacking the next.
+
+Reply **"go"** to start with Tier A, or tell me to reorder/cut anything.

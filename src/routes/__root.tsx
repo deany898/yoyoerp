@@ -10,18 +10,34 @@ import { ConfirmProvider } from "@/components/forms/ConfirmDialog";
 
 import appCss from "../styles.css?url";
 
-// App-wide React Query client. Master-data hooks (products, UOMs, warehouses,
-// categories, suppliers) cache for 5 min so route changes don't refetch them.
+// App-wide React Query client.
+// Tiered freshness:
+//  - default 5 min (lists like products, suppliers, customers)
+//  - master-data hooks override to Infinity (UOMs, warehouses, categories)
+//    via per-query staleTime so they only refetch on explicit refresh()
+//  - live-ops queries (inventory/movements/work-logs) get 30s overrides
+//    so they self-heal even before realtime invalidation lands.
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000,
       gcTime: 10 * 60 * 1000,
       refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
       retry: 1,
     },
   },
 });
+
+// Preconnect origin for Supabase to shave 100-300 ms off the first API call.
+const SUPABASE_ORIGIN = (() => {
+  try {
+    const raw = (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_URL) || "";
+    return raw ? new URL(raw).origin : "";
+  } catch {
+    return "";
+  }
+})();
 
 export const Route = createRootRoute({
   head: () => ({
@@ -59,6 +75,12 @@ export const Route = createRootRoute({
       { rel: "icon", type: "image/png", sizes: "32x32", href: "/icons/favicon-32.png" },
       { rel: "icon", type: "image/png", sizes: "192x192", href: "/icons/icon-192.png" },
       { rel: "icon", type: "image/png", sizes: "512x512", href: "/icons/icon-512.png" },
+      ...(SUPABASE_ORIGIN
+        ? [
+            { rel: "preconnect", href: SUPABASE_ORIGIN, crossOrigin: "anonymous" } as const,
+            { rel: "dns-prefetch", href: SUPABASE_ORIGIN } as const,
+          ]
+        : []),
     ],
   }),
   shellComponent: RootShell,

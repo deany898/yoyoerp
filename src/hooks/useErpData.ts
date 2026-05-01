@@ -4,6 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
+// Tiered cache freshness (overrides the global 5-min default).
+// Master-data tables rarely change — keep them in cache until explicitly refreshed.
+const MASTER_DATA_STALE = Infinity;
+const MASTER_DATA_GC = 30 * 60 * 1000; // 30 min
+
 export type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 export type ProductInsert = Database["public"]["Tables"]["products"]["Insert"];
 export type VariantRow = Database["public"]["Tables"]["product_variants"]["Row"];
@@ -44,6 +49,8 @@ export function useCategories() {
   const qc = useQueryClient();
   const q = useQuery({
     queryKey: ["erp", "categories"],
+    staleTime: MASTER_DATA_STALE,
+    gcTime: MASTER_DATA_GC,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("categories")
@@ -71,6 +78,8 @@ export function useWarehouses() {
   const qc = useQueryClient();
   const q = useQuery({
     queryKey: ["erp", "warehouses"],
+    staleTime: MASTER_DATA_STALE,
+    gcTime: MASTER_DATA_GC,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("warehouses")
@@ -129,6 +138,8 @@ export function useUoms(opts: { activeOnly?: boolean } = { activeOnly: true }) {
   const activeOnly = opts.activeOnly !== false;
   const q = useQuery({
     queryKey: ["erp", "uoms", { activeOnly }],
+    staleTime: MASTER_DATA_STALE,
+    gcTime: MASTER_DATA_GC,
     queryFn: async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let qb = (supabase as any)
