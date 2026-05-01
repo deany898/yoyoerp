@@ -265,6 +265,14 @@ function AuthPage() {
                       onChange={(e) => setSignupName(e.target.value)}
                       required
                     />
+                    <PhoneInput
+                      id="signup-mobile"
+                      countryIso={signupCountry}
+                      onCountryIsoChange={setSignupCountry}
+                      value={signupMobile}
+                      onChange={setSignupMobile}
+                      required
+                    />
                     <AuthIconInput
                       id="signup-email"
                       label="Email"
