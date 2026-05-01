@@ -70,7 +70,8 @@ function UtilitiesPage() {
     if (!form.warehouse_id) { toast.error("Pick a warehouse"); return; }
     if (!form.amount) { toast.error("Enter an amount"); return; }
     setSaving(true);
-    const { error } = await supabase.from("warehouse_utilities" as never).insert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any).from("warehouse_utilities").insert({
       warehouse_id: form.warehouse_id,
       kind: form.kind,
       label: form.label || null,
