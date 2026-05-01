@@ -140,7 +140,9 @@ export function PermissionMatrix() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold">Permissions</h2>
-          <p className="text-xs text-muted-foreground">Role defaults · per-user overrides</p>
+          <p className="text-xs text-muted-foreground">
+            Module access (sky) gates the role · individual capabilities (green) only apply when the module is enabled.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative w-full sm:w-64">
