@@ -1,5 +1,4 @@
 import { Outlet, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
-import { DemoProvider } from "@/contexts/DemoContext";
 import { RoleProvider } from "@/contexts/RoleContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
@@ -67,22 +66,20 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <AuthProvider>
-      <DemoProvider>
-        <RoleProvider>
-          <ConfirmProvider>
-            <ErrorBoundary>
-              <Outlet />
-            </ErrorBoundary>
-          </ConfirmProvider>
-          <Toaster
-            position="top-right"
-            richColors
-            closeButton
-            expand
-            toastOptions={{ duration: 4000 }}
-          />
-        </RoleProvider>
-      </DemoProvider>
+      <RoleProvider>
+        <ConfirmProvider>
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
+        </ConfirmProvider>
+        <Toaster
+          position="top-right"
+          richColors
+          closeButton
+          expand
+          toastOptions={{ duration: 4000 }}
+        />
+      </RoleProvider>
     </AuthProvider>
   );
 }
