@@ -27,6 +27,8 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ExportButton } from "@/components/shared/ExportButton";
+import { useAppConfig } from "@/contexts/AppConfigContext";
+import { FLAGS } from "@/lib/feature-flags";
 
 export const Route = createFileRoute("/app/goods-returns")({
   component: GoodsReturnsPage,
@@ -93,6 +95,8 @@ function GoodsReturnsPage() {
   const { warehouses } = useWarehouses();
   const { role } = useRole();
   const canEdit = ["admin", "manager", "sales", "dispatch"].includes(role);
+  const { isEnabled } = useAppConfig();
+  const showFinance = isEnabled(FLAGS.customers.showFinanceFields, true);
 
   const [returns, setReturns] = useState<GRRow[]>([]);
   const [customers, setCustomers] = useState<CustomerLite[]>([]);
@@ -369,7 +373,7 @@ function GoodsReturnsPage() {
                 <TableHead>Linked DO</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Return date</TableHead>
-                <TableHead className="text-right font-mono">Refund ₹</TableHead>
+                {showFinance && <TableHead className="text-right font-mono">Refund ₹</TableHead>}
                 <TableHead className="w-32"></TableHead>
               </TableRow>
             </TableHeader>
@@ -381,7 +385,7 @@ function GoodsReturnsPage() {
                   <TableCell className="font-mono text-xs text-muted-foreground">{r.dispatch_order?.do_number ?? "—"}</TableCell>
                   <TableCell><Badge variant="outline" className={STATUS_TONE[r.status]}>{r.status.replace(/_/g, " ")}</Badge></TableCell>
                   <TableCell className="text-sm text-muted-foreground">{r.return_date}</TableCell>
-                  <TableCell className="text-right font-mono">{Number(r.refund_amount).toLocaleString("en-IN")}</TableCell>
+                  {showFinance && <TableCell className="text-right font-mono">{Number(r.refund_amount).toLocaleString("en-IN")}</TableCell>}
                   <TableCell>
                     {canEdit && (
                       <div className="flex justify-end gap-1">
@@ -563,13 +567,15 @@ function GoodsReturnsPage() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-3 border-t border-border pt-3">
-                <div>
-                  <Label>Refund amount ₹</Label>
-                  <Input type="number" min={0} step="any" value={draft.refund_amount || refundAuto}
-                    onChange={(e) => patchDraft({ refund_amount: Number(e.target.value) })} disabled={isReceived} />
-                  <p className="mt-1 text-[11px] text-muted-foreground">Auto from line totals · ₹{refundAuto.toLocaleString("en-IN")}</p>
-                </div>
+              <div className={`grid ${showFinance ? "grid-cols-2" : "grid-cols-1"} gap-3 border-t border-border pt-3`}>
+                {showFinance && (
+                  <div>
+                    <Label>Refund amount ₹</Label>
+                    <Input type="number" min={0} step="any" value={draft.refund_amount || refundAuto}
+                      onChange={(e) => patchDraft({ refund_amount: Number(e.target.value) })} disabled={isReceived} />
+                    <p className="mt-1 text-[11px] text-muted-foreground">Auto from line totals · ₹{refundAuto.toLocaleString("en-IN")}</p>
+                  </div>
+                )}
                 <div><Label>Notes</Label><Textarea rows={2} value={draft.notes} onChange={(e) => patchDraft({ notes: e.target.value })} disabled={isReceived} /></div>
               </div>
 

@@ -11,6 +11,8 @@ import { useManufacturingOrders, type MOStatus } from "@/hooks/useMfgData";
 import { MoCreateSheet } from "@/components/manufacturing/MoCreateSheet";
 import { useNavigate } from "@tanstack/react-router";
 import { ExportButton } from "@/components/shared/ExportButton";
+import { useAppConfig } from "@/contexts/AppConfigContext";
+import { FLAGS } from "@/lib/feature-flags";
 
 export const Route = createFileRoute("/app/manufacturing")({
   head: () => ({
@@ -44,6 +46,8 @@ function ManufacturingPage() {
   const [statusFilter, setStatusFilter] = useState<MOStatus | "all">("all");
   const [createOpen, setCreateOpen] = useState(false);
   const navigate = useNavigate();
+  const { isEnabled } = useAppConfig();
+  const showDispatchLink = isEnabled(FLAGS.modules.dispatch, true);
 
   const filtered = useMemo(() => {
     return orders.filter((o) => {
@@ -137,7 +141,7 @@ function ManufacturingPage() {
                   <th className="px-4 py-3 text-right font-medium">Planned</th>
                   <th className="px-4 py-3 text-right font-medium">Produced</th>
                   <th className="px-4 py-3 text-left font-medium">Status</th>
-                  <th className="px-4 py-3 text-left font-medium">Source DO</th>
+                  {showDispatchLink && <th className="px-4 py-3 text-left font-medium">Source DO</th>}
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
@@ -171,13 +175,15 @@ function ManufacturingPage() {
                           {STATUS_LABEL[o.status]}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs">
-                        {o.source_do ? (
-                          <Link to="/app/dispatch-orders" className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
-                            {o.source_do.do_number}
-                          </Link>
-                        ) : <span className="text-muted-foreground">—</span>}
-                      </td>
+                      {showDispatchLink && (
+                        <td className="px-4 py-3 font-mono text-xs">
+                          {o.source_do ? (
+                            <Link to="/app/dispatch-orders" className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
+                              {o.source_do.do_number}
+                            </Link>
+                          ) : <span className="text-muted-foreground">—</span>}
+                        </td>
+                      )}
                       <td className="px-4 py-3 text-right text-muted-foreground">
                         <ArrowRight className="ml-auto h-4 w-4" />
                       </td>
