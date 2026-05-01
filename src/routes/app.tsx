@@ -22,7 +22,7 @@ export const Route = createFileRoute("/app")({
 });
 
 function AppLayout() {
-  const { role } = useRole();
+  const { role, rolesLoading } = useRole();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,23 +48,39 @@ function AppLayout() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // Role-based route guard
+  // Role-based route guard. Skip while:
+  //  · auth is still resolving,
+  //  · user is signed out (auth-guard below handles redirect to /auth),
+  //  · roles are still loading (don't kick admins off admin pages while their
+  //    role array is briefly empty).
   useEffect(() => {
+    if (authLoading || !user || rolesLoading) return;
     if (!canAccessRoute(location.pathname, role)) {
       toast.error("You don't have permission to access that page.");
-      navigate({ to: role === "customer" ? "/app/quick-order" : "/app/dashboard" });
+      navigate({ to: role === "customer" ? "/app/quick-order" : "/app/dashboard", replace: true });
     }
-  }, [location.pathname, role, navigate]);
+  }, [location.pathname, role, rolesLoading, authLoading, user, navigate]);
 
-  // Access guard — must be signed in
+  // Access guard — must be signed in. Use replace so back button doesn't
+  // re-enter the (now unauthenticated) app shell.
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
-      navigate({ to: "/auth" });
+      navigate({ to: "/auth", replace: true });
     }
   }, [user, authLoading, navigate]);
 
+  // Initial-mount spinner: only before the first successful auth resolution.
   if (!hasResolvedOnceRef.current && (authLoading || !user)) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground" />
+      </div>
+    );
+  }
+  // After logout, user becomes null. Show the spinner while we navigate to
+  // /auth instead of leaving the stale layout (with stale role) on screen.
+  if (!user) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground" />
