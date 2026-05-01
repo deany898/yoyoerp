@@ -1299,6 +1299,153 @@ export type Database = {
         }
         Relationships: []
       }
+      payroll_config: {
+        Row: {
+          daily_wage: number
+          hourly_rate: number
+          monthly_salary: number
+          notes: string | null
+          ot_multiplier: number
+          pay_basis: Database["public"]["Enums"]["pay_basis"]
+          piece_rate_per_unit: number
+          updated_at: string
+          worker_id: string
+        }
+        Insert: {
+          daily_wage?: number
+          hourly_rate?: number
+          monthly_salary?: number
+          notes?: string | null
+          ot_multiplier?: number
+          pay_basis?: Database["public"]["Enums"]["pay_basis"]
+          piece_rate_per_unit?: number
+          updated_at?: string
+          worker_id: string
+        }
+        Update: {
+          daily_wage?: number
+          hourly_rate?: number
+          monthly_salary?: number
+          notes?: string | null
+          ot_multiplier?: number
+          pay_basis?: Database["public"]["Enums"]["pay_basis"]
+          piece_rate_per_unit?: number
+          updated_at?: string
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_config_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: true
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_ledger_entries: {
+        Row: {
+          amount: number
+          basis: Database["public"]["Enums"]["pay_basis"]
+          created_at: string
+          created_by: string | null
+          entry_date: string
+          id: string
+          notes: string | null
+          qty: number
+          rate: number
+          run_id: string | null
+          work_log_id: string | null
+          worker_id: string
+        }
+        Insert: {
+          amount?: number
+          basis: Database["public"]["Enums"]["pay_basis"]
+          created_at?: string
+          created_by?: string | null
+          entry_date?: string
+          id?: string
+          notes?: string | null
+          qty?: number
+          rate?: number
+          run_id?: string | null
+          work_log_id?: string | null
+          worker_id: string
+        }
+        Update: {
+          amount?: number
+          basis?: Database["public"]["Enums"]["pay_basis"]
+          created_at?: string
+          created_by?: string | null
+          entry_date?: string
+          id?: string
+          notes?: string | null
+          qty?: number
+          rate?: number
+          run_id?: string | null
+          work_log_id?: string | null
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_ledger_entries_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_ledger_entries_work_log_id_fkey"
+            columns: ["work_log_id"]
+            isOneToOne: false
+            referencedRelation: "work_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_ledger_entries_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_runs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          locked_at: string | null
+          locked_by: string | null
+          period_end: string
+          period_start: string
+          status: Database["public"]["Enums"]["payroll_run_status"]
+          totals: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          period_end: string
+          period_start: string
+          status?: Database["public"]["Enums"]["payroll_run_status"]
+          totals?: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          period_end?: string
+          period_start?: string
+          status?: Database["public"]["Enums"]["payroll_run_status"]
+          totals?: Json
+        }
+        Relationships: []
+      }
       po_documents: {
         Row: {
           created_at: string
@@ -2604,6 +2751,487 @@ export type Database = {
         }
         Relationships: []
       }
+      wl_delivery_details: {
+        Row: {
+          created_at: string
+          delivery_batch: string | null
+          delivery_role: Database["public"]["Enums"]["delivery_role"]
+          fuel_notes: string | null
+          qty_delivered: number
+          route: string | null
+          vehicle_number: string | null
+          work_log_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_batch?: string | null
+          delivery_role?: Database["public"]["Enums"]["delivery_role"]
+          fuel_notes?: string | null
+          qty_delivered?: number
+          route?: string | null
+          vehicle_number?: string | null
+          work_log_id: string
+        }
+        Update: {
+          created_at?: string
+          delivery_batch?: string | null
+          delivery_role?: Database["public"]["Enums"]["delivery_role"]
+          fuel_notes?: string | null
+          qty_delivered?: number
+          route?: string | null
+          vehicle_number?: string | null
+          work_log_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wl_delivery_details_work_log_id_fkey"
+            columns: ["work_log_id"]
+            isOneToOne: true
+            referencedRelation: "work_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wl_dispatch_details: {
+        Row: {
+          cartons: number
+          created_at: string
+          dispatch_order_id: string | null
+          dispatch_zone: Database["public"]["Enums"]["dispatch_zone"]
+          lr_number: string | null
+          notes: string | null
+          orders_handled: number
+          qty_dispatched: number
+          work_log_id: string
+        }
+        Insert: {
+          cartons?: number
+          created_at?: string
+          dispatch_order_id?: string | null
+          dispatch_zone?: Database["public"]["Enums"]["dispatch_zone"]
+          lr_number?: string | null
+          notes?: string | null
+          orders_handled?: number
+          qty_dispatched?: number
+          work_log_id: string
+        }
+        Update: {
+          cartons?: number
+          created_at?: string
+          dispatch_order_id?: string | null
+          dispatch_zone?: Database["public"]["Enums"]["dispatch_zone"]
+          lr_number?: string | null
+          notes?: string | null
+          orders_handled?: number
+          qty_dispatched?: number
+          work_log_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wl_dispatch_details_dispatch_order_id_fkey"
+            columns: ["dispatch_order_id"]
+            isOneToOne: false
+            referencedRelation: "dispatch_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wl_dispatch_details_work_log_id_fkey"
+            columns: ["work_log_id"]
+            isOneToOne: true
+            referencedRelation: "work_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wl_helper_details: {
+        Row: {
+          created_at: string
+          helper_zone: Database["public"]["Enums"]["helper_zone"]
+          notes: string | null
+          qty_handled: number
+          support_area: string | null
+          work_log_id: string
+        }
+        Insert: {
+          created_at?: string
+          helper_zone: Database["public"]["Enums"]["helper_zone"]
+          notes?: string | null
+          qty_handled?: number
+          support_area?: string | null
+          work_log_id: string
+        }
+        Update: {
+          created_at?: string
+          helper_zone?: Database["public"]["Enums"]["helper_zone"]
+          notes?: string | null
+          qty_handled?: number
+          support_area?: string | null
+          work_log_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wl_helper_details_work_log_id_fkey"
+            columns: ["work_log_id"]
+            isOneToOne: true
+            referencedRelation: "work_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wl_moulding_details: {
+        Row: {
+          cavity_count: number
+          cavity_weight_grams: number
+          created_at: string
+          efficiency_pct: number | null
+          end_shot_count: number
+          expected_output: number | null
+          machine_id: string | null
+          material_used_grams: number
+          material_variant_id: string | null
+          material_waste_grams: number | null
+          mould_id: string | null
+          notes: string | null
+          product_id: string | null
+          qty_produced_actual: number
+          qty_rejected: number
+          start_shot_count: number
+          variant_id: string | null
+          work_log_id: string
+        }
+        Insert: {
+          cavity_count?: number
+          cavity_weight_grams?: number
+          created_at?: string
+          efficiency_pct?: number | null
+          end_shot_count?: number
+          expected_output?: number | null
+          machine_id?: string | null
+          material_used_grams?: number
+          material_variant_id?: string | null
+          material_waste_grams?: number | null
+          mould_id?: string | null
+          notes?: string | null
+          product_id?: string | null
+          qty_produced_actual?: number
+          qty_rejected?: number
+          start_shot_count?: number
+          variant_id?: string | null
+          work_log_id: string
+        }
+        Update: {
+          cavity_count?: number
+          cavity_weight_grams?: number
+          created_at?: string
+          efficiency_pct?: number | null
+          end_shot_count?: number
+          expected_output?: number | null
+          machine_id?: string | null
+          material_used_grams?: number
+          material_variant_id?: string | null
+          material_waste_grams?: number | null
+          mould_id?: string | null
+          notes?: string | null
+          product_id?: string | null
+          qty_produced_actual?: number
+          qty_rejected?: number
+          start_shot_count?: number
+          variant_id?: string | null
+          work_log_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wl_moulding_details_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wl_moulding_details_material_variant_id_fkey"
+            columns: ["material_variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wl_moulding_details_mould_id_fkey"
+            columns: ["mould_id"]
+            isOneToOne: false
+            referencedRelation: "moulds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wl_moulding_details_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wl_moulding_details_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wl_moulding_details_work_log_id_fkey"
+            columns: ["work_log_id"]
+            isOneToOne: true
+            referencedRelation: "work_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wl_packing_details: {
+        Row: {
+          cartons_used: number
+          created_at: string
+          labels_used: number
+          notes: string | null
+          output_uom: string
+          packaging_variant_id: string | null
+          qty_packed: number
+          variant_id: string | null
+          work_log_id: string
+        }
+        Insert: {
+          cartons_used?: number
+          created_at?: string
+          labels_used?: number
+          notes?: string | null
+          output_uom?: string
+          packaging_variant_id?: string | null
+          qty_packed?: number
+          variant_id?: string | null
+          work_log_id: string
+        }
+        Update: {
+          cartons_used?: number
+          created_at?: string
+          labels_used?: number
+          notes?: string | null
+          output_uom?: string
+          packaging_variant_id?: string | null
+          qty_packed?: number
+          variant_id?: string | null
+          work_log_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wl_packing_details_packaging_variant_id_fkey"
+            columns: ["packaging_variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wl_packing_details_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wl_packing_details_work_log_id_fkey"
+            columns: ["work_log_id"]
+            isOneToOne: true
+            referencedRelation: "work_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wl_production_details: {
+        Row: {
+          created_at: string
+          notes: string | null
+          product_id: string | null
+          qty_produced: number
+          qty_received: number
+          qty_rejected: number
+          rejection_pct: number | null
+          stage_kind: Database["public"]["Enums"]["stage_kind"]
+          uom: string
+          variant_id: string | null
+          work_log_id: string
+        }
+        Insert: {
+          created_at?: string
+          notes?: string | null
+          product_id?: string | null
+          qty_produced?: number
+          qty_received?: number
+          qty_rejected?: number
+          rejection_pct?: number | null
+          stage_kind?: Database["public"]["Enums"]["stage_kind"]
+          uom?: string
+          variant_id?: string | null
+          work_log_id: string
+        }
+        Update: {
+          created_at?: string
+          notes?: string | null
+          product_id?: string | null
+          qty_produced?: number
+          qty_received?: number
+          qty_rejected?: number
+          rejection_pct?: number | null
+          stage_kind?: Database["public"]["Enums"]["stage_kind"]
+          uom?: string
+          variant_id?: string | null
+          work_log_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wl_production_details_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wl_production_details_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wl_production_details_work_log_id_fkey"
+            columns: ["work_log_id"]
+            isOneToOne: true
+            referencedRelation: "work_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_logs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          duration_min: number | null
+          id: string
+          log_in_at: string
+          log_out_at: string | null
+          notes: string | null
+          shift: Database["public"]["Enums"]["shift_code"]
+          station_id: string | null
+          status: Database["public"]["Enums"]["work_log_status"]
+          supervisor_id: string | null
+          updated_at: string
+          warehouse_id: string | null
+          wl_number: string
+          work_type: Database["public"]["Enums"]["work_log_type"]
+          worker_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          duration_min?: number | null
+          id?: string
+          log_in_at?: string
+          log_out_at?: string | null
+          notes?: string | null
+          shift?: Database["public"]["Enums"]["shift_code"]
+          station_id?: string | null
+          status?: Database["public"]["Enums"]["work_log_status"]
+          supervisor_id?: string | null
+          updated_at?: string
+          warehouse_id?: string | null
+          wl_number: string
+          work_type: Database["public"]["Enums"]["work_log_type"]
+          worker_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          duration_min?: number | null
+          id?: string
+          log_in_at?: string
+          log_out_at?: string | null
+          notes?: string | null
+          shift?: Database["public"]["Enums"]["shift_code"]
+          station_id?: string | null
+          status?: Database["public"]["Enums"]["work_log_status"]
+          supervisor_id?: string | null
+          updated_at?: string
+          warehouse_id?: string | null
+          wl_number?: string
+          work_type?: Database["public"]["Enums"]["work_log_type"]
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_logs_station_id_fkey"
+            columns: ["station_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_logs_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_logs_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      worker_attendance: {
+        Row: {
+          check_in: string | null
+          check_out: string | null
+          created_at: string
+          date: string
+          hours: number
+          id: string
+          notes: string | null
+          source: string
+          status: Database["public"]["Enums"]["attendance_status"]
+          worker_id: string
+        }
+        Insert: {
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string
+          date: string
+          hours?: number
+          id?: string
+          notes?: string | null
+          source?: string
+          status?: Database["public"]["Enums"]["attendance_status"]
+          worker_id: string
+        }
+        Update: {
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string
+          date?: string
+          hours?: number
+          id?: string
+          notes?: string | null
+          source?: string
+          status?: Database["public"]["Enums"]["attendance_status"]
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worker_attendance_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workers: {
         Row: {
           code: string
@@ -2710,6 +3338,7 @@ export type Database = {
         | "dispatch"
         | "worker"
         | "customer"
+      attendance_status: "present" | "absent" | "half" | "leave"
       costing_method:
         | "supplier_quote"
         | "weighted_purchase"
@@ -2717,6 +3346,7 @@ export type Database = {
         | "lowest"
         | "preferred"
         | "unset"
+      delivery_role: "driver" | "helper"
       discount_type: "percent" | "amount"
       dispatch_status:
         | "draft"
@@ -2726,6 +3356,7 @@ export type Database = {
         | "dispatched"
         | "delivered"
         | "cancelled"
+      dispatch_zone: "sr1" | "sr2" | "warehouse"
       gr_condition: "resaleable" | "repairable" | "scrap"
       gr_reason:
         | "damaged"
@@ -2740,6 +3371,13 @@ export type Database = {
         | "approved"
         | "received"
         | "cancelled"
+      helper_zone:
+        | "sr1_upper"
+        | "sr1_ground"
+        | "sr2"
+        | "warehouse"
+        | "loading"
+        | "packing_support"
       machine_status: "idle" | "running" | "maintenance" | "offline"
       mo_status: "draft" | "released" | "in_progress" | "done" | "cancelled"
       movement_reason:
@@ -2755,6 +3393,15 @@ export type Database = {
         | "scrap"
         | "opening_balance"
       packaging_kind: "poly" | "carton" | "box" | "label" | "pallet" | "other"
+      pay_basis:
+        | "daily_wage"
+        | "monthly_salary"
+        | "piece_rate"
+        | "hourly"
+        | "incentive"
+        | "advance"
+        | "deduction"
+      payroll_run_status: "draft" | "locked" | "paid"
       po_document_kind:
         | "lr"
         | "invoice"
@@ -2784,8 +3431,20 @@ export type Database = {
         | "rejected"
         | "fulfilled"
         | "cancelled"
+      shift_code: "day" | "night" | "general" | "split"
       sourcing_type: "purchased" | "manufactured" | "hybrid"
-      stage_kind: "moulding" | "assembly" | "packing" | "qc" | "other"
+      stage_kind:
+        | "moulding"
+        | "assembly"
+        | "packing"
+        | "qc"
+        | "other"
+        | "circuit"
+        | "printing"
+        | "packing_prep"
+        | "material_prep"
+        | "semi_finished"
+        | "final_assembly"
       stage_pay_mode: "salary" | "per_unit"
       variant_kind: "base" | "variation" | "component"
       vendor_category:
@@ -2810,6 +3469,14 @@ export type Database = {
         | "neft"
         | "adjustment"
         | "other"
+      work_log_status: "open" | "closed" | "cancelled"
+      work_log_type:
+        | "production"
+        | "packing"
+        | "dispatch"
+        | "delivery"
+        | "helper"
+        | "moulding"
       zone_kind:
         | "raw_material"
         | "wip"
@@ -2956,6 +3623,7 @@ export const Constants = {
         "worker",
         "customer",
       ],
+      attendance_status: ["present", "absent", "half", "leave"],
       costing_method: [
         "supplier_quote",
         "weighted_purchase",
@@ -2964,6 +3632,7 @@ export const Constants = {
         "preferred",
         "unset",
       ],
+      delivery_role: ["driver", "helper"],
       discount_type: ["percent", "amount"],
       dispatch_status: [
         "draft",
@@ -2974,6 +3643,7 @@ export const Constants = {
         "delivered",
         "cancelled",
       ],
+      dispatch_zone: ["sr1", "sr2", "warehouse"],
       gr_condition: ["resaleable", "repairable", "scrap"],
       gr_reason: [
         "damaged",
@@ -2989,6 +3659,14 @@ export const Constants = {
         "approved",
         "received",
         "cancelled",
+      ],
+      helper_zone: [
+        "sr1_upper",
+        "sr1_ground",
+        "sr2",
+        "warehouse",
+        "loading",
+        "packing_support",
       ],
       machine_status: ["idle", "running", "maintenance", "offline"],
       mo_status: ["draft", "released", "in_progress", "done", "cancelled"],
@@ -3006,6 +3684,16 @@ export const Constants = {
         "opening_balance",
       ],
       packaging_kind: ["poly", "carton", "box", "label", "pallet", "other"],
+      pay_basis: [
+        "daily_wage",
+        "monthly_salary",
+        "piece_rate",
+        "hourly",
+        "incentive",
+        "advance",
+        "deduction",
+      ],
+      payroll_run_status: ["draft", "locked", "paid"],
       po_document_kind: [
         "lr",
         "invoice",
@@ -3038,8 +3726,21 @@ export const Constants = {
         "fulfilled",
         "cancelled",
       ],
+      shift_code: ["day", "night", "general", "split"],
       sourcing_type: ["purchased", "manufactured", "hybrid"],
-      stage_kind: ["moulding", "assembly", "packing", "qc", "other"],
+      stage_kind: [
+        "moulding",
+        "assembly",
+        "packing",
+        "qc",
+        "other",
+        "circuit",
+        "printing",
+        "packing_prep",
+        "material_prep",
+        "semi_finished",
+        "final_assembly",
+      ],
       stage_pay_mode: ["salary", "per_unit"],
       variant_kind: ["base", "variation", "component"],
       vendor_category: [
@@ -3065,6 +3766,15 @@ export const Constants = {
         "neft",
         "adjustment",
         "other",
+      ],
+      work_log_status: ["open", "closed", "cancelled"],
+      work_log_type: [
+        "production",
+        "packing",
+        "dispatch",
+        "delivery",
+        "helper",
+        "moulding",
       ],
       zone_kind: [
         "raw_material",
