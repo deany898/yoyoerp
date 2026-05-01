@@ -3818,6 +3818,7 @@ export type Database = {
         Args: { _depth?: number; _variant_id: string }
         Returns: undefined
       }
+      recompute_variant_cost: { Args: { _variant_id: string }; Returns: Json }
       resolve_identifier_email: {
         Args: { _identifier: string }
         Returns: string
@@ -3832,6 +3833,10 @@ export type Database = {
           _zone_id: string
         }
         Returns: undefined
+      }
+      uom_convert_qty: {
+        Args: { _from_code: string; _qty: number; _to_code: string }
+        Returns: number
       }
     }
     Enums: {
