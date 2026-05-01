@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SupplierPricesTab } from "./SupplierPricesTab";
@@ -16,18 +17,17 @@ import type { CategoryRow, ProductWithVariants } from "@/hooks/useErpData";
 import { useAppConfig } from "@/contexts/AppConfigContext";
 import { FLAGS } from "@/lib/feature-flags";
 
-const PRODUCT_TYPES = [
-  { value: "raw_material", label: "Raw material" },
-  { value: "packaging", label: "Packaging" },
-  { value: "wip", label: "Work in progress" },
-  { value: "finished_good", label: "Finished good" },
-] as const;
+const TYPE_LABEL: Record<string, string> = {
+  raw_material: "Raw",
+  packaging: "Packaging",
+  wip: "Semi-finished",
+  finished_good: "Finished good",
+};
 
 const schema = z.object({
   code: z.string().trim().max(64).optional().or(z.literal("")),
   name: z.string().trim().min(2).max(200),
   description: z.string().max(2000).optional(),
-  product_type: z.enum(["raw_material", "packaging", "wip", "finished_good"]),
   category_id: z.string().nullable(),
   uom: z.string().trim().min(1).max(16),
   hsn_code: z.string().max(20).optional(),
@@ -59,7 +59,6 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
     code: "",
     name: "",
     description: "",
-    product_type: "finished_good" as (typeof PRODUCT_TYPES)[number]["value"],
     category_id: null as string | null,
     uom: "pcs",
     hsn_code: "",
@@ -77,7 +76,6 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
         code: product?.code ?? "",
         name: product?.name ?? "",
         description: product?.description ?? "",
-        product_type: (product?.product_type ?? "finished_good") as typeof form.product_type,
         category_id: product?.category_id ?? null,
         uom: product?.uom ?? "pcs",
         hsn_code: product?.hsn_code ?? "",
@@ -108,7 +106,6 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
         code: parsed.data.code || "",
         name: parsed.data.name,
         description: parsed.data.description || null,
-        product_type: parsed.data.product_type,
         category_id: parsed.data.category_id,
         uom: parsed.data.uom,
         hsn_code: parsed.data.hsn_code || null,
@@ -188,12 +185,12 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
             </div>
             <div className="space-y-1.5">
               <Label>Type</Label>
-              <Select value={form.product_type} onValueChange={(v) => setForm((f) => ({ ...f, product_type: v as typeof f.product_type }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {PRODUCT_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <div className="flex h-9 items-center gap-2 rounded-md border border-input bg-muted/40 px-3 text-sm">
+                <Badge variant="outline" className="font-normal">
+                  {TYPE_LABEL[product?.product_type ?? "raw_material"] ?? "Auto"}
+                </Badge>
+                <span className="text-xs text-muted-foreground">Auto from BOM</span>
+              </div>
             </div>
           </div>
 

@@ -3941,6 +3941,10 @@ export type Database = {
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       next_doc_number: { Args: { _doc_type: string }; Returns: string }
+      recalc_product_type: {
+        Args: { p_product_id: string }
+        Returns: undefined
+      }
       recalc_variant_cost: {
         Args: { _depth?: number; _variant_id: string }
         Returns: undefined
