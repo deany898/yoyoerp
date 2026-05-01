@@ -1,5 +1,6 @@
-import { Send, Save } from "lucide-react";
+import { Send, Save, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface Props {
   itemCount: number;
@@ -9,6 +10,8 @@ interface Props {
   tax: number;
   shipping: number;
   total: number;
+  otherCharges: number;
+  onOtherChargesChange: (n: number) => void;
   saving: boolean;
   canEdit: boolean;
   onSubmit: () => void;
@@ -26,6 +29,22 @@ export function StickyTotals(p: Props) {
           {p.discount > 0 && <Stat label="Disc" value={`−₹${p.discount.toFixed(0)}`} className="text-amber-600" />}
           <Stat label="Tax" value={`₹${p.tax.toFixed(0)}`} />
           <Stat label="Ship" value={p.shipping === 0 ? "Free" : `₹${p.shipping.toFixed(0)}`} />
+          <label className="flex items-baseline gap-1.5">
+            <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              <Plus className="h-3 w-3" /> Other
+            </span>
+            <Input
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step="0.01"
+              value={p.otherCharges || ""}
+              onChange={(e) => p.onOtherChargesChange(Number(e.target.value) || 0)}
+              placeholder="0"
+              disabled={!p.canEdit}
+              className="h-7 w-20 px-2 text-right font-mono text-xs tabular-nums"
+            />
+          </label>
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
