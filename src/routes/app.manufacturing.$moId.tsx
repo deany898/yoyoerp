@@ -121,8 +121,8 @@ function MoDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 text-sm">
-        <Link to="/app/manufacturing" className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Back to production logs
+        <Link to="/app/work-logs" className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="h-4 w-4" /> Back to work logs
         </Link>
       </div>
 
