@@ -49,7 +49,6 @@ function MoDetailPage() {
   const { isEnabled } = useAppConfig();
   const showMaterialIssues = isEnabled(FLAGS.manufacturing.materialIssues, true);
   const showMoulds = isEnabled(FLAGS.manufacturing.moulds, true);
-  const showMachines = isEnabled(FLAGS.manufacturing.machines, true);
   const [mo, setMo] = useState<MOFull | null>(null);
   const [bom, setBom] = useState<BomLineRow[]>([]);
   const [issues, setIssues] = useState<MOIssueRow[]>([]);
