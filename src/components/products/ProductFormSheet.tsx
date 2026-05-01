@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SupplierPricesTab } from "./SupplierPricesTab";
+import { CostEnginePanel } from "./CostEnginePanel";
 import { toast } from "sonner";
 import type { CategoryRow, ProductWithVariants } from "@/hooks/useErpData";
 import { useAppConfig } from "@/contexts/AppConfigContext";
@@ -164,11 +165,16 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
         </SheetHeader>
 
         <Tabs defaultValue="overview" className="mt-6">
-          <TabsList className={`grid w-full ${showSupplierPrices ? "grid-cols-2" : "grid-cols-1"}`}>
+          <TabsList className={`grid w-full ${showSupplierPrices ? (showCosting ? "grid-cols-3" : "grid-cols-2") : (showCosting ? "grid-cols-2" : "grid-cols-1")}`}>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             {showSupplierPrices && (
               <TabsTrigger value="prices" disabled={!firstVariant}>
                 Supplier prices
+              </TabsTrigger>
+            )}
+            {showCosting && (
+              <TabsTrigger value="cost" disabled={!firstVariant}>
+                Cost engine
               </TabsTrigger>
             )}
           </TabsList>
@@ -280,6 +286,11 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
           {showSupplierPrices && (
             <TabsContent value="prices" className="mt-5">
               <SupplierPricesTab variantId={firstVariant?.id ?? ""} uom={form.uom} />
+            </TabsContent>
+          )}
+          {showCosting && (
+            <TabsContent value="cost" className="mt-5">
+              <CostEnginePanel variantId={firstVariant?.id ?? ""} productUom={form.uom} />
             </TabsContent>
           )}
         </Tabs>
