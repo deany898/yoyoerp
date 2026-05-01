@@ -55,9 +55,6 @@ export function SupplierFormSheet({ open, onOpenChange, supplier }: SupplierForm
       phone: "",
       address: "",
       notes: "",
-      paymentTerms: "",
-      leadTimeDays: 0,
-      minOrderQuantity: 0,
     },
   });
 
@@ -71,9 +68,6 @@ export function SupplierFormSheet({ open, onOpenChange, supplier }: SupplierForm
           phone: supplier.phone ?? "",
           address: supplier.address ?? "",
           notes: supplier.notes ?? "",
-          paymentTerms: "",
-          leadTimeDays: supplier.leadTimeDays ?? 0,
-          minOrderQuantity: 0,
         });
       } else {
         form.reset();
@@ -95,7 +89,6 @@ export function SupplierFormSheet({ open, onOpenChange, supplier }: SupplierForm
             phone: values.phone ?? "",
             address: values.address ?? "",
             notes: values.notes ?? "",
-            leadTimeDays: values.leadTimeDays ?? 0,
             updatedAt: now,
           },
         },
@@ -116,7 +109,7 @@ export function SupplierFormSheet({ open, onOpenChange, supplier }: SupplierForm
         phone: values.phone ?? "",
         address: values.address ?? "",
         notes: values.notes ?? "",
-        leadTimeDays: values.leadTimeDays ?? 0,
+        leadTimeDays: 0,
         rating: 0,
         isActive: true,
         createdAt: now,
