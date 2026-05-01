@@ -129,9 +129,9 @@ function ProductsPage() {
           <SmartSelect
             options={[
               { value: "all", label: "All types" },
-              { value: "raw_material", label: "Raw material" },
+              { value: "raw_material", label: "Raw" },
               { value: "packaging", label: "Packaging" },
-              { value: "wip", label: "Work in progress" },
+              { value: "wip", label: "Semi-finished" },
               { value: "finished_good", label: "Finished good" },
             ]}
             value={typeFilter}
@@ -140,6 +140,10 @@ function ProductsPage() {
           />
         </div>
       </div>
+
+      <p className="text-xs text-muted-foreground">
+        Type is set automatically: <span className="font-medium">Raw</span> · no BOM produces it. <span className="font-medium">Semi-finished</span> · produced by a BOM and used inside another BOM. <span className="font-medium">Finished good</span> · produced by a BOM and not consumed elsewhere.
+      </p>
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         {loading ? (
