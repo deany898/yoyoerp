@@ -254,16 +254,47 @@ export function SupplierPricesTab({ variantId }: Props) {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-mono text-sm font-semibold">₹{landed.toFixed(2)}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    base ₹{Number(q.unit_price).toFixed(2)} + frt ₹{Number(q.freight_cost).toFixed(2)}
-                  </p>
+                  {editingId === q.id ? (
+                    <div className="flex items-center gap-1">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        autoFocus
+                        value={editPrice}
+                        onChange={(e) => setEditPrice(e.target.value)}
+                        className="h-8 w-24 text-right font-mono text-sm"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") void saveEdit(q);
+                          if (e.key === "Escape") cancelEdit();
+                        }}
+                      />
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => saveEdit(q)} title="Save">
+                        <Check className="h-4 w-4 text-emerald-600" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={cancelEdit} title="Cancel">
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="font-mono text-sm font-semibold">₹{landed.toFixed(2)}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        base ₹{Number(q.unit_price).toFixed(2)} + frt ₹{Number(q.freight_cost).toFixed(2)}
+                      </p>
+                    </>
+                  )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <Button size="icon" variant="ghost" onClick={() => toggleActive(q)} title={q.is_active ? "Deactivate" : "Activate"}>
+                  {editingId !== q.id && (
+                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => startEdit(q)} title="Edit price">
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <PriceHistoryPopover supplierId={q.supplier_id} variantId={variantId} />
+                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => toggleActive(q)} title={q.is_active ? "Deactivate" : "Activate"}>
                     {q.is_active ? <X className="h-4 w-4" /> : <Check className="h-4 w-4" />}
                   </Button>
-                  <Button size="icon" variant="ghost" onClick={() => remove(q)} title="Delete">
+                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => remove(q)} title="Delete">
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
