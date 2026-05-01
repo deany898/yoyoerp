@@ -27,6 +27,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ExportButton } from "@/components/shared/ExportButton";
+import { AutoCodeField } from "@/components/shared/AutoCodeField";
 
 export const Route = createFileRoute("/app/requests")({
   component: RequestsPage,
@@ -243,7 +244,7 @@ function RequestsPage() {
           {draft && (
             <div className="mt-6 space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>Request #</Label><Input value={draft.request_number} onChange={(e) => setDraft({ ...draft, request_number: e.target.value })} /></div>
+                <AutoCodeField label="Request #" value={draft.id ? draft.request_number : ""} pendingCode={draft.id ? null : draft.request_number} />
                 <div>
                   <Label>Status</Label>
                   <SmartSelect
