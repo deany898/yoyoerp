@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Warehouse, Pencil, MapPin } from "lucide-react";
+import { Plus, Warehouse, Pencil, MapPin, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TableSkeleton } from "@/components/shared/skeletons";
@@ -9,6 +9,12 @@ import { useWarehouses, type WarehouseWithZones, type ZoneRow } from "@/hooks/us
 import { WarehouseFormDialog } from "@/components/warehouses/WarehouseFormDialog";
 import { ZoneFormDialog } from "@/components/warehouses/ZoneFormDialog";
 import { usePermissions, PermissionGate } from "@/hooks/usePermissions";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/app/warehouses")({
   head: () => ({
@@ -38,11 +44,43 @@ function WarehousesPage() {
   const [editingWh, setEditingWh] = useState<WarehouseWithZones | null>(null);
   const [zoneFormOpen, setZoneFormOpen] = useState(false);
   const [zoneCtx, setZoneCtx] = useState<{ warehouseId: string; zone: ZoneRow | null } | null>(null);
+  const [zoneToDelete, setZoneToDelete] = useState<ZoneRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const openCreateWh = () => { setEditingWh(null); setWhFormOpen(true); };
   const openEditWh = (w: WarehouseWithZones) => { setEditingWh(w); setWhFormOpen(true); };
   const openCreateZone = (warehouseId: string) => { setZoneCtx({ warehouseId, zone: null }); setZoneFormOpen(true); };
   const openEditZone = (warehouseId: string, zone: ZoneRow) => { setZoneCtx({ warehouseId, zone }); setZoneFormOpen(true); };
+
+  const confirmDeleteZone = async () => {
+    if (!zoneToDelete) return;
+    setDeleting(true);
+    try {
+      // Guard: block if stock or movements reference this zone
+      const [stockRes, movFromRes, movToRes] = await Promise.all([
+        supabase.from("inventory_stock").select("id", { count: "exact", head: true }).eq("zone_id", zoneToDelete.id),
+        supabase.from("stock_movements").select("id", { count: "exact", head: true }).eq("from_zone_id", zoneToDelete.id),
+        supabase.from("stock_movements").select("id", { count: "exact", head: true }).eq("to_zone_id", zoneToDelete.id),
+      ]);
+      const stockCount = stockRes.count ?? 0;
+      const movCount = (movFromRes.count ?? 0) + (movToRes.count ?? 0);
+      if (stockCount > 0 || movCount > 0) {
+        toast.error("Zone in use", {
+          description: `${stockCount} stock row(s), ${movCount} movement(s) reference this zone.`,
+        });
+        return;
+      }
+      const { error } = await supabase.from("warehouse_zones").delete().eq("id", zoneToDelete.id);
+      if (error) throw error;
+      toast.success("Zone deleted");
+      setZoneToDelete(null);
+      refresh();
+    } catch (err) {
+      toast.error("Delete failed", { description: err instanceof Error ? err.message : "Unknown" });
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -117,11 +155,24 @@ function WarehousesPage() {
                           </span>
                           <span className="truncate">{z.name}</span>
                         </div>
-                        {can("edit_item") && (
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditZone(w.id, z)}>
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
+                        <div className="flex items-center gap-0.5">
+                          {can("edit_item") && (
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditZone(w.id, z)}>
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                          {can("edit_item") && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => setZoneToDelete(z)}
+                              aria-label={`Delete zone ${z.code}`}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -142,6 +193,27 @@ function WarehousesPage() {
           onSaved={refresh}
         />
       )}
+
+      <AlertDialog open={!!zoneToDelete} onOpenChange={(o) => !o && !deleting && setZoneToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete zone {zoneToDelete?.code}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes "{zoneToDelete?.name}". Zones with existing stock or movement history cannot be deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); confirmDeleteZone(); }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
