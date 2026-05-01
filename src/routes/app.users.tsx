@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { ShieldCheck, Search, Users as UsersIcon, Loader2, Lock, LockOpen, KeyRound } from "lucide-react";
+import { ShieldCheck, Search, Users as UsersIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,13 +9,13 @@ import { useRole } from "@/hooks/useRole";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { SmartSelect } from "@/components/forms/SmartSelect";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ROLE_PERMISSION_MATRIX, ROLE_ORDER, ROLE_LABEL } from "@/lib/role-permissions";
 import { CreateUserDialog } from "@/components/admin/CreateUserDialog";
+import { UserRowActions } from "@/components/admin/UserRowActions";
 import { adminSetLock, adminResetPassword } from "@/server/admin-users.functions";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -235,26 +235,13 @@ function UserManagementPage() {
                         {format(new Date(u.created_at), "MMM d, yyyy")}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            disabled={savingId === u.user_id || isSelf}
-                            onClick={() => toggleLock(u)}
-                            title={u.admin_locked ? "Unlock identity fields" : "Lock identity fields"}
-                          >
-                            {u.admin_locked ? <Lock className="h-4 w-4" /> : <LockOpen className="h-4 w-4" />}
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            disabled={savingId === u.user_id}
-                            onClick={() => resetPassword(u)}
-                            title="Reset password"
-                          >
-                            <KeyRound className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <UserRowActions
+                          locked={u.admin_locked}
+                          isSelf={isSelf}
+                          saving={savingId === u.user_id}
+                          onToggleLock={() => toggleLock(u)}
+                          onResetPassword={() => resetPassword(u)}
+                        />
                       </TableCell>
                     </TableRow>
                   );
