@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -10,6 +10,8 @@ import { LocationSettings } from "@/components/settings/LocationSettings";
 import { ReorderDefaults } from "@/components/settings/ReorderDefaults";
 import { SystemSettings } from "@/components/settings/SystemSettings";
 import { UserManagement } from "@/components/settings/UserManagement";
+import { PermissionMatrix } from "@/components/settings/PermissionMatrix";
+import { Shield } from "lucide-react";
 
 export const Route = createFileRoute("/app/settings")({
   component: SettingsPage,
@@ -31,9 +33,17 @@ function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-[1000px] space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
-        <p className="text-sm text-muted-foreground">System configuration and management</p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
+          <p className="text-sm text-muted-foreground">System configuration and management</p>
+        </div>
+        <Link
+          to="/app/settings/audit"
+          className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-xs font-medium text-foreground hover:bg-accent"
+        >
+          <Shield className="h-3.5 w-3.5 text-primary" /> Audit log
+        </Link>
       </div>
 
       <Tabs defaultValue="categories" className="w-full">
@@ -43,6 +53,7 @@ function SettingsPage() {
           <TabsTrigger value="locations">Locations</TabsTrigger>
           <TabsTrigger value="reorder-defaults">Reorder Defaults</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="permissions">Permissions</TabsTrigger>
           <TabsTrigger value="system">System</TabsTrigger>
         </TabsList>
 
@@ -61,6 +72,9 @@ function SettingsPage() {
           </TabsContent>
           <TabsContent value="users">
             <ErrorBoundary><UserManagement /></ErrorBoundary>
+          </TabsContent>
+          <TabsContent value="permissions">
+            <ErrorBoundary><PermissionMatrix /></ErrorBoundary>
           </TabsContent>
           <TabsContent value="system">
             <ErrorBoundary><SystemSettings /></ErrorBoundary>
