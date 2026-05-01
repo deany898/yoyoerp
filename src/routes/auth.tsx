@@ -13,7 +13,7 @@ import { AuthIconInput } from "@/components/auth/AuthIconInput";
 import { GoogleIcon } from "@/components/auth/GoogleIcon";
 import { ForgotPasswordDialog } from "@/components/auth/ForgotPasswordDialog";
 import { PhoneInput } from "@/components/auth/PhoneInput";
-import { DEFAULT_COUNTRY_ISO, digitsOnly, toE164 } from "@/lib/country-codes";
+import { COUNTRY_CODES, DEFAULT_COUNTRY_ISO, digitsOnly, toE164 } from "@/lib/country-codes";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -208,11 +208,8 @@ function AuthPage() {
                             onChange={(e) => setSigninCountry(e.target.value)}
                             className="h-7 rounded-md border border-input bg-background px-2 text-xs"
                           >
-                            {/* Dynamically populate */}
-                            {Array.from(new Map(
-                              (await import("@/lib/country-codes")).COUNTRY_CODES.map((c) => [c.iso, c]),
-                            ).values()).map((c) => (
-                              <option key={c.iso} value={c.iso}>{c.flag} +{c.code} {c.name}</option>
+                            {COUNTRY_CODES.map((c) => (
+                              <option key={`${c.iso}-${c.code}`} value={c.iso}>{c.flag} +{c.code} {c.name}</option>
                             ))}
                           </select>
                         </div>
