@@ -1,29 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { Layers, Package, Plus, Search, Trash2, Link2 } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { TableSkeleton } from "@/components/shared/skeletons";
-import { EmptyState } from "@/components/shared/EmptyState";
-import { PermissionGate, usePermissions } from "@/hooks/usePermissions";
-import { AddStageSheet } from "@/components/manufacturing/AddStageSheet";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { SmartSelect } from "@/components/forms/SmartSelect";
-import { supabase } from "@/integrations/supabase/client";
-import { notify } from "@/lib/notify";
-import { useConfirm } from "@/components/forms/ConfirmDialog";
-import { AutoCodeField } from "@/components/shared/AutoCodeField";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
+/**
+ * Stages now live inside the product detail sheet.
+ * This route is kept only to preserve old bookmarks · it redirects to /app/products.
+ */
 export const Route = createFileRoute("/app/stages")({
-  head: () => ({
-    meta: [
-      { title: "Stages · YOYO ERP" },
-      { name: "description", content: "Define product-specific stages and reusable stage groups." },
-    ],
-  }),
-  component: StagesPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/app/products" });
+  },
+  component: () => null,
 });
 
 type ProductStageRow = {
