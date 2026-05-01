@@ -78,6 +78,8 @@ export function useWarehouses() {
   const qc = useQueryClient();
   const q = useQuery({
     queryKey: ["erp", "warehouses"],
+    staleTime: MASTER_DATA_STALE,
+    gcTime: MASTER_DATA_GC,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("warehouses")
@@ -136,6 +138,8 @@ export function useUoms(opts: { activeOnly?: boolean } = { activeOnly: true }) {
   const activeOnly = opts.activeOnly !== false;
   const q = useQuery({
     queryKey: ["erp", "uoms", { activeOnly }],
+    staleTime: MASTER_DATA_STALE,
+    gcTime: MASTER_DATA_GC,
     queryFn: async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let qb = (supabase as any)
