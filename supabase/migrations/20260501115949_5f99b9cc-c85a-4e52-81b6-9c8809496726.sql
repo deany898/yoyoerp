@@ -1,0 +1,10 @@
+REVOKE EXECUTE ON FUNCTION public.auto_po_number() FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.auto_do_number() FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.auto_mo_number() FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.auto_gr_number() FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.auto_request_number() FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.auto_po_number() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.auto_do_number() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.auto_mo_number() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.auto_gr_number() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.auto_request_number() TO authenticated;
