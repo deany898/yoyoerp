@@ -130,7 +130,7 @@ function WipPage() {
                 }`}
           </p>
         </div>
-        <PermissionGate permission="adjust_stock">
+        <PermissionGate permission="log_movement">
           <Button onClick={() => setOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" /> New handoff
           </Button>
