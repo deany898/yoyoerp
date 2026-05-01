@@ -21,6 +21,7 @@ import { ExportButton } from "@/components/shared/ExportButton";
 import { ImportButton } from "@/components/shared/ImportButton";
 import { useAppConfig } from "@/contexts/AppConfigContext";
 import { FLAGS } from "@/lib/feature-flags";
+import { AutoCodeField } from "@/components/shared/AutoCodeField";
 
 export const Route = createFileRoute("/app/customers")({
   component: CustomersPage,
@@ -65,6 +66,18 @@ function CustomersPage() {
   const [draft, setDraft] = useState<Partial<CustomerRow> | null>(null);
   const [saving, setSaving] = useState(false);
 
+  function nextCustomerCode(): string {
+    let max = 0;
+    for (const r of rows) {
+      const m = /^CUS-(\d+)$/i.exec(r.code ?? "");
+      if (m) {
+        const n = parseInt(m[1], 10);
+        if (n > max) max = n;
+      }
+    }
+    return `CUS-${String(max + 1).padStart(3, "0")}`;
+  }
+
   async function refresh() {
     setLoading(true);
     const { data, error } = await supabase
@@ -105,7 +118,7 @@ function CustomersPage() {
     };
     const res = draft.id
       ? await supabase.from("customers").update({ ...basePayload, code: draft.code! }).eq("id", draft.id)
-      : await supabase.from("customers").insert({ ...basePayload, code: "" });
+      : await supabase.from("customers").insert({ ...basePayload, code: nextCustomerCode() });
     setSaving(false);
     if (res.error) { toast.error("Save failed", { description: res.error.message }); return; }
     toast.success(draft.id ? "Customer updated" : "Customer created");
@@ -218,7 +231,7 @@ function CustomersPage() {
             <div className="mt-6 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Name *</Label><Input value={draft.name ?? ""} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></div>
-                <div><Label>Code</Label><Input value={(draft.code ?? "") || "Auto-generated on save"} disabled className="bg-muted/40" /></div>
+                <AutoCodeField label="Code" value={draft.code ?? ""} pendingCode={draft.id ? null : nextCustomerCode()} />
                 <div><Label>Contact name</Label><Input value={draft.contact_name ?? ""} onChange={(e) => setDraft({ ...draft, contact_name: e.target.value })} /></div>
                 <div><Label>Phone</Label><Input value={draft.phone ?? ""} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} /></div>
                 <div><Label>Email</Label><Input type="email" value={draft.email ?? ""} onChange={(e) => setDraft({ ...draft, email: e.target.value })} /></div>

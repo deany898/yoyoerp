@@ -27,7 +27,7 @@ function StationsPage() {
       loading={loading}
       refresh={refresh}
       fields={[
-        { key: "code", label: "Code", required: true, placeholder: "e.g. STN-01" },
+        { key: "code", label: "Code", kind: "auto-code" },
         { key: "name", label: "Name", required: true, placeholder: "e.g. Injection moulding bay" },
         { key: "location", label: "Location", placeholder: "e.g. Plant A · Floor 1" },
         { key: "is_active", label: "Status", kind: "switch" },

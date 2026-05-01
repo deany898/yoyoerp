@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { notify } from "@/lib/notify";
+import { AutoCodeField } from "@/components/shared/AutoCodeField";
 
-export type FieldKind = "text" | "number" | "switch";
+export type FieldKind = "text" | "number" | "switch" | "auto-code";
 
 export interface MasterField {
   key: string;
@@ -53,6 +54,7 @@ export function MasterRecordSheet({ open, onOpenChange, table, entityLabel, fiel
 
   const save = async () => {
     for (const f of fields) {
+      if (f.kind === "auto-code") continue;
       if (f.required && (values[f.key] === "" || values[f.key] == null)) {
         notify.warning(`${f.label} is required`);
         return;
@@ -61,6 +63,11 @@ export function MasterRecordSheet({ open, onOpenChange, table, entityLabel, fiel
     setSaving(true);
     const payload: Record<string, unknown> = {};
     for (const f of fields) {
+      if (f.kind === "auto-code") {
+        // System-assigned · only include on edit so we don't blank an existing code.
+        if (isEdit && values[f.key]) payload[f.key] = values[f.key];
+        continue;
+      }
       const v = values[f.key];
       if (f.kind === "number") payload[f.key] = Number(v) || 0;
       else if (f.kind === "switch") payload[f.key] = !!v;
@@ -92,6 +99,13 @@ export function MasterRecordSheet({ open, onOpenChange, table, entityLabel, fiel
 
         <div className="mt-6 space-y-4">
           {fields.map((f) => (
+            f.kind === "auto-code" ? (
+              <AutoCodeField
+                key={f.key}
+                label={f.label}
+                value={values[f.key] as string | undefined}
+              />
+            ) : (
             <div key={f.key} className="space-y-1.5">
               <Label htmlFor={f.key} className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 {f.label}{f.required && <span className="text-destructive"> *</span>}
@@ -114,6 +128,7 @@ export function MasterRecordSheet({ open, onOpenChange, table, entityLabel, fiel
                 />
               )}
             </div>
+            )
           ))}
         </div>
 

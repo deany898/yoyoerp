@@ -28,7 +28,7 @@ function MouldsPage() {
       loading={loading}
       refresh={refresh}
       fields={[
-        { key: "code", label: "Code", required: true, placeholder: "e.g. MLD-001" },
+        { key: "code", label: "Code", kind: "auto-code" },
         { key: "name", label: "Name", required: true },
         { key: "cavity_count", label: "Cavity count", kind: "number" },
         { key: "life_cycles", label: "Total life (cycles)", kind: "number" },

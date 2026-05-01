@@ -1,123 +1,66 @@
-## Plan
+## Goal
 
-Six related changes across navigation, master data, workforce, products, settings, and permissions.
+Every "code" or "document number" field across the app should be **system-generated and locked** in the UI. Users never type or edit these. All other fields (name, qty, price, dates, notes, etc.) stay fully editable.
 
----
+Codes/numbers are already generated server-side by Postgres triggers (`auto_set_code`, `auto_po_number`, `auto_do_number`, `auto_mo_number`, `auto_gr_number`, `auto_request_number`, `auto_wl_number`, `next_doc_number(...)`) and worker auto-code triggers. We just need to remove the input controls or render them disabled with an "Auto-generated on save" placeholder, and stop sending user-entered values.
 
-### 1. Sidebar · remove "User management" from Contacts
+## Scope · forms to update
 
-In `src/components/layout/Sidebar.tsx`, the Contacts group currently lists `User management`, `Customers`, `Suppliers`, `Workers`. Remove the User management entry from Contacts (it stays under Admin where it belongs).
+### Master data (code field)
+- **Stations** (`src/routes/app.stations.tsx`) — remove the `code` field from `MasterListPage` `fields`, keep it in `columns`.
+- **Moulds** (`src/routes/app.moulds.tsx`) — same treatment.
+- **Machines** (`src/routes/app.machines.tsx`) — same.
+- **Stages / stage groups** (`src/routes/app.stages.tsx`) — drop the `code` input from the inline create form; rely on trigger-generated value. Display in table only.
+- **Workers** (`src/components/workers/WorkerFormSheet.tsx`) — already auto, but verify the form does not show a code input on create; on edit show as disabled.
+- **Categories** (`src/routes/app.categories.tsx`) — auto-generate `CAT-###` via a small client helper or a new `next_doc_number('CAT')` (DB allow-list update needed). Lock the input.
+- **Suppliers** (`src/routes/app.suppliers.tsx` + `src/components/vendors/SupplierFormSheet.tsx`) — already uses `nextSupplierCode()`; replace the editable input with a disabled "Auto-generated" placeholder and stop reading user value.
+- **Customers** (`src/routes/app.customers.tsx`) — currently inserts `code: ""`; switch to a `nextCustomerCode()` client helper (mirror suppliers) and disable the input.
+- **Products** (`src/components/products/ProductFormSheet.tsx`) — `code` is already optional; render it disabled with an auto-suggested value (`PRD-####`) on create. **SKU** stays user-editable (it's a real business identifier, not a system code) — confirm with user only if you want SKU auto'd too.
 
----
+### Transactional documents (number field)
+All of these already have DB triggers; UI just needs the input gone.
+- **Purchase Orders** (`src/routes/app.purchase-orders.tsx`) — `po_number` field is already `disabled`. Keep, but also remove the `Label`/section on create (show as a small badge `PO # · auto-generated on save`) so it stops looking like a form field.
+- **Dispatch Orders** (`src/routes/app.dispatch-orders.tsx`) — same as PO.
+- **Goods Returns** (`src/routes/app.goods-returns.tsx`) — same.
+- **Inventory Requests** (`src/routes/app.requests.tsx`) — currently pre-fills `REQ-YYMM-####` and exposes an editable input. Lock it (read-only) and let the DB trigger overwrite it on insert.
+- **Manufacturing Orders** (`src/components/manufacturing/MoCreateSheet.tsx`) — `mo_number` is fetched via `next_doc_number('MO')`; ensure it never appears as an editable input.
+- **Work Logs / Handoffs** — `wl_number` and `ho_number` are auto by trigger; verify no UI input exposes them.
 
-### 2. Import & Export on Customers, Workers, Suppliers, Products, Categories
+### Stays editable (no change)
+SKU, names, descriptions, prices, quantities, dates, addresses, contact info, notes, status dropdowns, line items.
 
-Today only an Export button exists (`src/components/shared/ExportButton.tsx`); a generic CSV import sheet exists at `src/components/data/CSVImportSheet.tsx` but isn't wired into these pages.
+## Technical approach
 
-- Build a small `ImportButton` wrapper around `CSVImportSheet` that takes: `table`, `fields` (column map), `onImported` refresh callback, and an optional row transform.
-- Place an `Import` + `Export` button pair in the page headers of:
-  - `src/routes/app.customers.tsx`
-  - `src/routes/app.suppliers.tsx`
-  - `src/routes/app.products.tsx` (also fixes the misaligned "New product" header — see #4)
-  - `src/routes/app.categories.tsx` (add an Import/Export bar above the CategoryManager)
-  - `src/routes/app.workers.tsx` (extend `MasterListPage` to optionally render header actions, then wire Import/Export here)
-- All imports use the existing 3-step flow (upload → field mapping → validate → commit) from `CSVImportSheet`. Each page provides its own column schema.
+1. **Shared "auto code" display component** — create `src/components/shared/AutoCodeField.tsx`:
+   - Renders a small badge: `Code · auto-generated on save` (or shows the code on edit, disabled).
+   - Used everywhere we previously had `<Input value={code} disabled />`.
 
----
+2. **`MasterRecordSheet` enhancement** — add a new field kind `"auto-code"` so master pages can declare:
+   ```ts
+   { key: "code", label: "Code", kind: "auto-code" }
+   ```
+   When `kind === "auto-code"`:
+   - On create: render the AutoCodeField placeholder, never send `code` in the payload (DB trigger fills it).
+   - On edit: render AutoCodeField showing the existing code, disabled.
 
-### 3. Worker form · salary + duty hours + mobile
+3. **Update master pages** (`stations`, `moulds`, `machines`, `stages`, `categories`) to use `kind: "auto-code"` instead of removing the row entirely, so users still see "this gets a code".
 
-Worker schema today: `code, name, station_id, job_role, hourly_rate, phone, is_active`. Payroll lives in a separate `payroll_config` table (with `pay_basis`, `daily_wage`, `monthly_salary`, `hourly_rate`, etc.).
+4. **Suppliers / Customers** — switch from `nextSupplierCode()` editable input to `<AutoCodeField pendingCode={nextSupplierCode()} />`. Continue inserting the generated code (no DB trigger exists for these yet).
 
-Changes to `src/routes/app.workers.tsx`:
-- Drop **Role (job_role)** field — workers are always role "worker" implicitly. (The DB column stays for back-compat; we just stop asking.)
-- Drop **Primary station** field.
-- Rename **Phone** → **Mobile number** and make it **required**.
-- Replace **Hourly rate** with two inputs: **Salary (₹)** and **Duty hours** (e.g. 400/10, 500/12). Computed **Hourly rate** = `salary / duty_hours`, shown read-only.
-- The computed hourly rate is what gets persisted to `workers.hourly_rate` (so existing payroll math keeps working). The raw salary + duty hours are stored on `payroll_config` for that worker (`monthly_salary` or `daily_wage` + a new `duty_hours` numeric column on `payroll_config`).
-- Mobile validation: minimum 10 digits.
+5. **Inventory Requests** — change the `<Input>` for `request_number` to `<AutoCodeField />` and stop sending `request_number` in the insert (trigger fills it).
 
-In the workers list, add two action icons per row:
-- **Call** → `tel:<mobile>`
-- **WhatsApp** → `https://wa.me/<digits>`
+6. **PO / DO / GR / MO** — replace the current `<div><Label>... <Input disabled /></div>` block with a single `<AutoCodeField pendingCode="…" />` line for visual consistency.
 
-Migration:
-- Add `duty_hours numeric not null default 8` to `payroll_config`.
+7. **Memory** — add `mem://ui/auto-codes.md` documenting the rule: "All code/number identifiers are system-generated. Never expose an editable input for them."
 
-This requires a custom row form (the current generic `MasterRecordSheet` can't compute derived values). I'll build `src/components/workers/WorkerFormSheet.tsx` (~200 lines) and use it from `app.workers.tsx` instead of `MasterListPage`'s built-in form. The list view stays on `MasterListPage` with a custom `onCreate`/`onEdit` override (small extension to that component to allow injecting a form renderer).
+## Out of scope
 
----
+- SKU on products (real business field, often user-defined).
+- HSN code, GST number, tax IDs (external identifiers, not system codes).
+- Names, descriptions, qty, price, all transactional line data.
 
-### 4. Products header alignment
+## Verification checklist
 
-In `src/routes/app.products.tsx`, the header currently puts **New product** and **Export** as siblings of the title block, which on desktop pushes the export below the button. Wrap both action buttons in a single right-aligned action group:
+After implementation, every create form across these pages must show codes as a non-editable badge / disabled input, and saving must succeed without the user touching that field:
 
-```tsx
-<div className="flex items-center gap-2">
-  <ImportButton ... />
-  <ExportButton ... />
-  <PermissionGate permission="create_item">
-    <Button onClick={openCreate}>New product</Button>
-  </PermissionGate>
-</div>
-```
-
----
-
-### 5. Inventory settings · "Track inventory" toggle + audit log delete
-
-`src/routes/app.admin.inventory-settings.tsx` currently only renders `<ReorderDefaults />`. Add a new card at top: **Track inventory** switch.
-
-- New flag `inventory.track_stock` (default `true`) seeded into `app_config_flags`.
-- When OFF: hide `/app/inventory`, `/app/movements`, `/app/requests` from sidebar (add to `ROUTE_FLAGS` in `src/lib/feature-flags.ts`); skip stock postings inside manufacturing/dispatch helpers (`src/lib/mfg-posting.ts` and dispatch flow check the flag and no-op the inventory write).
-- When ON: stock auto-deducts on dispatch completion (already wired) and auto-adds on production output (already wired) — no behavior change.
-
-**Audit log delete + snapshot rule (mentioned in the request):**
-- Audit log access is already manager+admin (line 34 of `app.admin.audit.tsx`); access denied to non-admins is correct, so no change there.
-- Add a "Clear logs older than…" admin action in audit log: writes one final `audit_log` row of action `snapshot` containing the last inventory totals (sum from `inventory_stock`) and the timestamp, then deletes prior entries. New `admin delete audit` RLS policy on `audit_log` for admin only.
-
----
-
-### 6. Permission matrix · module-first, then verbs
-
-Today `src/components/settings/PermissionMatrix.tsx` shows every `<module>.<verb>` capability as a flat list with role columns. Rework so:
-
-**Step 1 (top of matrix):** for each role, an admin first toggles **module access** (one switch per module per role: Products, Customers, Suppliers, Inventory, Manufacturing, …). This drives a new `role_module_access(role, module, granted)` table.
-
-**Step 2 (below, per module):** only modules the role has access to expand into their CRUD verb rows (`view`, `create`, `edit`, `delete`, `approve`, `export`, `import`, `bulk_edit`). Verbs for un-granted modules are hidden, not greyed out.
-
-UI:
-- Tabs: `Module access` | `Module permissions` | `User overrides` (rename existing).
-- Module access tab = compact role × module grid of switches.
-- Module permissions tab = current role × capability grid, but capabilities are filtered to `{capability | module ∈ granted modules for that role}`. Modules collapse/expand.
-
-Server-side enforcement:
-- New table `role_module_access` (role app_role, module text, granted bool, PK on (role, module)).
-- Update `has_capability(uid, cap)` SQL function to also check that the user's role has the parent module granted; otherwise return false regardless of `role_permissions`.
-- Seed defaults from existing `role_permissions` (a role gets module access if it has any granted capability in that module).
-
----
-
-### Technical summary
-
-**New files:**
-- `src/components/shared/ImportButton.tsx` — wraps `CSVImportSheet` with table-aware insert.
-- `src/components/workers/WorkerFormSheet.tsx` — bespoke worker form with salary→hourly math.
-
-**Edited files:**
-- `src/components/layout/Sidebar.tsx` — drop User management from Contacts.
-- `src/routes/app.customers.tsx`, `app.suppliers.tsx`, `app.products.tsx`, `app.categories.tsx` — header import/export buttons; products header alignment.
-- `src/routes/app.workers.tsx` — use new WorkerFormSheet; add Call/WhatsApp row actions; remove role + station; require mobile.
-- `src/components/manufacturing/MasterListPage.tsx` — accept optional `headerActions` and `renderForm` slot.
-- `src/routes/app.admin.inventory-settings.tsx` — add Track inventory switch card.
-- `src/lib/feature-flags.ts` — add `inventory.track_stock` and conditional ROUTE_FLAGS entries.
-- `src/lib/mfg-posting.ts` and dispatch posting helpers — guard stock writes behind the flag.
-- `src/components/settings/PermissionMatrix.tsx` — module-access tab + filtered verbs.
-- `src/routes/app.admin.audit.tsx` — Clear logs (with snapshot) admin action.
-
-**Migrations (in order):**
-1. `alter table payroll_config add column duty_hours numeric not null default 8;`
-2. `insert into app_config_flags (key, label, category, enabled, description) values ('inventory.track_stock', 'Track inventory', 'inventory', true, 'When off, the app hides inventory/movements/requests and skips stock postings.');`
-3. `create table role_module_access (role app_role not null, module text not null, granted boolean not null default false, primary key (role, module));` + RLS (admin write, staff read) + seed from existing `role_permissions`.
-4. Replace `has_capability(uid, cap)` to also `AND` against `role_module_access`.
-5. `create policy "admin delete audit" on audit_log for delete to authenticated using (has_role(auth.uid(), 'admin'));`
+Stations · Moulds · Machines · Stages · Stage groups · Workers · Categories · Suppliers · Customers · Products · Purchase Orders · Dispatch Orders · Goods Returns · Inventory Requests · Manufacturing Orders.

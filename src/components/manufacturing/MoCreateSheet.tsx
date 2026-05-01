@@ -7,6 +7,7 @@ import { SmartSelect } from "@/components/forms/SmartSelect";
 import { supabase } from "@/integrations/supabase/client";
 import { notify } from "@/lib/notify";
 import { nextMoNumber } from "@/hooks/useMfgData";
+import { AutoCodeField } from "@/components/shared/AutoCodeField";
 
 interface VariantOpt { id: string; sku: string; variant_name: string; product_name: string }
 interface WhOpt { id: string; name: string; code: string }
@@ -106,10 +107,7 @@ export function MoCreateSheet({ open, onOpenChange, prefill, onCreated }: Props)
           <SheetDescription>Plan production for a finished or semi-finished variant.</SheetDescription>
         </SheetHeader>
         <div className="mt-6 space-y-4">
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Log number</Label>
-            <Input value={moNumber} onChange={(e) => setMoNumber(e.target.value)} placeholder="Auto-generated" className="font-mono" />
-          </div>
+          <AutoCodeField label="Log number" pendingCode={moNumber} />
 
           <div className="space-y-1.5">
             <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Product variant *</Label>

@@ -12,6 +12,7 @@ import { VENDOR_CATEGORIES, type VendorCategory } from "./vendor-constants";
 import type { SupplierRow } from "@/hooks/useErpData";
 import { useAppConfig } from "@/contexts/AppConfigContext";
 import { FLAGS } from "@/lib/feature-flags";
+import { AutoCodeField } from "@/components/shared/AutoCodeField";
 
 type Editable = Partial<SupplierRow>;
 
@@ -46,10 +47,7 @@ export function SupplierFormSheet({ open, onOpenChange, editing, setEditing, onS
         </SheetHeader>
         <div className="mt-6 space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Code <span className="text-muted-foreground text-xs font-normal">(auto)</span></Label>
-              <Input value={e.code ?? ""} onChange={(ev) => set({ code: ev.target.value })} placeholder="Auto-generated" />
-            </div>
+            <AutoCodeField label="Code" value={e.code ?? ""} />
             <div><Label>Lead time (days)</Label><Input type="number" min={0} value={e.lead_time_days ?? 7} onChange={(ev) => set({ lead_time_days: Number(ev.target.value) })} /></div>
           </div>
           <div><Label>Name *</Label><Input value={e.name ?? ""} onChange={(ev) => set({ name: ev.target.value })} placeholder="Acme Industries Pvt Ltd" /></div>
