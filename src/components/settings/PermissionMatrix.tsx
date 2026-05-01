@@ -5,9 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ROLES, type UserRoleType } from "@/lib/roles";
+import { type UserRoleType } from "@/lib/roles";
 import { ALL_CAPABILITIES, MODULE_LABEL, type Capability } from "@/lib/capabilities";
 import { notify } from "@/lib/notify";
+
+const ROLES: UserRoleType[] = ["admin", "manager", "supervisor", "sales", "dispatch", "worker", "customer"];
 
 type RoleRow = { role: UserRoleType; capability: string; granted: boolean };
 type OverrideRow = { user_id: string; capability: string; granted: boolean };
@@ -106,7 +108,7 @@ export function PermissionMatrix() {
 
   if (loading) return <div className="flex items-center justify-center py-16"><Loader2 className="h-5 w-5 animate-spin" /></div>;
 
-  const visibleRoles: UserRoleType[] = ROLES.filter((r) => r !== "customer");
+  const visibleRoles: UserRoleType[] = ROLES.filter((r: UserRoleType) => r !== "customer");
 
   return (
     <div className="space-y-4">
