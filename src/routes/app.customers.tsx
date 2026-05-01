@@ -18,6 +18,7 @@ import {
 import { SmartSelect } from "@/components/forms/SmartSelect";
 import { useRole } from "@/hooks/useRole";
 import { ExportButton } from "@/components/shared/ExportButton";
+import { ImportButton } from "@/components/shared/ImportButton";
 import { useAppConfig } from "@/contexts/AppConfigContext";
 import { FLAGS } from "@/lib/feature-flags";
 
@@ -122,6 +123,27 @@ function CustomersPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {canEdit && (
+            <ImportButton
+              table="customers"
+              entityName="customers"
+              capability="customers.import"
+              onImported={refresh}
+              fields={[
+                { key: "code", label: "Code", required: true },
+                { key: "name", label: "Name", required: true },
+                { key: "contact_name", label: "Contact" },
+                { key: "phone", label: "Phone" },
+                { key: "email", label: "Email" },
+                { key: "city", label: "City" },
+                { key: "state", label: "State" },
+                { key: "pricing_tier", label: "Pricing tier" },
+                { key: "gst_number", label: "GST" },
+                { key: "pan_number", label: "PAN" },
+                { key: "payment_terms", label: "Payment terms" },
+              ]}
+            />
+          )}
           <ExportButton
             filename="customers"
             capability="customers.export"
