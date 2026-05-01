@@ -8,7 +8,6 @@ import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { DashboardReorderSection } from "@/components/insights/DashboardReorderSection";
 import { DashboardAnomalySection } from "@/components/insights/DashboardAnomalySection";
 import { useStockSummary } from "@/hooks/useInventoryData";
-import { useDemo } from "@/hooks/useDemo";
 import type { UserRoleType } from "@/lib/roles";
 
 interface RoleDashboardProps {
@@ -42,10 +41,9 @@ export function RoleDashboard({ role }: RoleDashboardProps) {
 
 function FullOpsDashboard({ withInsights }: { withInsights: boolean }) {
   const { data: summary } = useStockSummary();
-  const { demoStore } = useDemo();
-  const items = demoStore?.getItems() ?? [];
-  const movements = demoStore?.getMovements() ?? [];
-  const suppliers = demoStore?.getSuppliers() ?? [];
+  const items: never[] = [];
+  const movements: never[] = [];
+  const suppliers: never[] = [];
 
   return (
     <>
