@@ -3,8 +3,10 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAppConfig } from "@/contexts/AppConfigContext";
 import { Button } from "@/components/ui/button";
-import { Layers, Factory, Sparkles, Truck, ClipboardList, Shield } from "lucide-react";
+import { Layers, Factory, Sparkles, Truck, ClipboardList, Shield, Lock } from "lucide-react";
 import { PRESET_TEMPLATES, type PresetTemplate } from "@/lib/preset-templates";
+import { useRole } from "@/hooks/useRole";
+import { canApplyPresets } from "@/lib/flag-constraints";
 
 const ICONS = {
   layers: Layers,
@@ -17,9 +19,15 @@ const ICONS = {
 
 export function ComplexityPresets() {
   const { refresh } = useAppConfig();
+  const { role } = useRole();
+  const allowed = canApplyPresets(role);
   const [busy, setBusy] = useState<string | null>(null);
 
   const apply = async (preset: PresetTemplate) => {
+    if (!allowed) {
+      toast.error("Not allowed", { description: "Only admins or managers may apply presets." });
+      return;
+    }
     if (!confirm(`Apply "${preset.label}"? This will overwrite the affected flags.`)) return;
     setBusy(preset.id);
     const updates = Object.entries(preset.flags).map(([key, enabled]) =>
@@ -38,6 +46,11 @@ export function ComplexityPresets() {
       <p className="text-xs text-muted-foreground">
         Apply a profile to instantly turn on the right set of features for your business. You can fine-tune any toggle afterwards.
       </p>
+      {!allowed && (
+        <p className="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[11px] text-amber-800">
+          <Lock className="h-3 w-3" /> Presets are locked for role · <b>{role}</b>
+        </p>
+      )}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {PRESET_TEMPLATES.map((p) => {
           const Icon = ICONS[p.iconKey];
@@ -64,7 +77,7 @@ export function ComplexityPresets() {
               <Button
                 size="sm"
                 className="mt-3 w-full"
-                disabled={busy === p.id}
+                disabled={busy === p.id || !allowed}
                 onClick={() => apply(p)}
                 data-testid={`preset-apply-${p.id}`}
               >
