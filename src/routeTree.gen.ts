@@ -38,6 +38,7 @@ import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppCustomersRouteImport } from './routes/app.customers'
 import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
 import { Route as AppAiInsightsRouteImport } from './routes/app.ai-insights'
+import { Route as AppWorkersIdRouteImport } from './routes/app.workers.$id'
 import { Route as AppManufacturingMoIdRouteImport } from './routes/app.manufacturing.$moId'
 
 const AuthRoute = AuthRouteImport.update({
@@ -185,6 +186,11 @@ const AppAiInsightsRoute = AppAiInsightsRouteImport.update({
   path: '/ai-insights',
   getParentRoute: () => AppRoute,
 } as any)
+const AppWorkersIdRoute = AppWorkersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppWorkersRoute,
+} as any)
 const AppManufacturingMoIdRoute = AppManufacturingMoIdRouteImport.update({
   id: '/$moId',
   path: '/$moId',
@@ -219,9 +225,10 @@ export interface FileRoutesByFullPath {
   '/app/users': typeof AppUsersRoute
   '/app/warehouses': typeof AppWarehousesRoute
   '/app/work-logs': typeof AppWorkLogsRoute
-  '/app/workers': typeof AppWorkersRoute
+  '/app/workers': typeof AppWorkersRouteWithChildren
   '/app/': typeof AppIndexRoute
   '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
+  '/app/workers/$id': typeof AppWorkersIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -250,9 +257,10 @@ export interface FileRoutesByTo {
   '/app/users': typeof AppUsersRoute
   '/app/warehouses': typeof AppWarehousesRoute
   '/app/work-logs': typeof AppWorkLogsRoute
-  '/app/workers': typeof AppWorkersRoute
+  '/app/workers': typeof AppWorkersRouteWithChildren
   '/app': typeof AppIndexRoute
   '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
+  '/app/workers/$id': typeof AppWorkersIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -283,9 +291,10 @@ export interface FileRoutesById {
   '/app/users': typeof AppUsersRoute
   '/app/warehouses': typeof AppWarehousesRoute
   '/app/work-logs': typeof AppWorkLogsRoute
-  '/app/workers': typeof AppWorkersRoute
+  '/app/workers': typeof AppWorkersRouteWithChildren
   '/app/': typeof AppIndexRoute
   '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
+  '/app/workers/$id': typeof AppWorkersIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -320,6 +329,7 @@ export interface FileRouteTypes {
     | '/app/workers'
     | '/app/'
     | '/app/manufacturing/$moId'
+    | '/app/workers/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -351,6 +361,7 @@ export interface FileRouteTypes {
     | '/app/workers'
     | '/app'
     | '/app/manufacturing/$moId'
+    | '/app/workers/$id'
   id:
     | '__root__'
     | '/'
@@ -383,6 +394,7 @@ export interface FileRouteTypes {
     | '/app/workers'
     | '/app/'
     | '/app/manufacturing/$moId'
+    | '/app/workers/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -596,6 +608,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAiInsightsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/workers/$id': {
+      id: '/app/workers/$id'
+      path: '/$id'
+      fullPath: '/app/workers/$id'
+      preLoaderRoute: typeof AppWorkersIdRouteImport
+      parentRoute: typeof AppWorkersRoute
+    }
     '/app/manufacturing/$moId': {
       id: '/app/manufacturing/$moId'
       path: '/$moId'
@@ -616,6 +635,18 @@ const AppManufacturingRouteChildren: AppManufacturingRouteChildren = {
 
 const AppManufacturingRouteWithChildren =
   AppManufacturingRoute._addFileChildren(AppManufacturingRouteChildren)
+
+interface AppWorkersRouteChildren {
+  AppWorkersIdRoute: typeof AppWorkersIdRoute
+}
+
+const AppWorkersRouteChildren: AppWorkersRouteChildren = {
+  AppWorkersIdRoute: AppWorkersIdRoute,
+}
+
+const AppWorkersRouteWithChildren = AppWorkersRoute._addFileChildren(
+  AppWorkersRouteChildren,
+)
 
 interface AppRouteChildren {
   AppAiInsightsRoute: typeof AppAiInsightsRoute
@@ -642,7 +673,7 @@ interface AppRouteChildren {
   AppUsersRoute: typeof AppUsersRoute
   AppWarehousesRoute: typeof AppWarehousesRoute
   AppWorkLogsRoute: typeof AppWorkLogsRoute
-  AppWorkersRoute: typeof AppWorkersRoute
+  AppWorkersRoute: typeof AppWorkersRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
 }
 
@@ -671,7 +702,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppUsersRoute: AppUsersRoute,
   AppWarehousesRoute: AppWarehousesRoute,
   AppWorkLogsRoute: AppWorkLogsRoute,
-  AppWorkersRoute: AppWorkersRoute,
+  AppWorkersRoute: AppWorkersRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
 }
 
