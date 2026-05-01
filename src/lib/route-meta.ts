@@ -14,7 +14,6 @@ import {
   HelpCircle,
   Send,
   Users,
-  Factory,
 } from "lucide-react";
 import { ClipboardCheck } from "lucide-react";
 import { Layers as LayersIcon } from "lucide-react";

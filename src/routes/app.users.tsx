@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { ROLE_PERMISSION_MATRIX, ROLE_ORDER, ROLE_LABEL } from "@/lib/role-permissions";
 import { CreateUserDialog } from "@/components/admin/CreateUserDialog";
 import { UserRowActions } from "@/components/admin/UserRowActions";
+import { PermissionMatrix } from "@/components/settings/PermissionMatrix";
 import { adminSetLock, adminResetPassword } from "@/server/admin-users.functions";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -249,6 +250,11 @@ function UserManagementPage() {
               </TableBody>
             </Table>
           )}
+        </section>
+
+        {/* Editable role defaults + per-user overrides */}
+        <section className="rounded-xl border border-border bg-card shadow-sm p-4">
+          <ErrorBoundary><PermissionMatrix /></ErrorBoundary>
         </section>
 
         {/* Permissions matrix */}
