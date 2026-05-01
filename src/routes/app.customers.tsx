@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { SmartSelect } from "@/components/forms/SmartSelect";
 import { useRole } from "@/hooks/useRole";
+import { ExportButton } from "@/components/shared/ExportButton";
 
 export const Route = createFileRoute("/app/customers")({
   component: CustomersPage,
@@ -117,9 +118,30 @@ function CustomersPage() {
             {loading ? "Loading…" : `${rows.length} customer${rows.length === 1 ? "" : "s"}`}
           </p>
         </div>
-        {canEdit && (
-          <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> New customer</Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ExportButton
+            filename="customers"
+            capability="customers.export"
+            rows={filtered as unknown as Record<string, unknown>[]}
+            columns={[
+              { key: "code", label: "Code" },
+              { key: "name", label: "Name" },
+              { key: "contact_name", label: "Contact" },
+              { key: "phone", label: "Phone" },
+              { key: "email", label: "Email" },
+              { key: "city", label: "City" },
+              { key: "state", label: "State" },
+              { key: "pricing_tier", label: "Tier" },
+              { key: "gst_number", label: "GST" },
+              { key: "pan_number", label: "PAN" },
+              { key: "payment_terms", label: "Payment terms" },
+              { key: "is_active", label: "Active", format: (v) => (v ? "yes" : "no") },
+            ]}
+          />
+          {canEdit && (
+            <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> New customer</Button>
+          )}
+        </div>
       </header>
 
       <div className="relative">
