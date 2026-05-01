@@ -23,7 +23,7 @@ import {
   Sliders,
   ScrollText,
 } from "lucide-react";
-import { Cpu, Hammer, HardHat, Zap, FileText, Lightbulb } from "lucide-react";
+import { Cpu, Hammer, HardHat, Zap, Lightbulb } from "lucide-react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/hooks/useRole";
