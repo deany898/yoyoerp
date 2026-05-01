@@ -37,6 +37,7 @@ import { Route as AppGoodsReturnsRouteImport } from './routes/app.goods-returns'
 import { Route as AppDispatchOrdersRouteImport } from './routes/app.dispatch-orders'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppCustomersRouteImport } from './routes/app.customers'
+import { Route as AppCommandCenterRouteImport } from './routes/app.command-center'
 import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
 import { Route as AppAiInsightsRouteImport } from './routes/app.ai-insights'
 import { Route as AppWorkersIdRouteImport } from './routes/app.workers.$id'
@@ -184,6 +185,11 @@ const AppCustomersRoute = AppCustomersRouteImport.update({
   path: '/customers',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCommandCenterRoute = AppCommandCenterRouteImport.update({
+  id: '/command-center',
+  path: '/command-center',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -221,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/app/ai-insights': typeof AppAiInsightsRoute
   '/app/analytics': typeof AppAnalyticsRoute
+  '/app/command-center': typeof AppCommandCenterRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/dispatch-orders': typeof AppDispatchOrdersRoute
@@ -256,6 +263,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/app/ai-insights': typeof AppAiInsightsRoute
   '/app/analytics': typeof AppAnalyticsRoute
+  '/app/command-center': typeof AppCommandCenterRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/dispatch-orders': typeof AppDispatchOrdersRoute
@@ -293,6 +301,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/app/ai-insights': typeof AppAiInsightsRoute
   '/app/analytics': typeof AppAnalyticsRoute
+  '/app/command-center': typeof AppCommandCenterRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/dispatch-orders': typeof AppDispatchOrdersRoute
@@ -331,6 +340,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/app/ai-insights'
     | '/app/analytics'
+    | '/app/command-center'
     | '/app/customers'
     | '/app/dashboard'
     | '/app/dispatch-orders'
@@ -366,6 +376,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/app/ai-insights'
     | '/app/analytics'
+    | '/app/command-center'
     | '/app/customers'
     | '/app/dashboard'
     | '/app/dispatch-orders'
@@ -402,6 +413,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/app/ai-insights'
     | '/app/analytics'
+    | '/app/command-center'
     | '/app/customers'
     | '/app/dashboard'
     | '/app/dispatch-orders'
@@ -637,6 +649,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCustomersRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/command-center': {
+      id: '/app/command-center'
+      path: '/command-center'
+      fullPath: '/app/command-center'
+      preLoaderRoute: typeof AppCommandCenterRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/analytics': {
       id: '/app/analytics'
       path: '/analytics'
@@ -732,6 +751,7 @@ const AppWorkersRouteWithChildren = AppWorkersRoute._addFileChildren(
 interface AppRouteChildren {
   AppAiInsightsRoute: typeof AppAiInsightsRoute
   AppAnalyticsRoute: typeof AppAnalyticsRoute
+  AppCommandCenterRoute: typeof AppCommandCenterRoute
   AppCustomersRoute: typeof AppCustomersRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDispatchOrdersRoute: typeof AppDispatchOrdersRoute
@@ -762,6 +782,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAiInsightsRoute: AppAiInsightsRoute,
   AppAnalyticsRoute: AppAnalyticsRoute,
+  AppCommandCenterRoute: AppCommandCenterRoute,
   AppCustomersRoute: AppCustomersRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDispatchOrdersRoute: AppDispatchOrdersRoute,
