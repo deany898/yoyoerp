@@ -17,8 +17,8 @@ import { WorkerFormSheet } from "@/components/workers/WorkerFormSheet";
 export const Route = createFileRoute("/app/workers")({
   head: () => ({
     meta: [
-      { title: "Workers · YOYO ERP" },
-      { name: "description", content: "Shop-floor worker registry." },
+      { title: "Team · YOYO ERP" },
+      { name: "description", content: "Team registry · attendance, payroll, advances." },
     ],
   }),
   component: WorkersPage,
@@ -55,15 +55,15 @@ function WorkersPage() {
       <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Workforce</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-3xl">Workers</h1>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-3xl">Team</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {loading ? "Loading…" : `${workers.length} ${workers.length === 1 ? "worker" : "workers"}`} · Shop-floor staff records.
+            {loading ? "Loading…" : `${workers.length} ${workers.length === 1 ? "member" : "members"}`} · Attendance · Payroll · Advances.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <ImportButton
             table="workers"
-            entityName="workers"
+            entityName="team"
             capability="workers.import"
             onImported={refresh}
             fields={[
@@ -74,7 +74,7 @@ function WorkersPage() {
             ]}
           />
           <ExportButton
-            filename="workers"
+            filename="team"
             capability="workers.export"
             rows={filtered as unknown as Record<string, unknown>[]}
             columns={[
@@ -86,14 +86,14 @@ function WorkersPage() {
             ]}
           />
           <PermissionGate permission="create_item">
-            <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> New worker</Button>
+            <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> New member</Button>
           </PermissionGate>
         </div>
       </header>
 
       <div className="relative max-w-md">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search workers…" className="pl-9" />
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search team…" className="pl-9" />
       </div>
 
       {loading ? (
@@ -102,9 +102,9 @@ function WorkersPage() {
         <div className="rounded-xl border border-border bg-card">
           <EmptyState
             icon={HardHat}
-            title={workers.length === 0 ? "No workers" : "No matches"}
-            description={workers.length === 0 ? "Add your first worker to start tracking." : "Try a different search."}
-            actionLabel={workers.length === 0 && can("create_item") ? "New worker" : undefined}
+            title={workers.length === 0 ? "No team members" : "No matches"}
+            description={workers.length === 0 ? "Add your first team member to start tracking." : "Try a different search."}
+            actionLabel={workers.length === 0 && can("create_item") ? "New member" : undefined}
             onAction={workers.length === 0 && can("create_item") ? openCreate : undefined}
           />
         </div>
