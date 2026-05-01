@@ -115,6 +115,29 @@ export function useSuppliers() {
   return { suppliers: data, loading, refresh };
 }
 
+// ===================== UOMs =====================
+import type { UomDef } from "@/lib/uom";
+
+export function useUoms() {
+  const [data, setData] = useState<UomDef[]>([]);
+  const [loading, setLoading] = useState(true);
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    // `uoms` table is freshly created · types may not be regenerated yet.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: rows, error } = await (supabase as any)
+      .from("uoms")
+      .select("code,label,factor,base_uom,is_active")
+      .eq("is_active", true)
+      .order("code");
+    if (error) toast.error("Failed to load UOMs", { description: error.message });
+    setData((rows as UomDef[]) ?? []);
+    setLoading(false);
+  }, []);
+  useEffect(() => { refresh(); }, [refresh]);
+  return { uoms: data, loading, refresh };
+}
+
 // ===================== Purchase Orders =====================
 export type POStatus = Database["public"]["Enums"]["po_status"];
 export type PORow = Database["public"]["Tables"]["purchase_orders"]["Row"];
