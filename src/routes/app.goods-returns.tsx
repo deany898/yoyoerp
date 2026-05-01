@@ -27,6 +27,8 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ExportButton } from "@/components/shared/ExportButton";
+import { useAppConfig } from "@/contexts/AppConfigContext";
+import { FLAGS } from "@/lib/feature-flags";
 
 export const Route = createFileRoute("/app/goods-returns")({
   component: GoodsReturnsPage,
@@ -93,6 +95,8 @@ function GoodsReturnsPage() {
   const { warehouses } = useWarehouses();
   const { role } = useRole();
   const canEdit = ["admin", "manager", "sales", "dispatch"].includes(role);
+  const { isEnabled } = useAppConfig();
+  const showFinance = isEnabled(FLAGS.customers.showFinanceFields, true);
 
   const [returns, setReturns] = useState<GRRow[]>([]);
   const [customers, setCustomers] = useState<CustomerLite[]>([]);
