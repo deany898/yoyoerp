@@ -38,9 +38,14 @@ export function lineMath(opts: {
   factor: number;
   discountPct: number;
   taxRate: number;
+  discountMode?: "pct" | "amt";
+  discountAmt?: number;
 }) {
   const gross = opts.qty * opts.unitPrice * opts.factor;
-  const discount = gross * (opts.discountPct / 100);
+  const mode = opts.discountMode ?? "pct";
+  const discount = mode === "amt"
+    ? Math.min(Math.max(0, (opts.discountAmt ?? 0) * opts.qty), gross)
+    : gross * (opts.discountPct / 100);
   const net = gross - discount;
   const tax = net * (opts.taxRate / 100);
   return { gross, discount, net, tax, total: net + tax };

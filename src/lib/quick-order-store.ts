@@ -10,7 +10,10 @@ export interface DraftLine {
   uom: string;
   unit_price: number;
   units_per_pack: number;
+  /** "pct" -> uses discount_pct; "amt" -> uses discount_amt (₹ per unit) */
+  discount_mode: "pct" | "amt";
   discount_pct: number;
+  discount_amt: number;
   tax_rate: number;
 }
 
