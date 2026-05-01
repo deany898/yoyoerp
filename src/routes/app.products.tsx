@@ -84,9 +84,9 @@ function ProductsPage() {
               product_name: p.name,
               product_type: p.product_type ?? "",
               variant_sku: v.sku ?? "",
-              variant_name: v.name ?? "",
+              variant_label: (v as unknown as { variant_label?: string }).variant_label ?? "",
               effective_cost: v.effective_cost ?? 0,
-              uom: v.uom ?? "",
+              base_uom: (v as unknown as { base_uom?: string }).base_uom ?? "",
               is_active: v.is_active ? "yes" : "no",
             })),
           )}
@@ -95,9 +95,9 @@ function ProductsPage() {
             { key: "product_name", label: "Product name" },
             { key: "product_type", label: "Type" },
             { key: "variant_sku", label: "SKU" },
-            { key: "variant_name", label: "Variant" },
+            { key: "variant_label", label: "Variant" },
             { key: "effective_cost", label: "Effective cost" },
-            { key: "uom", label: "UoM" },
+            { key: "base_uom", label: "UoM" },
             { key: "is_active", label: "Active" },
           ]}
         />
