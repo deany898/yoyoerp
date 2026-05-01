@@ -513,6 +513,7 @@ function QuickOrderPage() {
       </section>
 
       <StickyTotals
+        subtotal={totals.subtotal - totals.discount}
         total={totals.total}
         charges={extraCharges}
         onAddCharge={(label, amount) =>

@@ -30,7 +30,7 @@ export function StickyTotals(p: Props) {
     <div className="sticky bottom-0 left-0 right-0 z-30 border-t border-border bg-card/95 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.18)] backdrop-blur">
       <div className="mx-auto flex max-w-[1600px] flex-col gap-2 px-4 py-2.5 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-wrap items-center gap-2">
-          <AddChargePopover onAdd={p.onAddCharge} disabled={!p.canEdit} />
+          <AddChargePopover onAdd={p.onAddCharge} disabled={!p.canEdit} subtotal={p.subtotal} />
           {p.charges.map((c) => (
             <span
               key={c.id}
