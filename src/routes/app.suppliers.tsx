@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { ExportButton } from "@/components/shared/ExportButton";
+import { ImportButton } from "@/components/shared/ImportButton";
 import { Vendor360Sheet } from "@/components/vendors/Vendor360Sheet";
 import { SupplierFormSheet } from "@/components/vendors/SupplierFormSheet";
 import {
@@ -113,6 +114,27 @@ function SuppliersPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {canManage && (
+            <ImportButton
+              table="suppliers"
+              entityName="suppliers"
+              capability="suppliers.import"
+              onImported={refresh}
+              fields={[
+                { key: "code", label: "Code", required: true },
+                { key: "name", label: "Name", required: true },
+                { key: "category", label: "Category" },
+                { key: "contact_name", label: "Contact" },
+                { key: "phone", label: "Phone" },
+                { key: "email", label: "Email" },
+                { key: "city", label: "City" },
+                { key: "state", label: "State" },
+                { key: "gst_number", label: "GST" },
+                { key: "lead_time_days", label: "Lead time (days)", numeric: true },
+                { key: "payment_terms", label: "Payment terms" },
+              ]}
+            />
+          )}
           <ExportButton
             filename="suppliers"
             capability="suppliers.export"
