@@ -31,9 +31,6 @@ const schema = z.object({
   phone: z.string(),
   address: z.string(),
   notes: z.string(),
-  paymentTerms: z.string(),
-  leadTimeDays: z.coerce.number().int().min(0, "Must be 0 or more"),
-  minOrderQuantity: z.coerce.number().int().min(0, "Must be 0 or more"),
 });
 
 type FormValues = z.infer<typeof schema>;
