@@ -244,6 +244,7 @@ function AuthPage() {
                       </button>
                     </div>
                   </form>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="signup" className="space-y-4">
