@@ -323,15 +323,17 @@ function MoDetailPage() {
 
       {mo.variant && (
         <>
-          <MouldingRunDialog
-            open={mouldOpen}
-            onOpenChange={setMouldOpen}
-            moId={mo.id}
-            baseVariantId={mo.variant.id}
-            baseVariantLabel={mo.variant.variant_name}
-            warehouseId={mo.warehouse_id}
-            onPosted={load}
-          />
+          {showMoulds && (
+            <MouldingRunDialog
+              open={mouldOpen}
+              onOpenChange={setMouldOpen}
+              moId={mo.id}
+              baseVariantId={mo.variant.id}
+              baseVariantLabel={mo.variant.variant_name}
+              warehouseId={mo.warehouse_id}
+              onPosted={load}
+            />
+          )}
           <PackingRunDialog
             open={packOpen}
             onOpenChange={setPackOpen}
