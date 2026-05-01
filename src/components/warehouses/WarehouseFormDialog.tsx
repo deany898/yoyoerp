@@ -87,7 +87,7 @@ export function WarehouseFormDialog({ open, onOpenChange, warehouse, onSaved }: 
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5"><Label>Code</Label><Input value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder="MAIN" /></div>
+            <div className="space-y-1.5"><Label>Code</Label><Input value={isEdit ? form.code : "Auto-generated on save"} disabled className="bg-muted/40" /></div>
             <div className="space-y-1.5"><Label>Country</Label><Input value={form.country} onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))} maxLength={2} /></div>
           </div>
           <div className="space-y-1.5"><Label>Name</Label><Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Main Plant" /></div>

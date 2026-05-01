@@ -77,7 +77,7 @@ export function ZoneFormDialog({ open, onOpenChange, warehouseId, zone, onSaved 
         <DialogHeader><DialogTitle>{isEdit ? "Edit zone" : "Add zone"}</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5"><Label>Code</Label><Input value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))} /></div>
+            <div className="space-y-1.5"><Label>Code</Label><Input value={isEdit ? form.code : "Auto-generated on save"} disabled className="bg-muted/40" /></div>
             <div className="space-y-1.5">
               <Label>Kind</Label>
               <Select value={form.kind} onValueChange={(v) => setForm((f) => ({ ...f, kind: v as Kind }))}>

@@ -197,7 +197,7 @@ function CustomersPage() {
             <div className="mt-6 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Name *</Label><Input value={draft.name ?? ""} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></div>
-                <div><Label>Code</Label><Input value={draft.code ?? ""} onChange={(e) => setDraft({ ...draft, code: e.target.value })} /></div>
+                <div><Label>Code</Label><Input value={(draft.code ?? "") || "Auto-generated on save"} disabled className="bg-muted/40" /></div>
                 <div><Label>Contact name</Label><Input value={draft.contact_name ?? ""} onChange={(e) => setDraft({ ...draft, contact_name: e.target.value })} /></div>
                 <div><Label>Phone</Label><Input value={draft.phone ?? ""} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} /></div>
                 <div><Label>Email</Label><Input type="email" value={draft.email ?? ""} onChange={(e) => setDraft({ ...draft, email: e.target.value })} /></div>
