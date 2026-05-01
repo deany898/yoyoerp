@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAppConfig } from "@/contexts/AppConfigContext";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Loader2, Search, ChevronDown, ChevronRight } from "lucide-react";
 
 const CATEGORY_LABELS: Record<string, string> = {
