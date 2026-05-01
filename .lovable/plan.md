@@ -1,161 +1,156 @@
-## Goal
 
-Turn YOYO ERP V1 into a real factory execution system. Supervisors and admins open a single fast **Add Log** flow on mobile, pick a worker + work type, and the form adapts to capture exactly what that role produces (Production / Packing / Dispatch / Delivery / Helper / Moulding). Every log feeds worker profiles, machine/mould telemetry, productivity analytics, and payroll.
+# YOYO ERP V2 · Private Industrial Command Center
 
-## Scope
+The full scope you described is roughly 9–10 engineering passes. Trying to build it all at once produces shallow stubs everywhere. Per your answer, we go **Foundation first** and ship each phase fully working before moving on.
 
-In: schema, server functions, mobile-first Add Log UI, machine detail page, worker 360, payroll skeleton, role nav + bottom-nav updates.
-Out (follow-up): full payroll run automation (PF/ESI), biometric integration, attendance geofencing, advanced shift scheduling.
+This plan covers **Phase 1 only** (the next pass). Subsequent phases are listed at the end so you can see the road, but they are NOT being built now.
 
-## Architecture overview
+---
+
+## Phase 1 · Foundation (this pass)
+
+### 1A · Permissions governance (fixed 7 roles + per-user overrides)
+
+One migration:
+
+- `permission_capability` enum · ~50 capabilities covering every module:
+  `view`, `create`, `edit`, `delete`, `approve`, `export`, `import`, `bulk_edit` per module (products, customers, suppliers, inventory, movements, manufacturing, dispatch, returns, purchase orders, payroll, work logs, analytics, settings, users) plus financial-visibility flags (`view_costs`, `view_margins`, `view_pricing`, `view_payroll`).
+- `role_permissions` table · default capability matrix per app_role · admin can edit at runtime to globally widen/narrow a role.
+- `user_permission_overrides` table · `(user_id, capability, granted boolean, reason, granted_by, expires_at)` · admin can grant or revoke a single capability for a single user without changing their role.
+- `has_capability(_user_id, _cap)` SECURITY DEFINER function · checks override first, then role default. All RLS policies and the React `usePermissions` hook get rewired to call this.
+- `audit_log` rows for every grant/revoke (already exists).
+
+Admin UI (`/app/settings/permissions`):
+- Matrix view · roles × capabilities with toggle switches.
+- Per-user overrides tab · search a user, see effective permissions, grant/revoke individual capabilities with expiry.
+- All changes are admin-only and audit-logged.
+
+### 1B · Live "View as role" simulator
+
+- Admin-only floating switcher (top-right) that overrides the effective role for the current session in the browser only.
+- Affects sidebar visibility, route guards, capability checks · does NOT change DB role · server-side RLS still enforces real role (so admin can simulate but cannot escalate other users).
+- Banner: "Viewing as Worker · Click to exit". One-click reset.
+
+### 1C · Global search engine (server-side, role-aware)
+
+- New server function `globalSearch({ query, scope?, limit })` (`createServerFn`) running under `requireSupabaseAuth`.
+- Searches across: products, variants, customers, suppliers, dispatch orders (DO#), purchase orders (PO#), manufacturing orders (MO#), goods returns (GR#), inventory movements, warehouses, zones, machines, moulds, workers, work logs, payroll runs, settings pages, and reports.
+- Each table queried with ILIKE on its meaningful columns, results ranked by recency · capped per entity type to keep latency low (<200ms typical).
+- **Authorization:** every result passes through `has_capability(user, "<entity>.view")` before being returned. Customers see nothing internal. Workers see only production/inventory entities. Sales sees customers + orders but not payroll. Admin sees everything.
+- New Cmd+K palette page extending current `CommandPalette` · grouped results, recent searches stored in `user_search_history` (per-user, last 50), keyboard navigation, deep-link to entity detail.
+- Mobile: search button in `BottomNav` opens full-screen search sheet.
+
+### 1D · Audit log surfacing
+
+- New `/app/settings/audit` page (admin only) · paginated table of `audit_log` rows with filters by actor, action, table, date range, and free-text on `notes`.
+- "Last 5 major actions" widget on user profile page.
+- Already-existing `audit_log` table is used as-is (it has the right columns).
+
+### 1E · OTP-based login (email channel)
+
+- Add Email OTP option to `/auth` page alongside existing email+password and Google.
+- Uses Supabase `signInWithOtp()` · 6-digit code emailed via the existing Lovable Cloud auth-email pipeline.
+- UI: tabbed login form · "Password" / "OTP" / "Google".
+- Phone/WhatsApp OTP deferred · adds a "Coming soon" placeholder with a note that admin can enable later via SMS connector.
+
+### 1F · PWA install polish
+
+PWA scope confirmed = installable only (no service worker). What we actually do:
+- Verify `/manifest.webmanifest` has correct `name`, `short_name`, `theme_color`, `background_color`, all icon sizes (192, 512, maskable).
+- Add iOS install meta tags (`apple-mobile-web-app-capable`, `apple-touch-icon`, status bar style) in `__root.tsx` head.
+- Add a one-time install prompt banner for Android Chrome (`beforeinstallprompt`) and an iOS-specific "Add to Home Screen" hint.
+- No service worker · no offline · no background sync (per your choice).
+
+### Files (Phase 1)
 
 ```text
-Add Log (mobile FAB)
-  └─ work_logs (header: worker, work_type, shift, supervisor, in/out, station)
-       ├─ wl_production_details   (stage, product/variant, qty in/out/rej)
-       ├─ wl_packing_details      (variant, packed qty, cartons, material used)
-       ├─ wl_dispatch_details     (zone, DO ref, cartons, LR, qty)
-       ├─ wl_delivery_details     (vehicle, route, batch, qty, fuel notes)
-       ├─ wl_helper_details       (zone enum, support area, qty handled)
-       └─ wl_moulding_details     (machine, mould, start/end shot, cavity, material, output)
-             ↓ trigger
-       machine_shot_history       (per-log shot delta, efficiency, waste)
-       payroll_ledger_entries     (auto-created from log: piece-rate / hours / incentive)
+supabase/migrations/
+  20260501_permissions_governance.sql    new (capabilities, role_permissions, user_permission_overrides, has_capability, search_history)
+
+src/server/
+  permissions.functions.ts                new · grant/revoke/list capabilities (admin only)
+  global-search.functions.ts              new · authorized search across all entities
+  audit.functions.ts                      new · paged audit log query (admin only)
+
+src/lib/
+  capabilities.ts                         new · capability constants + TS types
+  capability-matrix.ts                    new · default role → capability map (seed + UI source)
+
+src/hooks/
+  usePermissions.tsx                      rewrite · backed by capabilities, supports simulator override
+  useGlobalSearch.ts                      new · debounced server query + history
+
+src/contexts/
+  RoleSimulatorContext.tsx                new · admin-only "view as" override
+
+src/components/
+  command/GlobalSearchPalette.tsx         new · replaces existing CommandPalette content
+  layout/RoleSimulatorBar.tsx             new · floating switcher + active banner
+  settings/PermissionMatrix.tsx           new · role × capability toggles
+  settings/UserOverridesPanel.tsx         new · per-user grant/revoke
+  settings/AuditLogTable.tsx              new
+  auth/OtpLoginForm.tsx                   new
+
+src/routes/
+  app.settings.permissions.tsx            new
+  app.settings.audit.tsx                  new
+  auth.tsx                                edit · add OTP tab
+  __root.tsx                              edit · iOS PWA meta + install banner mount
 ```
 
-All detail tables share `work_log_id` FK so a worker's day is one row in `work_logs` plus exactly one detail row.
+All files stay under the 250-line cap by splitting into atomic components.
 
-## Part 1 · Database (single migration)
+### Why this order
 
-New enums:
-- `work_log_type`: production, packing, dispatch, delivery, helper, moulding
-- `helper_zone`: sr1_upper, sr1_ground, sr2, warehouse, loading, packing_support
-- `dispatch_zone`: sr1, sr2, warehouse
-- `delivery_role`: driver, helper
-- `production_stage_kind` (extend existing `stage_kind`): assembly, circuit, printing, qc, packing_prep, material_prep, semi_finished, final_assembly
-- `pay_basis`: daily_wage, monthly_salary, piece_rate, hourly, incentive, advance, deduction
-- `shift_code`: day, night, general, split
+Without governance + audit + authorized search, every later phase (analytics, AI assistant, purge tools, blueprint export) would either leak data across roles or get rebuilt twice. RBAC and search are the load-bearing walls.
 
-New tables:
-- `work_logs` — id, worker_id, supervisor_id, work_type, shift, warehouse_id, station_id, log_in_at, log_out_at, duration_min (generated), notes, status (open/closed), created_by
-- `wl_production_details` — work_log_id PK FK, stage_kind, product_id, variant_id, qty_received, qty_produced, qty_rejected, uom, rejection_pct (generated), output_per_hr (generated)
-- `wl_packing_details` — work_log_id, variant_id, qty_packed, packaging_variant_id, cartons_used, labels_used, output_uom
-- `wl_dispatch_details` — work_log_id, dispatch_zone, dispatch_order_id (nullable), orders_handled, cartons, lr_number, qty_dispatched
-- `wl_delivery_details` — work_log_id, delivery_role, vehicle_id (nullable string), route, delivery_batch, qty_delivered, fuel_notes
-- `wl_helper_details` — work_log_id, helper_zone, support_area, qty_handled
-- `wl_moulding_details` — work_log_id, machine_id, mould_id, material_variant_id, product_id, variant_id, start_shot_count, end_shot_count, cavity_count, cavity_weight_grams, qty_produced_actual, qty_rejected, material_used_grams, expected_output (generated = (end-start)*cavity_count), efficiency_pct (generated), material_waste_grams (generated)
-- `worker_attendance` — id, worker_id, date, check_in, check_out, hours, status (present/absent/half/leave), source (manual/log)
-- `payroll_config` — worker_id PK, pay_basis, monthly_salary, daily_wage, hourly_rate, piece_rate_per_unit, ot_multiplier
-- `payroll_ledger_entries` — id, worker_id, work_log_id (nullable), entry_date, basis, qty, rate, amount, notes, run_id (nullable)
-- `payroll_runs` — id, period_start, period_end, status (draft/locked/paid), totals jsonb, locked_by, locked_at
-- `machine_shot_history` — derived from wl_moulding_details for fast machine analytics
+---
 
-RLS: all `is_staff()` read; write = `has_any_role(admin, manager, supervisor)` for headers, plus `worker` may close own log; payroll write = admin+manager only.
+## Phases 2–9 · NOT being built this pass
 
-Triggers / functions:
-- `trg_work_log_close` → on `log_out_at` set: compute duration, derive attendance row, write payroll_ledger_entry based on `payroll_config.pay_basis`.
-- `trg_moulding_post` → bumps `moulds.used_cycles` (replaces existing `trg_bump_mould_cycles` source) using shot delta × cavity, sets machine status.
-- `recalc_machine_kpis(machine_id, date)` — daily output, rejection%, runtime; called from triggers and machine detail loader.
-- `next_doc_number('WL')` already supported by existing counter pattern; reuse.
+Listed so you can see the destination, ranked by dependency:
 
-## Part 2 · Server functions
+```text
+Phase 2 · Customer + Staff Analytics Engine
+        - customer_analytics + worker_analytics materialized views
+        - admin-only /app/intelligence/customers and /app/intelligence/team
+        - tier-movement, churn-risk, productivity, search-behavior
 
-`src/server/work-logs.functions.ts`
-- `createWorkLog({ worker_id, work_type, shift, warehouse_id, station_id, supervisor_id, log_in_at, notes })` → returns `work_log_id`. Auto-numbers WL.
-- `fillWorkLog({ work_log_id, details })` — discriminated union per work_type, validates with Zod, inserts the right `wl_*_details` row, sets `log_out_at`, closes log. Wraps in single PG transaction via RPC.
-- `listOpenLogs({ supervisor_id? })` for mobile resume.
-- `listWorkerLogs({ worker_id, range })` for worker 360.
+Phase 3 · YOYO Admin AI Assistant (Lovable AI Gemini)
+        - /app/ai-assistant chat + scheduled "morning briefing"
+        - feeds on analytics views; suggests price moves, dead stock, weak performers
 
-`src/server/machines.functions.ts`
-- `getMachineDetail({ machine_id })` → status, active worker (open moulding log), current mould, shift progress, today's shot count, daily output, rejection%, utility burden, maintenance flag, last 30 historical logs.
+Phase 4 · Data privacy + timeline purge
+        - admin-only purge tool with date-range hard delete
+        - requires typed confirmation, audit-logged
+        - blueprint snapshot taken automatically before any purge
 
-`src/server/payroll.functions.ts`
-- `createPayrollRun({ period_start, period_end })` → aggregates ledger entries per worker, returns draft totals.
-- `lockPayrollRun({ run_id })` — admin only.
+Phase 5 · Blueprint Export / Import
+        - admin-only ZIP export of full schema + data + settings
+        - import path on a fresh project for migration
 
-All use `requireSupabaseAuth` middleware.
+Phase 6 · QuickSell / B2B intelligence views
+        - dealer segmentation, route optimization, opportunity reports
+        - depends on Phase 2 analytics
 
-## Part 3 · UI — Mobile-first Add Log
+Phase 7 · Push notifications + advanced PWA
+        - only if you later upgrade PWA scope
 
-New routes & components:
+Phase 8 · SMS / WhatsApp OTP
+        - requires Twilio or MSG91 connector (paid)
 
-```
-src/routes/app.work-logs.tsx          → list of today's logs, filter by supervisor/worker/type, FAB "Add Log"
-src/routes/app.work-logs.$id.tsx      → log detail + Fill form (if open)
-src/routes/app.machines.$id.tsx       → machine detail page (PART 5)
-src/routes/app.workers.$id.tsx        → worker 360 (PART 6)
-src/routes/app.payroll.tsx            → payroll runs list + ledger
+Phase 9 · Hardening + load test + final polish
 ```
 
-Components (each ≤250 lines, atomic):
-- `components/work-logs/AddLogSheet.tsx` — step 1: Worker → WorkType → Shift → Supervisor → Station → In-time. One question per screen on mobile.
-- `components/work-logs/dynamic/ProductionFields.tsx`
-- `components/work-logs/dynamic/PackingFields.tsx` (variant picker filtered to packaging variants)
-- `components/work-logs/dynamic/DispatchFields.tsx`
-- `components/work-logs/dynamic/DeliveryFields.tsx`
-- `components/work-logs/dynamic/HelperFields.tsx`
-- `components/work-logs/dynamic/MouldingFields.tsx` — auto-computes shot delta, expected output, efficiency, material waste live as user types.
-- `components/work-logs/FillLogSheet.tsx` — work_type-aware wrapper that mounts the right dynamic block + Log Out time + Notes.
-- `components/work-logs/QuickWorkerPicker.tsx`, `QuickStagePicker.tsx` — large-button mobile selectors.
-- `components/work-logs/LogCard.tsx` for list view.
+---
 
-UX rules:
-- FAB on `/app/dashboard`, `/app/work-logs`, `/app/machines/:id` for supervisors+.
-- Mobile: full-screen sheets, 56px+ tap targets, sticky bottom CTA.
-- Desktop: side sheet + multi-station dashboard grid on `/app/work-logs`.
+## What you get after this pass
 
-## Part 4 · Machine detail (PART 5 of brief)
+- Admin can grant/revoke any capability per role or per user, live, with audit.
+- Admin can simulate any role to verify what every user actually sees.
+- Cmd+K (and mobile search button) finds anything in the system the current user is allowed to see · nothing more.
+- Every privileged change is in an audit log admin can browse.
+- Users can log in with email OTP in addition to password and Google.
+- App installs cleanly on iOS, Android, and desktop.
 
-`/app/machines/$id`:
-- Top bar: status chip, active worker (if open log), current mould.
-- KPI strip: shift progress %, today shot count, daily output, rejection%, utility ₹.
-- Maintenance banner when `moulds.used_cycles / life_cycles > 80%`.
-- Tabs: Live (open log + recent shots), History (paginated `wl_moulding_details`), Maintenance.
-- "Add Log" CTA pre-fills machine + station.
-
-## Part 5 · Worker 360 (PART 6 of brief)
-
-`/app/workers/$id` tabs:
-- Overview (productivity sparkline, pay basis, advances balance)
-- Attendance (calendar from `worker_attendance`)
-- Logs (filter by work_type)
-- Production / Dispatch / Packing / Helper history (views over `wl_*_details`)
-- Machines & Moulds assigned (from moulding logs)
-- Payroll (ledger entries + advances)
-
-## Part 6 · Payroll skeleton (PART 7)
-
-`/app/payroll`:
-- Runs list (draft/locked/paid).
-- Drill into run → per-worker totals from `payroll_ledger_entries`.
-- "New run" generates draft from a date range; admin locks.
-- Worker payroll config editor on worker 360 (basis + rates + advances).
-- Auto-entry rules: closing a production/moulding log writes piece-rate entry; helper/dispatch/delivery write hourly entry; daily attendance writes daily_wage entry. Manual entries allowed.
-
-## Part 7 · Navigation & roles
-
-`src/lib/role-nav.ts` updates:
-- Add `/app/work-logs` to admin, manager, supervisor, worker (worker sees only own).
-- Add `/app/payroll` to admin, manager.
-- Mobile bottom nav: supervisor → `[dashboard, work-logs, manufacturing, movements]`; worker → `[dashboard, work-logs, manufacturing]`; admin → `[dashboard, work-logs, products, manufacturing]`.
-
-`src/lib/role-permissions.ts`: add `create_work_log` (admin/manager/supervisor), `close_own_log` (worker), `view_payroll` (admin/manager).
-
-## Part 8 · Memory updates
-
-- New `mem://erp/workforce-logging` — work_logs schema + dynamic detail tables + Add Log flow.
-- New `mem://erp/payroll` — payroll_config + ledger + run lifecycle.
-- Update `mem://index.md` Core: add "Workforce execution: single Add Log flow drives work_logs + per-type detail rows + auto payroll ledger."
-
-## Verification checklist
-
-- Add Log on mobile (440px) for each of the 6 work types; close log; verify detail row + attendance + payroll ledger created.
-- Moulding log: end_shot - start_shot computes correct expected output; mould `used_cycles` increments; machine KPIs refresh.
-- Worker 360 shows logs across all types.
-- Payroll draft run aggregates ledger entries correctly.
-- Role gating: worker can only create/close own log; supervisor cannot edit payroll.
-- All new files ≤250 lines.
-
-## Open question
-
-Auto-attendance: should opening a work log automatically mark the worker present for that date (proposed default), or do you want a separate attendance check-in step before logs are allowed? I'll go with auto unless you say otherwise.
+Confirm to proceed and I'll run the migration first, then build the UI + server functions in the same pass.
