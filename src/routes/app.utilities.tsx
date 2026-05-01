@@ -95,6 +95,19 @@ function UtilitiesPage() {
 
   const whName = (id: string) => warehouses.find((w) => w.id === id)?.name ?? "—";
 
+  // 30-day rolling average per warehouse (sum of utility entries with period_month
+  // in the last 30 days, divided by 30 days = avg daily utility cost).
+  const rolling30 = (() => {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 30);
+    const map = new Map<string, number>();
+    for (const r of rows) {
+      if (new Date(r.period_month) < cutoff) continue;
+      map.set(r.warehouse_id, (map.get(r.warehouse_id) ?? 0) + Number(r.amount || 0));
+    }
+    return map;
+  })();
+
   return (
     <div className="mx-auto max-w-[1100px] space-y-6">
       <header>
@@ -148,6 +161,31 @@ function UtilitiesPage() {
               <Plus className="h-4 w-4" /> Add entry
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Last 30-day rolling average</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {warehouses.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No warehouses yet.</p>
+          ) : (
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
+              {warehouses.map((w) => {
+                const total = rolling30.get(w.id) ?? 0;
+                const perDay = total / 30;
+                return (
+                  <div key={w.id} className="rounded-lg border border-border bg-muted/20 p-3">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{w.name}</div>
+                    <div className="mt-1 font-mono text-lg tabular-nums">₹{total.toFixed(2)}</div>
+                    <div className="text-[11px] text-muted-foreground">≈ ₹{perDay.toFixed(2)} / day · feeds machine effective hourly cost</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
 
