@@ -58,7 +58,7 @@ function WorkLogsPage() {
     const needle = q.trim().toLowerCase();
     if (!needle) return logs;
     return logs.filter((l) =>
-      [l.log_no, l.worker?.name, l.worker?.code, l.warehouse?.name, l.station?.name]
+      [l.wl_number, l.worker?.name, l.worker?.code, l.warehouse?.name, l.station?.name]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(needle)),
     );
@@ -154,13 +154,13 @@ function WorkLogsPage() {
                     <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${WORK_TYPE_TONE[l.work_type]}`}>
                       {WORK_TYPE_LABEL[l.work_type]}
                     </span>
-                    <span className="text-xs font-mono text-muted-foreground">{l.log_no}</span>
+                    <span className="text-xs font-mono text-muted-foreground">{l.wl_number}</span>
                   </div>
                   <div className="mt-1 truncate text-sm font-medium">
                     {l.worker?.name ?? "Unassigned"} <span className="text-xs text-muted-foreground">· {l.worker?.code ?? ""}</span>
                   </div>
                   <div className="mt-0.5 text-xs text-muted-foreground">
-                    {SHIFT_LABEL[l.shift]} · {fmtTime(l.log_in_at)} → {fmtTime(l.log_out_at)} · {fmtDuration(l.duration_minutes)}
+                    {SHIFT_LABEL[l.shift]} · {fmtTime(l.log_in_at)} → {fmtTime(l.log_out_at)} · {fmtDuration(l.duration_min)}
                   </div>
                 </div>
                 <Badge variant={l.status === "open" ? "secondary" : "outline"} className="shrink-0 text-[10px] uppercase">
@@ -190,7 +190,7 @@ function WorkLogsPage() {
             <tbody>
               {filtered.map((l) => (
                 <tr key={l.id} className="border-t border-slate-100 hover:bg-slate-50/50">
-                  <td className="px-3 py-2 font-mono text-xs">{l.log_no}</td>
+                  <td className="px-3 py-2 font-mono text-xs">{l.wl_number}</td>
                   <td className="px-3 py-2">
                     <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase ${WORK_TYPE_TONE[l.work_type]}`}>
                       {WORK_TYPE_LABEL[l.work_type]}
@@ -204,7 +204,7 @@ function WorkLogsPage() {
                   <td className="px-3 py-2 text-xs tabular-nums">
                     {fmtTime(l.log_in_at)} → {fmtTime(l.log_out_at)}
                   </td>
-                  <td className="px-3 py-2 font-mono text-xs tabular-nums">{fmtDuration(l.duration_minutes)}</td>
+                  <td className="px-3 py-2 font-mono text-xs tabular-nums">{fmtDuration(l.duration_min)}</td>
                   <td className="px-3 py-2 text-xs text-muted-foreground">
                     {[l.station?.name, l.warehouse?.name].filter(Boolean).join(" · ") || "—"}
                   </td>
