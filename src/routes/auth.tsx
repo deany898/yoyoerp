@@ -7,12 +7,11 @@ import { Logo } from "@/components/brand/Logo";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { notify, friendlyAuthError } from "@/lib/notify";
 import { AuthIconInput } from "@/components/auth/AuthIconInput";
 import { GoogleIcon } from "@/components/auth/GoogleIcon";
 import { ForgotPasswordDialog } from "@/components/auth/ForgotPasswordDialog";
-import { OtpLoginForm } from "@/components/auth/OtpLoginForm";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -40,7 +39,6 @@ function AuthPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState<"signin" | "signup">("signin");
-  const [authMode, setAuthMode] = useState<"password" | "otp">("password");
   const [submitting, setSubmitting] = useState(false);
 
   const [signinEmail, setSigninEmail] = useState("");
@@ -155,7 +153,7 @@ function AuthPage() {
         <div className="mb-6 flex flex-col items-center text-center">
           <Logo size={88} showWordmark={false} />
           <h1 className="mt-5 text-3xl font-bold tracking-tight text-foreground">YOYO ERP</h1>
-          <p className="mt-1 text-sm font-medium text-muted-foreground">YOYO Internal Operations Platform</p>
+          <p className="mt-1 text-sm font-medium text-muted-foreground">Internal Operations Platform</p>
         </div>
 
         <div className="w-full rounded-2xl border border-border bg-card p-6 shadow-[0_10px_40px_-12px_rgba(15,23,42,0.15)] md:p-8">
@@ -166,36 +164,12 @@ function AuthPage() {
                   </h2>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {tab === "signin"
-                      ? "Sign in to continue to YOYO"
+                      ? "Sign in to continue"
                       : "Set up your YOYO ERP workspace access"}
                   </p>
                 </div>
 
-                <TabsList className="mb-6 grid w-full grid-cols-2">
-                  <TabsTrigger value="signin">Sign in</TabsTrigger>
-                  <TabsTrigger value="signup">Create account</TabsTrigger>
-                </TabsList>
-
                 <TabsContent value="signin" className="space-y-4">
-                  <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted/40 p-1 text-xs font-medium">
-                    <button
-                      type="button"
-                      onClick={() => setAuthMode("password")}
-                      className={`h-8 rounded-md transition ${authMode === "password" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                    >
-                      Password
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAuthMode("otp")}
-                      className={`h-8 rounded-md transition ${authMode === "otp" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                    >
-                      Email OTP
-                    </button>
-                  </div>
-                  {authMode === "otp" ? (
-                    <OtpLoginForm onSuccess={() => navigate({ to: "/app/dashboard" })} />
-                  ) : (
                   <form onSubmit={handleSignIn} className="space-y-4">
                     <AuthIconInput
                       id="signin-email"
@@ -244,7 +218,6 @@ function AuthPage() {
                       </button>
                     </div>
                   </form>
-                  )}
                 </TabsContent>
 
                 <TabsContent value="signup" className="space-y-4">
@@ -316,8 +289,30 @@ function AuthPage() {
                   Continue with Google
                 </Button>
 
-                <p className="mt-6 text-center text-xs text-muted-foreground">
-                  Authorized personnel only · Accounts are managed by administrators.
+                <p className="mt-6 text-center text-sm text-muted-foreground">
+                  {tab === "signin" ? (
+                    <>
+                      New here?{" "}
+                      <button
+                        type="button"
+                        onClick={() => setTab("signup")}
+                        className="font-medium text-primary hover:underline"
+                      >
+                        Create an account
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      Already have an account?{" "}
+                      <button
+                        type="button"
+                        onClick={() => setTab("signin")}
+                        className="font-medium text-primary hover:underline"
+                      >
+                        Sign in
+                      </button>
+                    </>
+                  )}
                 </p>
               </Tabs>
         </div>
