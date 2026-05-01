@@ -63,23 +63,18 @@ function AuthPage() {
     }
     setSubmitting(true);
     let identifier = parsed.data.email.trim();
-    // Resolve username / mobile to the email used for auth
+    // Resolve username / mobile to the email used for auth (server-side)
     if (!identifier.includes("@")) {
-      const isMobile = /^[+0-9 ()-]+$/.test(identifier);
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("user_id")
-        .or(isMobile ? `mobile.eq.${identifier}` : `username.ilike.${identifier}`)
-        .maybeSingle();
-      if (!profile) {
+      const { data: resolved, error: resolveErr } = await supabase.rpc(
+        "resolve_identifier_email",
+        { _identifier: identifier },
+      );
+      if (resolveErr || !resolved) {
         setSubmitting(false);
         notify.error("No account found for that username or mobile");
         return;
       }
-      // Profiles table doesn't expose email directly · ask the user to use their email
-      setSubmitting(false);
-      notify.warning("Please sign in with your email for now · username/mobile sign-in coming soon");
-      return;
+      identifier = resolved as string;
     }
     const { error } = await supabase.auth.signInWithPassword({
       email: identifier,

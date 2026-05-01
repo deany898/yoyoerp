@@ -2695,6 +2695,10 @@ export type Database = {
         Args: { _depth?: number; _variant_id: string }
         Returns: undefined
       }
+      resolve_identifier_email: {
+        Args: { _identifier: string }
+        Returns: string
+      }
     }
     Enums: {
       app_role:
