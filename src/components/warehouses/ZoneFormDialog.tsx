@@ -55,15 +55,20 @@ export function ZoneFormDialog({ open, onOpenChange, warehouseId, zone, onSaved 
     if (!parsed.success) { toast.error(parsed.error.issues[0]?.message); return; }
     setBusy(true);
     try {
-      const payload: { warehouse_id: string; name: string; kind: Kind; code?: string } = {
-        warehouse_id: warehouseId, name: parsed.data.name, kind: parsed.data.kind,
+      const payload = {
+        warehouse_id: warehouseId,
+        name: parsed.data.name,
+        kind: parsed.data.kind,
+        code: parsed.data.code ? parsed.data.code.toUpperCase() : "",
       };
-      if (parsed.data.code) payload.code = parsed.data.code.toUpperCase();
       if (isEdit && zone) {
         const { error } = await supabase.from("warehouse_zones").update(payload).eq("id", zone.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("warehouse_zones").insert(payload);
+        // Strip code on insert so the DB trigger can auto-generate it
+        const { code: _code, ...insertPayload } = payload;
+        void _code;
+        const { error } = await supabase.from("warehouse_zones").insert(insertPayload as typeof payload);
         if (error) throw error;
       }
       toast.success(isEdit ? "Zone updated" : "Zone added");

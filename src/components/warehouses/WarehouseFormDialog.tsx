@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import type { WarehouseRow } from "@/hooks/useErpData";
 
 const schema = z.object({
-  code: z.string().trim().min(2).max(20),
+  code: z.string().trim().max(20).optional().or(z.literal("")),
   name: z.string().trim().min(2).max(120),
   city: z.string().max(80).optional(),
   state: z.string().max(80).optional(),
@@ -54,7 +54,7 @@ export function WarehouseFormDialog({ open, onOpenChange, warehouse, onSaved }: 
     setSubmitting(true);
     try {
       const payload = {
-        code: parsed.data.code,
+        code: parsed.data.code || "",
         name: parsed.data.name,
         city: parsed.data.city || null,
         state: parsed.data.state || null,
@@ -65,7 +65,9 @@ export function WarehouseFormDialog({ open, onOpenChange, warehouse, onSaved }: 
         const { error } = await supabase.from("warehouses").update(payload).eq("id", warehouse.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("warehouses").insert(payload);
+        const { code: _code, ...insertPayload } = payload;
+        void _code;
+        const { error } = await supabase.from("warehouses").insert(insertPayload as typeof payload);
         if (error) throw error;
       }
       toast.success(isEdit ? "Warehouse updated" : "Warehouse created");
