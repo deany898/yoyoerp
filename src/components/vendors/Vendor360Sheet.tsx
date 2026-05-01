@@ -4,6 +4,9 @@ import {
 } from "@/components/ui/sheet";
 import { categoryLabel } from "./vendor-constants";
 import type { SupplierRow } from "@/hooks/useErpData";
+import { useAppConfig } from "@/contexts/AppConfigContext";
+import { FLAGS } from "@/lib/feature-flags";
+import { DynamicField } from "@/components/shared/DynamicField";
 
 interface Props {
   supplier: SupplierRow | null;
@@ -20,6 +23,8 @@ interface Props {
 export function Vendor360Sheet({ supplier, open, onOpenChange }: Props) {
   if (!supplier) return null;
   const cat = supplier.category;
+  const { isEnabled } = useAppConfig();
+  const showFinance = isEnabled(FLAGS.suppliers.showFinanceFields, true);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -35,16 +40,36 @@ export function Vendor360Sheet({ supplier, open, onOpenChange }: Props) {
         </SheetHeader>
 
         <div className="mt-6 space-y-3">
-          <Field label="Contact" value={supplier.contact_name || "—"} />
-          <Field label="Phone" value={supplier.phone || "—"} />
-          <Field label="Email" value={supplier.email || "—"} />
-          <Field label="GST" value={supplier.gst_number || "—"} />
-          <Field
-            label="Address"
-            value={[supplier.address, supplier.city, supplier.state].filter(Boolean).join(", ") || "—"}
-          />
-          <Field label="Payment terms" value={supplier.payment_terms || "—"} />
-          {supplier.notes && <Field label="Notes" value={supplier.notes} />}
+          <DynamicField module="suppliers" fieldKey="contact_name">
+            <Field label="Contact" value={supplier.contact_name || "—"} />
+          </DynamicField>
+          <DynamicField module="suppliers" fieldKey="phone">
+            <Field label="Phone" value={supplier.phone || "—"} />
+          </DynamicField>
+          <DynamicField module="suppliers" fieldKey="email">
+            <Field label="Email" value={supplier.email || "—"} />
+          </DynamicField>
+          {showFinance && (
+            <DynamicField module="suppliers" fieldKey="gst_number">
+              <Field label="GST" value={supplier.gst_number || "—"} />
+            </DynamicField>
+          )}
+          <DynamicField module="suppliers" fieldKey="address">
+            <Field
+              label="Address"
+              value={[supplier.address, supplier.city, supplier.state].filter(Boolean).join(", ") || "—"}
+            />
+          </DynamicField>
+          {showFinance && (
+            <DynamicField module="suppliers" fieldKey="payment_terms">
+              <Field label="Payment terms" value={supplier.payment_terms || "—"} />
+            </DynamicField>
+          )}
+          {supplier.notes && (
+            <DynamicField module="suppliers" fieldKey="notes">
+              <Field label="Notes" value={supplier.notes} />
+            </DynamicField>
+          )}
         </div>
 
         <div className="mt-8 rounded-lg border border-dashed border-border bg-muted/30 p-4 text-xs text-muted-foreground">

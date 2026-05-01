@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SmartSelect } from "@/components/forms/SmartSelect";
 import { ExportButton } from "@/components/shared/ExportButton";
+import { useAppConfig } from "@/contexts/AppConfigContext";
+import { FLAGS } from "@/lib/feature-flags";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
@@ -88,6 +90,10 @@ function DispatchOrdersPage() {
   const { warehouses } = useWarehouses();
   const { role } = useRole();
   const canEdit = ["admin", "manager", "sales", "dispatch"].includes(role);
+  const { isEnabled } = useAppConfig();
+  const showDiscount = isEnabled(FLAGS.dispatch.discount, true);
+  const showTax = isEnabled(FLAGS.dispatch.tax, true);
+  const showShipping = isEnabled(FLAGS.dispatch.shipping, true);
 
   const [orders, setOrders] = useState<DORow[]>([]);
   const [customers, setCustomers] = useState<CustomerLite[]>([]);
@@ -403,11 +409,20 @@ function DispatchOrdersPage() {
                           }}
                           placeholder="Search product…"
                         />
-                        <div className="grid grid-cols-[1fr_1fr_1fr_1fr_36px] gap-2">
+                        <div
+                          className="grid gap-2"
+                          style={{
+                            gridTemplateColumns: `1fr 1fr ${showDiscount ? "1fr " : ""}${showTax ? "1fr " : ""}36px`,
+                          }}
+                        >
                           <Input type="number" min={0} step="0.01" placeholder="Qty" value={l.qty} onChange={(e) => updateLine(i, { qty: Number(e.target.value) })} />
                           <Input type="number" min={0} step="0.01" placeholder="Unit price" value={l.unit_price} onChange={(e) => updateLine(i, { unit_price: Number(e.target.value) })} />
-                          <Input type="number" min={0} step="0.01" placeholder="Discount" value={l.discount_value} onChange={(e) => updateLine(i, { discount_value: Number(e.target.value) })} />
-                          <Input type="number" min={0} step="0.01" placeholder="Tax %" value={l.tax_rate} onChange={(e) => updateLine(i, { tax_rate: Number(e.target.value) })} />
+                          {showDiscount && (
+                            <Input type="number" min={0} step="0.01" placeholder="Discount" value={l.discount_value} onChange={(e) => updateLine(i, { discount_value: Number(e.target.value) })} />
+                          )}
+                          {showTax && (
+                            <Input type="number" min={0} step="0.01" placeholder="Tax %" value={l.tax_rate} onChange={(e) => updateLine(i, { tax_rate: Number(e.target.value) })} />
+                          )}
                           <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive" onClick={() => removeLine(i)}><X className="h-3.5 w-3.5" /></Button>
                         </div>
                       </div>
@@ -416,17 +431,19 @@ function DispatchOrdersPage() {
                 )}
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <div><Label>Freight</Label><Input type="number" min={0} step="0.01" value={draft.freight_cost} onChange={(e) => patchDraft({ freight_cost: Number(e.target.value) })} /></div>
-                <div><Label>Packing</Label><Input type="number" min={0} step="0.01" value={draft.packing_cost} onChange={(e) => patchDraft({ packing_cost: Number(e.target.value) })} /></div>
-                <div><Label>Other charges</Label><Input type="number" min={0} step="0.01" value={draft.other_charges} onChange={(e) => patchDraft({ other_charges: Number(e.target.value) })} /></div>
-              </div>
+              {showShipping && (
+                <div className="grid grid-cols-3 gap-3">
+                  <div><Label>Freight</Label><Input type="number" min={0} step="0.01" value={draft.freight_cost} onChange={(e) => patchDraft({ freight_cost: Number(e.target.value) })} /></div>
+                  <div><Label>Packing</Label><Input type="number" min={0} step="0.01" value={draft.packing_cost} onChange={(e) => patchDraft({ packing_cost: Number(e.target.value) })} /></div>
+                  <div><Label>Other charges</Label><Input type="number" min={0} step="0.01" value={draft.other_charges} onChange={(e) => patchDraft({ other_charges: Number(e.target.value) })} /></div>
+                </div>
+              )}
 
               <div className="rounded-md border border-border bg-muted/40 p-3 text-sm space-y-1 font-mono">
                 <div className="flex justify-between"><span>Subtotal</span><span>₹{totals.subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span>Discount</span><span>-₹{totals.discount.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span>Tax</span><span>₹{totals.tax.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span>Freight + packing + other</span><span>₹{(draft.freight_cost + draft.packing_cost + draft.other_charges).toFixed(2)}</span></div>
+                {showDiscount && <div className="flex justify-between"><span>Discount</span><span>-₹{totals.discount.toFixed(2)}</span></div>}
+                {showTax && <div className="flex justify-between"><span>Tax</span><span>₹{totals.tax.toFixed(2)}</span></div>}
+                {showShipping && <div className="flex justify-between"><span>Freight + packing + other</span><span>₹{(draft.freight_cost + draft.packing_cost + draft.other_charges).toFixed(2)}</span></div>}
                 <div className="flex justify-between border-t border-border pt-1 font-semibold"><span>Grand total</span><span>₹{totals.grand.toFixed(2)}</span></div>
               </div>
 

@@ -12,6 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SupplierPricesTab } from "./SupplierPricesTab";
 import { toast } from "sonner";
 import type { CategoryRow, ProductWithVariants } from "@/hooks/useErpData";
+import { useAppConfig } from "@/contexts/AppConfigContext";
+import { FLAGS } from "@/lib/feature-flags";
 
 const PRODUCT_TYPES = [
   { value: "raw_material", label: "Raw material" },
@@ -48,6 +50,9 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
   const isEdit = !!product;
   const firstVariant = product?.variants?.[0];
   const [submitting, setSubmitting] = useState(false);
+  const { isEnabled } = useAppConfig();
+  const showCosting = isEnabled(FLAGS.products.costing, true);
+  const showSupplierPrices = isEnabled(FLAGS.suppliers.quoteHistory, true) && isEnabled(FLAGS.modules.suppliers, true);
 
   const [form, setForm] = useState({
     code: "",
@@ -159,11 +164,13 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
         </SheetHeader>
 
         <Tabs defaultValue="overview" className="mt-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className={`grid w-full ${showSupplierPrices ? "grid-cols-2" : "grid-cols-1"}`}>
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="prices" disabled={!firstVariant}>
-              Supplier prices
-            </TabsTrigger>
+            {showSupplierPrices && (
+              <TabsTrigger value="prices" disabled={!firstVariant}>
+                Supplier prices
+              </TabsTrigger>
+            )}
           </TabsList>
           <TabsContent value="overview" className="mt-5 space-y-5">
           <div className="grid grid-cols-2 gap-3">
@@ -242,33 +249,39 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
             </div>
           </div>
 
-          <Separator />
-          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Purchase price
-          </div>
-          <div className="space-y-1.5">
-            <Label>Manual purchase cost (₹) · overrides supplier quote</Label>
-            <Input
-              type="number"
-              min={0}
-              step="0.01"
-              placeholder="Leave blank to use latest supplier quote"
-              value={form.manual_purchase_cost}
-              onChange={(e) => setForm((f) => ({ ...f, manual_purchase_cost: e.target.value }))}
-            />
-            <p className="text-[11px] text-muted-foreground">
-              When set, this value is used as the effective purchase cost instead of the latest supplier quote.
-            </p>
-          </div>
+          {showCosting && (
+            <>
+              <Separator />
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Purchase price
+              </div>
+              <div className="space-y-1.5">
+                <Label>Manual purchase cost (₹) · overrides supplier quote</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  placeholder="Leave blank to use latest supplier quote"
+                  value={form.manual_purchase_cost}
+                  onChange={(e) => setForm((f) => ({ ...f, manual_purchase_cost: e.target.value }))}
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  When set, this value is used as the effective purchase cost instead of the latest supplier quote.
+                </p>
+              </div>
+            </>
+          )}
 
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>Cancel</Button>
             <Button onClick={submit} disabled={submitting}>{submitting ? "Saving…" : isEdit ? "Save changes" : "Create product"}</Button>
           </div>
           </TabsContent>
-          <TabsContent value="prices" className="mt-5">
-            <SupplierPricesTab variantId={firstVariant?.id ?? ""} />
-          </TabsContent>
+          {showSupplierPrices && (
+            <TabsContent value="prices" className="mt-5">
+              <SupplierPricesTab variantId={firstVariant?.id ?? ""} />
+            </TabsContent>
+          )}
         </Tabs>
       </SheetContent>
     </Sheet>
