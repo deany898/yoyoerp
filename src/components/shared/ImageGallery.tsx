@@ -49,8 +49,11 @@ export function ProductImageGallery({ productId, canEdit = true }: Props) {
       sort_order: images.length,
       is_primary: isFirst,
     });
-    if (error) return notify.error("Could not save image", { description: error.message });
-    void refresh();
+    if (error) {
+      notify.error("Could not save image", { description: error.message });
+      return;
+    }
+    await refresh();
   };
 
   const setPrimary = async (id: string) => {
