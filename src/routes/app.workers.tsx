@@ -3,6 +3,8 @@ import { HardHat } from "lucide-react";
 import { MasterListPage } from "@/components/manufacturing/MasterListPage";
 import { useStations, useWorkers } from "@/hooks/useMfgData";
 import { SmartSelect } from "@/components/forms/SmartSelect";
+import { useAppConfig } from "@/contexts/AppConfigContext";
+import { FLAGS } from "@/lib/feature-flags";
 
 export const Route = createFileRoute("/app/workers")({
   head: () => ({
@@ -17,6 +19,8 @@ export const Route = createFileRoute("/app/workers")({
 function WorkersPage() {
   const { workers, loading, refresh } = useWorkers();
   const { stations } = useStations();
+  const { isEnabled } = useAppConfig();
+  const showPayroll = isEnabled(FLAGS.workforce.payroll, true);
   const stationOpts = stations.map((s) => ({ value: s.id, label: s.name, hint: s.code }));
   const stationName = (id: string | null) => stations.find((s) => s.id === id)?.name ?? "—";
 
@@ -48,7 +52,9 @@ function WorkersPage() {
             />
           ),
         },
-        { key: "hourly_rate", label: "Hourly rate (₹/hr)", kind: "number", step: "0.01" },
+        ...(showPayroll
+          ? [{ key: "hourly_rate", label: "Hourly rate (₹/hr)", kind: "number" as const, step: "0.01" }]
+          : []),
         { key: "phone", label: "Phone" },
         { key: "is_active", label: "Active", kind: "switch" },
       ]}
@@ -57,7 +63,9 @@ function WorkersPage() {
         { key: "name", label: "Name" },
         { key: "job_role", label: "Role" },
         { key: "station_id", label: "Station", render: (r) => stationName(r.station_id) },
-        { key: "hourly_rate", label: "₹/hr", className: "font-mono text-right tabular-nums", render: (r) => Number(r.hourly_rate).toFixed(2) },
+        ...(showPayroll
+          ? [{ key: "hourly_rate", label: "₹/hr", className: "font-mono text-right tabular-nums", render: (r: { hourly_rate: number }) => Number(r.hourly_rate).toFixed(2) }]
+          : []),
         { key: "is_active", label: "Status" },
       ]}
     />
