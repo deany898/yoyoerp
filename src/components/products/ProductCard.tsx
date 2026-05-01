@@ -30,8 +30,11 @@ interface Props {
 export function ProductCard({ product, showCost, onClick }: Props) {
   const v = product.variants[0];
   const purchase = v ? Number(v.manual_purchase_cost ?? v.purchase_cost ?? v.avg_cost ?? 0) : 0;
-  const selling = v ? Number(v.last_cost ?? 0) : 0; // placeholder · selling-price tier wired via product_pricing_tiers later
-  const margin = selling > 0 && purchase > 0 ? ((selling - purchase) / selling) * 100 : null;
+  // Sale/Dealer prices come from product_pricing_tiers (wired in a follow-up).
+  // For now we surface placeholders so the layout is finalised.
+  const sale = v ? Number(v.last_cost ?? 0) : 0;
+  const dealer = sale > 0 ? sale * 0.9 : 0;
+  const margin = sale > 0 && purchase > 0 ? ((sale - purchase) / sale) * 100 : null;
   const lowMargin = margin !== null && margin < 15;
 
   return (
@@ -57,24 +60,23 @@ export function ProductCard({ product, showCost, onClick }: Props) {
 
       <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
         <div className="rounded-lg bg-muted/40 px-2.5 py-2">
-          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Purchase</div>
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Sale</div>
           <div className="mt-0.5 font-mono text-sm font-semibold text-foreground">
-            {showCost ? `₹${purchase.toFixed(2)}` : "•••"}
+            {sale > 0 ? `₹${sale.toFixed(2)}` : "—"}
           </div>
         </div>
         <div className="rounded-lg bg-muted/40 px-2.5 py-2">
-          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">SKUs</div>
-          <div className="mt-0.5 inline-flex items-center gap-1 text-sm font-semibold text-foreground">
-            <Boxes className="h-3.5 w-3.5 text-muted-foreground" />
-            {product.variants.length}
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Dealer</div>
+          <div className="mt-0.5 font-mono text-sm font-semibold text-foreground">
+            {dealer > 0 ? `₹${dealer.toFixed(2)}` : "—"}
           </div>
         </div>
       </div>
 
       <div className="mt-2.5 flex items-center justify-between gap-2 text-[11px]">
         <span className="inline-flex items-center gap-1 text-muted-foreground">
-          <Truck className="h-3 w-3" />
-          {product.preferred_supplier_id ? "Preferred set" : "No supplier"}
+          <Boxes className="h-3 w-3" />
+          {product.variants.length} SKU{product.variants.length === 1 ? "" : "s"}
         </span>
         <div className="flex items-center gap-2">
           {showCost && margin !== null && (
