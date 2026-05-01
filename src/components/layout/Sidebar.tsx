@@ -29,6 +29,7 @@ import { isRouteVisibleToRole } from "@/lib/role-nav";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppConfig } from "@/contexts/AppConfigContext";
 import { ROUTE_FLAGS } from "@/lib/feature-flags";
+import { toast } from "sonner";
 
 
 const ROLE_LABELS: Record<string, string> = {
@@ -133,8 +134,19 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const roleLabel = ROLE_LABELS[role] ?? role;
 
   const handleSignOut = async () => {
-    await signOut();
-    await navigate({ to: "/auth" });
+    try {
+      await signOut();
+    } catch (err) {
+      console.error("Sign out failed:", err);
+      toast.error("Could not sign out. Please try again.");
+    }
+    // Navigate regardless — local state is already cleared by signOut.
+    try {
+      await navigate({ to: "/auth", replace: true });
+    } catch {
+      // Hard fallback if SPA navigation is blocked.
+      if (typeof window !== "undefined") window.location.assign("/auth");
+    }
   };
 
   const toggleGroup = (label: string) => {

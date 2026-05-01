@@ -1,4 +1,4 @@
-import { createContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useMemo, type ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { getPermissionsForRole, type RolePermissions, type UserRoleType } from "@/lib/roles";
 import { useRoleSimulator } from "@/contexts/RoleSimulatorContext";
@@ -11,12 +11,15 @@ export interface RoleContextValue {
   isAdmin: boolean;
   isManager: boolean;
   isRequestor: boolean;
+  /** True while the user_roles query is in flight. Components should render
+   *  a skeleton instead of role-conditional UI when this is true. */
+  rolesLoading: boolean;
 }
 
 export const RoleContext = createContext<RoleContextValue | null>(null);
 
 export function RoleProvider({ children }: { children: ReactNode }) {
-  const { roles: authRoles } = useAuth();
+  const { user, roles: authRoles, rolesLoading } = useAuth();
   const { simulatedRole } = useRoleSimulator();
 
   // Real-auth: pick the highest privilege role the user holds.
@@ -31,8 +34,13 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     "customer",
     "requestor",
   ];
-  const realRole: UserRoleType =
-    ROLE_PRIORITY.find((r) => authRoles.includes(r)) ?? "worker";
+  const matchedRole = ROLE_PRIORITY.find((r) => authRoles.includes(r));
+  // While roles are loading OR no user is signed in, fall back to the LEAST-
+  // privileged real role ("customer") so we never silently grant write access.
+  // Components gate role-dependent UI with `rolesLoading` instead of relying
+  // on the fallback. We never default to "worker" because it has stock-write
+  // permissions and would silently elevate unassigned users.
+  const realRole: UserRoleType = matchedRole ?? "customer";
 
   // Only admins are allowed to simulate other roles. For everyone else the
   // simulated value is ignored on the client (and the server never trusts it).
@@ -49,8 +57,9 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       isAdmin: role === "admin",
       isManager: role === "manager",
       isRequestor: role === "requestor",
+      rolesLoading: rolesLoading || (!!user && !matchedRole && authRoles.length === 0),
     };
-  }, [role, realRole]);
+  }, [role, realRole, rolesLoading, user, matchedRole, authRoles.length]);
 
   return <RoleContext.Provider value={value}>{children}</RoleContext.Provider>;
 }
