@@ -105,7 +105,10 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
 };
 
 export function isRouteVisibleToRole(href: string, role: UserRoleType): boolean {
-  return ROLE_ROUTES[role]?.includes(href) ?? false;
+  const allowed = ROLE_ROUTES[role];
+  if (!allowed) return false;
+  // Exact match OR sub-route (e.g. /app/products/123 under /app/products).
+  return allowed.some((base) => href === base || href.startsWith(base + "/"));
 }
 
 /** Top items shown in the mobile bottom nav (max 4 + More). */
