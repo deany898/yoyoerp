@@ -1,18 +1,22 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { ShieldCheck, Search, Users as UsersIcon, Loader2 } from "lucide-react";
+import { ShieldCheck, Search, Users as UsersIcon, Loader2, Lock, LockOpen, KeyRound } from "lucide-react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useRole } from "@/hooks/useRole";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { SmartSelect } from "@/components/forms/SmartSelect";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ROLE_PERMISSION_MATRIX, ROLE_ORDER, ROLE_LABEL } from "@/lib/role-permissions";
+import { CreateUserDialog } from "@/components/admin/CreateUserDialog";
+import { adminSetLock, adminResetPassword } from "@/server/admin-users.functions";
 import type { Database } from "@/integrations/supabase/types";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
@@ -22,6 +26,7 @@ interface UserRow {
   display_name: string | null;
   created_at: string;
   role: AppRole;
+  admin_locked: boolean;
 }
 
 export const Route = createFileRoute("/app/users")({
@@ -37,6 +42,8 @@ function UserManagementPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const setLockFn = useServerFn(adminSetLock);
+  const resetPwFn = useServerFn(adminResetPassword);
 
   useEffect(() => {
     if (role !== "admin") {
@@ -52,7 +59,7 @@ function UserManagementPage() {
   async function load() {
     setLoading(true);
     const [{ data: profiles, error: pErr }, { data: roles, error: rErr }] = await Promise.all([
-      supabase.from("profiles").select("user_id, display_name, created_at"),
+      supabase.from("profiles").select("user_id, display_name, created_at, admin_locked"),
       supabase.from("user_roles").select("user_id, role"),
     ]);
     if (pErr || rErr) {
@@ -67,6 +74,7 @@ function UserManagementPage() {
       display_name: p.display_name,
       created_at: p.created_at,
       role: roleMap.get(p.user_id) ?? "customer",
+      admin_locked: p.admin_locked ?? false,
     }));
     list.sort((a, b) => (a.display_name ?? "").localeCompare(b.display_name ?? ""));
     setRows(list);
@@ -109,6 +117,38 @@ function UserManagementPage() {
     setSavingId(null);
   }
 
+  async function toggleLock(target: UserRow) {
+    setSavingId(target.user_id);
+    try {
+      await setLockFn({ data: { user_id: target.user_id, locked: !target.admin_locked } });
+      setRows((prev) =>
+        prev.map((r) => (r.user_id === target.user_id ? { ...r, admin_locked: !r.admin_locked } : r)),
+      );
+      toast.success(target.admin_locked ? "Profile unlocked" : "Profile locked");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Update failed");
+    } finally {
+      setSavingId(null);
+    }
+  }
+
+  async function resetPassword(target: UserRow) {
+    const pwd = window.prompt(`Set a new password for ${target.display_name ?? "user"} (min 8 chars):`);
+    if (!pwd || pwd.length < 8) {
+      if (pwd !== null) toast.error("Password must be at least 8 characters");
+      return;
+    }
+    setSavingId(target.user_id);
+    try {
+      await resetPwFn({ data: { user_id: target.user_id, password: pwd } });
+      toast.success("Password updated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Reset failed");
+    } finally {
+      setSavingId(null);
+    }
+  }
+
   const filtered = useMemo(() => {
     if (!search.trim()) return rows;
     const q = search.toLowerCase();
@@ -130,6 +170,7 @@ function UserManagementPage() {
               Manage team roles and permissions across the platform.
             </p>
           </div>
+          <CreateUserDialog onCreated={load} />
         </div>
 
         {/* Users table */}
@@ -160,6 +201,7 @@ function UserManagementPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Joined</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -171,6 +213,11 @@ function UserManagementPage() {
                         {u.display_name ?? "—"}
                         {isSelf && (
                           <Badge variant="outline" className="ml-2 text-[10px]">You</Badge>
+                        )}
+                        {u.admin_locked && (
+                          <Badge variant="outline" className="ml-2 bg-amber-50 text-amber-800 ring-1 ring-amber-200 text-[10px]">
+                            Locked
+                          </Badge>
                         )}
                       </TableCell>
                       <TableCell>
@@ -186,6 +233,28 @@ function UserManagementPage() {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {format(new Date(u.created_at), "MMM d, yyyy")}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            disabled={savingId === u.user_id || isSelf}
+                            onClick={() => toggleLock(u)}
+                            title={u.admin_locked ? "Unlock identity fields" : "Lock identity fields"}
+                          >
+                            {u.admin_locked ? <Lock className="h-4 w-4" /> : <LockOpen className="h-4 w-4" />}
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            disabled={savingId === u.user_id}
+                            onClick={() => resetPassword(u)}
+                            title="Reset password"
+                          >
+                            <KeyRound className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
