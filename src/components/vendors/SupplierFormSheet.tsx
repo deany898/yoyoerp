@@ -46,7 +46,10 @@ export function SupplierFormSheet({ open, onOpenChange, editing, setEditing, onS
         </SheetHeader>
         <div className="mt-6 space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div><Label>Code *</Label><Input value={e.code ?? ""} onChange={(ev) => set({ code: ev.target.value })} placeholder="SUP-001" /></div>
+            <div>
+              <Label>Code <span className="text-muted-foreground text-xs font-normal">(auto)</span></Label>
+              <Input value={e.code ?? ""} onChange={(ev) => set({ code: ev.target.value })} placeholder="Auto-generated" />
+            </div>
             <div><Label>Lead time (days)</Label><Input type="number" min={0} value={e.lead_time_days ?? 7} onChange={(ev) => set({ lead_time_days: Number(ev.target.value) })} /></div>
           </div>
           <div><Label>Name *</Label><Input value={e.name ?? ""} onChange={(ev) => set({ name: ev.target.value })} placeholder="Acme Industries Pvt Ltd" /></div>
