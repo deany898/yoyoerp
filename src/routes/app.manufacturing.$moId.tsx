@@ -14,6 +14,7 @@ import { PackingRunDialog } from "@/components/manufacturing/PackingRunDialog";
 import { useConfirm } from "@/components/forms/ConfirmDialog";
 import { useAppConfig } from "@/contexts/AppConfigContext";
 import { FLAGS } from "@/lib/feature-flags";
+import { getMoDetail } from "@/server/manufacturing.functions";
 
 export const Route = createFileRoute("/app/manufacturing/$moId")({
   head: () => ({ meta: [{ title: "Production log · YOYO ERP" }] }),
@@ -64,52 +65,24 @@ function MoDetailPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const moRes = await supabase
-      .from("manufacturing_orders")
-      .select(`
-        *,
-        variant:product_variants(id, sku, variant_name, product_id),
-        warehouse:warehouses(id, name, code),
-        source_do:dispatch_orders(id, do_number)
-      `)
-      .eq("id", moId)
-      .maybeSingle();
-    if (moRes.error || !moRes.data) {
-      notify.error("Could not load production log", { description: moRes.error?.message });
+    let payload: Awaited<ReturnType<typeof getMoDetail>>;
+    try {
+      payload = await getMoDetail({ data: { moId } });
+    } catch (e) {
+      notify.error("Could not load production log", { description: (e as Error).message });
       setLoading(false);
       return;
     }
-    const moData = moRes.data as unknown as MOFull;
-    setMo(moData);
-
-    if (moData.variant) {
-      const bomRes = await supabase
-        .from("bom_master")
-        .select("id, lines:bom_lines(id, qty_per, scrap_pct, uom, variant:product_variants(id, sku, variant_name, product_id))")
-        .eq("variant_id", moData.variant.id)
-        .eq("is_active", true)
-        .order("version", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      const lines = (bomRes.data?.lines ?? []) as unknown as BomLineRow[];
-      // load product names for components
-      const pids = Array.from(new Set(lines.map((l) => l.variant?.product_id).filter(Boolean) as string[]));
-      let productMap = new Map<string, string>();
-      if (pids.length) {
-        const pRes = await supabase.from("products").select("id, name").in("id", pids);
-        productMap = new Map((pRes.data ?? []).map((p) => [p.id, p.name]));
-      }
-      setBom(lines.map((l) => ({ ...l, product_name: l.variant ? productMap.get(l.variant.product_id) : "—" })));
+    if (!payload.mo) {
+      notify.error("Production log not found");
+      setLoading(false);
+      return;
     }
-
-    const [issuesRes, outputsRes, runsRes] = await Promise.all([
-      supabase.from("mo_material_issues").select("*").eq("mo_id", moId).order("posted_at", { ascending: false }),
-      supabase.from("mo_outputs").select("*").eq("mo_id", moId).order("posted_at", { ascending: false }),
-      supabase.from("mo_stage_runs").select("*").eq("mo_id", moId).order("created_at", { ascending: false }),
-    ]);
-    setIssues(issuesRes.data ?? []);
-    setOutputs(outputsRes.data ?? []);
-    setRuns(runsRes.data ?? []);
+    setMo(payload.mo as unknown as MOFull);
+    setBom(payload.bom as unknown as BomLineRow[]);
+    setIssues(payload.issues as MOIssueRow[]);
+    setOutputs(payload.outputs as MOOutputRow[]);
+    setRuns(payload.runs as MORunRow[]);
     setLoading(false);
   }, [moId]);
 
