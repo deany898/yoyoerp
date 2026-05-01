@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { CategoryCoverButton } from "./CategoryCoverButton";
 
 interface Cat {
   id: string;
@@ -233,6 +234,7 @@ function CategoryNode(p: NodeProps) {
           <>
             <span className="flex-1 truncate text-sm font-medium">{cat.name}</span>
             {kids.length > 0 && <Badge variant="secondary" className="text-[10px]">{kids.length} sub</Badge>}
+            <CategoryCoverButton categoryId={cat.id} categoryName={cat.name} />
             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => p.onStartEdit(cat)}>
               <Pencil className="h-3.5 w-3.5" />
             </Button>
