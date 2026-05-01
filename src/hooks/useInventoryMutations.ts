@@ -1,5 +1,4 @@
 import { useCallback, useState } from "react";
-import { useDemo } from "@/hooks/useDemo";
 import type {
   Item,
   Supplier,
@@ -7,9 +6,8 @@ import type {
   StockMovement,
   PurchaseOrder,
   InventoryRequest,
+  Category,
 } from "@/types/inventory";
-import type { DemoStore } from "@/lib/demo-store";
-import { generateStockAlerts } from "@/lib/notification-generators";
 
 interface MutationResult<TData> {
   mutate: (data: TData, opts?: { onSuccess?: () => void; onError?: (e: Error) => void }) => void;
@@ -17,123 +15,72 @@ interface MutationResult<TData> {
   error: Error | null;
 }
 
-function useDemoMutation<TData>(
-  handler: (store: DemoStore, data: TData) => void,
-): MutationResult<TData> {
-  const { isDemo, demoStore, bumpVersion } = useDemo();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+function useNoopMutation<TData>(): MutationResult<TData> {
+  const [isLoading] = useState(false);
+  const [error] = useState<Error | null>(null);
 
   const mutate = useCallback(
-    (data: TData, opts?: { onSuccess?: () => void; onError?: (e: Error) => void }) => {
-      if (!isDemo || !demoStore) {
-        opts?.onError?.(new Error("Not in demo mode"));
-        return;
-      }
-      setIsLoading(true);
-      try {
-        handler(demoStore, data);
-        bumpVersion();
-        setError(null);
-        opts?.onSuccess?.();
-      } catch (e) {
-        const err = e instanceof Error ? e : new Error(String(e));
-        setError(err);
-        opts?.onError?.(err);
-      } finally {
-        setIsLoading(false);
-      }
+    (_data: TData, opts?: { onSuccess?: () => void; onError?: (e: Error) => void }) => {
+      const err = new Error("This module has not been migrated to the live backend yet.");
+      opts?.onError?.(err);
     },
-    [isDemo, demoStore, handler, bumpVersion],
+    [],
   );
 
   return { mutate, isLoading, error };
 }
 
 export function useCreateItem() {
-  return useDemoMutation<Item>((store, data) => store.createItem(data));
+  return useNoopMutation<Item>();
 }
-
 export function useUpdateItem() {
-  return useDemoMutation<{ id: string; updates: Partial<Item> }>((store, { id, updates }) =>
-    store.updateItem(id, updates),
-  );
+  return useNoopMutation<{ id: string; updates: Partial<Item> }>();
 }
-
 export function useDeleteItem() {
-  return useDemoMutation<string>((store, id) => store.deleteItem(id));
+  return useNoopMutation<string>();
 }
-
 export function useCreateMovement() {
-  return useDemoMutation<StockMovement>((store, data) => {
-    store.createMovement(data);
-    generateStockAlerts(store);
-  });
+  return useNoopMutation<StockMovement>();
 }
-
 export function useCreatePurchaseOrder() {
-  return useDemoMutation<PurchaseOrder>((store, data) => store.createPurchaseOrder(data));
+  return useNoopMutation<PurchaseOrder>();
 }
-
 export function useUpdatePurchaseOrder() {
-  return useDemoMutation<{ id: string; updates: Partial<PurchaseOrder> }>((store, { id, updates }) =>
-    store.updatePurchaseOrder(id, updates),
-  );
+  return useNoopMutation<{ id: string; updates: Partial<PurchaseOrder> }>();
 }
-
 export function useDeletePurchaseOrder() {
-  return useDemoMutation<string>((store, id) => store.deletePurchaseOrder(id));
+  return useNoopMutation<string>();
 }
-
 export function useCreateSupplier() {
-  return useDemoMutation<Supplier>((store, data) => store.createSupplier(data));
+  return useNoopMutation<Supplier>();
 }
-
 export function useUpdateSupplier() {
-  return useDemoMutation<{ id: string; updates: Partial<Supplier> }>((store, { id, updates }) =>
-    store.updateSupplier(id, updates),
-  );
+  return useNoopMutation<{ id: string; updates: Partial<Supplier> }>();
 }
-
 export function useDeleteSupplier() {
-  return useDemoMutation<string>((store, id) => store.deleteSupplier(id));
+  return useNoopMutation<string>();
 }
-
 export function useCreateRequest() {
-  return useDemoMutation<InventoryRequest>((store, data) => store.createRequest(data));
+  return useNoopMutation<InventoryRequest>();
 }
-
 export function useUpdateRequest() {
-  return useDemoMutation<{ id: string; updates: Partial<InventoryRequest> }>((store, { id, updates }) =>
-    store.updateRequest(id, updates),
-  );
+  return useNoopMutation<{ id: string; updates: Partial<InventoryRequest> }>();
 }
-
 export function useCreateLocation() {
-  return useDemoMutation<Location>((store, data) => store.createLocation(data));
+  return useNoopMutation<Location>();
 }
-
 export function useUpdateLocation() {
-  return useDemoMutation<{ id: string; updates: Partial<Location> }>((store, { id, updates }) =>
-    store.updateLocation(id, updates),
-  );
+  return useNoopMutation<{ id: string; updates: Partial<Location> }>();
 }
-
 export function useDeleteLocation() {
-  return useDemoMutation<string>((store, id) => store.deleteLocation(id));
+  return useNoopMutation<string>();
 }
-
-// ─── Category mutations ─────────────────────────────────
 export function useCreateCategory() {
-  return useDemoMutation<import("@/types/inventory").Category>((store, data) => store.createCategory(data));
+  return useNoopMutation<Category>();
 }
-
 export function useUpdateCategory() {
-  return useDemoMutation<{ id: string; updates: Partial<import("@/types/inventory").Category> }>((store, { id, updates }) =>
-    store.updateCategory(id, updates),
-  );
+  return useNoopMutation<{ id: string; updates: Partial<Category> }>();
 }
-
 export function useDeleteCategory() {
-  return useDemoMutation<string>((store, id) => store.deleteCategory(id));
+  return useNoopMutation<string>();
 }

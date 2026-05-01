@@ -1,5 +1,4 @@
 import { createContext, useMemo, useState, type ReactNode } from "react";
-import { useDemo } from "@/hooks/useDemo";
 import { useAuth } from "@/hooks/useAuth";
 import { getPermissionsForRole, type RolePermissions, type UserRoleType } from "@/lib/roles";
 
@@ -9,16 +8,12 @@ export interface RoleContextValue {
   isAdmin: boolean;
   isManager: boolean;
   isRequestor: boolean;
-  /** Demo-only: override the current role */
-  setDemoRole: (role: UserRoleType) => void;
 }
 
 export const RoleContext = createContext<RoleContextValue | null>(null);
 
 export function RoleProvider({ children }: { children: ReactNode }) {
-  const { isDemo } = useDemo();
   const { roles: authRoles } = useAuth();
-  const [demoRole, setDemoRole] = useState<UserRoleType>("admin");
 
   // Real-auth: pick the highest privilege role the user holds.
   // Order: admin > manager > supervisor > sales > dispatch > worker > customer > requestor (legacy).
@@ -32,10 +27,8 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     "customer",
     "requestor",
   ];
-  const realRole: UserRoleType =
+  const role: UserRoleType =
     ROLE_PRIORITY.find((r) => authRoles.includes(r)) ?? "worker";
-
-  const role: UserRoleType = isDemo ? demoRole : realRole;
 
   const value = useMemo<RoleContextValue>(() => {
     const permissions = getPermissionsForRole(role);
@@ -45,7 +38,6 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       isAdmin: role === "admin",
       isManager: role === "manager",
       isRequestor: role === "requestor",
-      setDemoRole,
     };
   }, [role]);
 

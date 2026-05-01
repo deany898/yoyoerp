@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { RoleDashboard } from "@/components/dashboard/RoleDashboard";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { useAlertGenerator } from "@/hooks/useStockAlertGenerator";
-import { useDemo } from "@/hooks/useDemo";
 import { useRole } from "@/hooks/useRole";
 import { useOnboarding, type TourStep } from "@/hooks/useOnboarding";
 
@@ -23,19 +22,18 @@ export const Route = createFileRoute("/app/dashboard")({
 });
 
 function DashboardPage() {
-  const { isDemo } = useDemo();
   const { role } = useRole();
   useAlertGenerator();
 
   const tour = useOnboarding("dashboard");
 
-  // Auto-start tour on first demo visit
+  // Auto-start tour on first visit
   useEffect(() => {
-    if (isDemo && !tour.hasCompleted) {
+    if (!tour.hasCompleted) {
       const timer = setTimeout(() => tour.startTour(), 500);
       return () => clearTimeout(timer);
     }
-  }, [isDemo, tour.hasCompleted]);
+  }, [tour.hasCompleted]);
 
   const handleTourComplete = () => {
     tour.completeTour();

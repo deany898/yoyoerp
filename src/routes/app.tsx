@@ -3,11 +3,9 @@ import { useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
-import { DemoBanner } from "@/components/layout/DemoBanner";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { ShortcutsHelpDialog } from "@/components/command/ShortcutsHelpDialog";
 import { PageTransition } from "@/components/shared/PageTransition";
-import { useDemo } from "@/hooks/useDemo";
 import { useRole } from "@/hooks/useRole";
 import { useAuth } from "@/hooks/useAuth";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
@@ -19,7 +17,6 @@ export const Route = createFileRoute("/app")({
 });
 
 function AppLayout() {
-  const { isDemo } = useDemo();
   const { role } = useRole();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -31,21 +28,21 @@ function AppLayout() {
 
   // Role-based route guard
   useEffect(() => {
-    if (isDemo && !canAccessRoute(location.pathname, role)) {
+    if (!canAccessRoute(location.pathname, role)) {
       toast.error("You don't have permission to access that page.");
       navigate({ to: "/app/dashboard" });
     }
-  }, [location.pathname, role, navigate, isDemo]);
+  }, [location.pathname, role, navigate]);
 
-  // Access guard — must be in demo OR signed in
+  // Access guard — must be signed in
   useEffect(() => {
     if (authLoading) return;
-    if (!isDemo && !user) {
+    if (!user) {
       navigate({ to: "/auth" });
     }
-  }, [isDemo, user, authLoading, navigate]);
+  }, [user, authLoading, navigate]);
 
-  if (authLoading || (!isDemo && !user)) {
+  if (authLoading || !user) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground" />
@@ -55,7 +52,6 @@ function AppLayout() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background">
-      <DemoBanner />
       <div className="flex flex-1 overflow-hidden">
         <aside className="hidden w-[264px] shrink-0 border-r border-border bg-sidebar md:block">
           <Sidebar />

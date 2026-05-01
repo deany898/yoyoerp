@@ -31,7 +31,6 @@ import { PAGES } from "./palette-pages";
 import { ACTIONS } from "./palette-actions";
 import { ItemResultRow } from "./ItemResultRow";
 import { parseQuery } from "@/lib/nl-search-parser";
-import { useDemo } from "@/hooks/useDemo";
 
 // ─── Component ───────────────────────────────────────────
 
@@ -46,7 +45,6 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const { data: items } = useItems();
   const { can } = usePermissions();
   const { role } = useRole();
-  const { demoStore } = useDemo();
 
   // Reset query on close
   useEffect(() => {
@@ -75,28 +73,6 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       }
     }
 
-    // Category filter (fuzzy match on category name)
-    if (parsed.filters.category && demoStore) {
-      const cats = demoStore.getCategories();
-      const catName = parsed.filters.category.toLowerCase();
-      const matchingCats = cats.filter((c) => c.name.toLowerCase().includes(catName));
-      if (matchingCats.length > 0) {
-        const catIds = new Set(matchingCats.map((c) => c.id));
-        results = results.filter((i) => i.categoryId && catIds.has(i.categoryId));
-      }
-    }
-
-    // Supplier filter
-    if (parsed.filters.supplier && demoStore) {
-      const sups = demoStore.getSuppliers();
-      const supName = parsed.filters.supplier.toLowerCase();
-      const matchingSups = sups.filter((s) => s.name.toLowerCase().includes(supName));
-      if (matchingSups.length > 0) {
-        const supIds = new Set(matchingSups.map((s) => s.id));
-        results = results.filter((i) => i.supplierId && supIds.has(i.supplierId));
-      }
-    }
-
     // Search terms
     if (parsed.searchTerms.length > 0) {
       results = results.filter((i) =>
@@ -107,7 +83,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     }
 
     return results.slice(0, 10);
-  }, [isNL, items, parsed, demoStore]);
+  }, [isNL, items, parsed]);
 
   // Standard item search results (max 8)
   const matchedItems = useMemo(() => {

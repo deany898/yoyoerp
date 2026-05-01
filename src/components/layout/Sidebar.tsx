@@ -26,7 +26,7 @@ import { useRole } from "@/hooks/useRole";
 import { Logo } from "@/components/brand/Logo";
 import { isRouteVisibleToRole } from "@/lib/role-nav";
 import { useAuth } from "@/hooks/useAuth";
-import { useDemo } from "@/hooks/useDemo";
+
 
 const ROLE_LABELS: Record<string, string> = {
   admin: "Administrator",
@@ -120,21 +120,13 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const { role } = useRole();
   const { user, displayName: authDisplayName, signOut } = useAuth();
-  const { isDemo, exitDemoMode } = useDemo();
   const navigate = useNavigate();
 
-  const displayName = isDemo
-    ? "Demo Admin"
-    : (authDisplayName ?? user?.email?.split("@")[0] ?? "Account");
+  const displayName = authDisplayName ?? user?.email?.split("@")[0] ?? "Account";
   const initial = displayName.trim().charAt(0).toUpperCase() || "U";
   const roleLabel = ROLE_LABELS[role] ?? role;
 
   const handleSignOut = async () => {
-    if (isDemo) {
-      await navigate({ to: "/" });
-      exitDemoMode();
-      return;
-    }
     await signOut();
     await navigate({ to: "/auth" });
   };
@@ -191,8 +183,8 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           <button
             type="button"
             onClick={handleSignOut}
-            aria-label={isDemo ? "Exit demo" : "Sign out"}
-            title={isDemo ? "Exit demo" : "Sign out"}
+            aria-label="Sign out"
+            title="Sign out"
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
           >
             <LogOut className="h-4 w-4" />

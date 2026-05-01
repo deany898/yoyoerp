@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useDemo } from "@/hooks/useDemo";
+import { toast as _toast } from "sonner";
 import { RequestStatus, MovementType } from "@/types/inventory";
 import type { InventoryRequest, Item, StockMovement } from "@/types/inventory";
 
@@ -61,7 +61,6 @@ function buildMovements(
 }
 
 export function useApprovalActions({ items }: { items: Item[] }) {
-  const { isDemo, demoStore, bumpVersion } = useDemo();
   const [dialog, setDialog] = useState<DialogType>(null);
   const [activeRequest, setActiveRequest] = useState<InventoryRequest | null>(null);
   const [declineReason, setDeclineReason] = useState("");
@@ -92,79 +91,21 @@ export function useApprovalActions({ items }: { items: Item[] }) {
   }
 
   function confirmApprove() {
-    if (!activeRequest || !isDemo || !demoStore) return;
-    const err = checkStock(activeRequest.items, itemMap);
-    if (err) { toast.error(err); return; }
-
-    const now = new Date().toISOString();
-    const movements = buildMovements(activeRequest);
-    setIsLoading(true);
-    try {
-      for (const m of movements) demoStore.createMovement(m);
-      demoStore.updateRequest(activeRequest.id, {
-        status: RequestStatus.Approved,
-        approvedBy: "demo-admin",
-        updatedAt: now,
-      });
-      bumpVersion();
-      toast.success(`${activeRequest.requestNumber} approved`);
-      setDialog(null);
-      setActiveRequest(null);
-    } finally {
-      setIsLoading(false);
-    }
+    toast.error("Inventory request workflow has not been migrated to the live backend yet.");
+    setDialog(null);
+    setActiveRequest(null);
   }
 
   function confirmDecline() {
-    if (!activeRequest || !declineReason.trim() || !isDemo || !demoStore) return;
-    const now = new Date().toISOString();
-    setIsLoading(true);
-    try {
-      demoStore.updateRequest(activeRequest.id, {
-        status: RequestStatus.Declined,
-        approvedBy: "demo-admin",
-        declineReason: declineReason.trim(),
-        updatedAt: now,
-      });
-      bumpVersion();
-      toast.success(`${activeRequest.requestNumber} declined`);
-      setDialog(null);
-      setActiveRequest(null);
-    } finally {
-      setIsLoading(false);
-    }
+    toast.error("Inventory request workflow has not been migrated to the live backend yet.");
+    setDialog(null);
+    setActiveRequest(null);
   }
 
   function confirmPartial() {
-    if (!activeRequest || !isDemo || !demoStore) return;
-    const allZero = activeRequest.items.every((li) => (partialQtys[li.id] ?? 0) === 0);
-    if (allZero) { toast.error("Approve at least one item quantity"); return; }
-
-    const err = checkStock(activeRequest.items, itemMap, partialQtys);
-    if (err) { toast.error(err); return; }
-
-    const allFull = activeRequest.items.every((li) => (partialQtys[li.id] ?? 0) >= li.quantity);
-    const newStatus = allFull ? RequestStatus.Approved : RequestStatus.PartiallyFulfilled;
-    const now = new Date().toISOString();
-    const movements = buildMovements(activeRequest, partialQtys);
-
-    setIsLoading(true);
-    try {
-      for (const m of movements) demoStore.createMovement(m);
-      demoStore.updateRequest(activeRequest.id, {
-        status: newStatus,
-        approvedBy: "demo-admin",
-        updatedAt: now,
-      });
-      bumpVersion();
-      toast.success(
-        `${activeRequest.requestNumber} ${allFull ? "approved" : "partially fulfilled"}`,
-      );
-      setDialog(null);
-      setActiveRequest(null);
-    } finally {
-      setIsLoading(false);
-    }
+    toast.error("Inventory request workflow has not been migrated to the live backend yet.");
+    setDialog(null);
+    setActiveRequest(null);
   }
 
   function renderDialogs() {
