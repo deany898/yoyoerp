@@ -22,7 +22,7 @@ const KINDS = [
 type Kind = (typeof KINDS)[number]["v"];
 
 const schema = z.object({
-  code: z.string().trim().min(1).max(20),
+  code: z.string().trim().max(20).optional().or(z.literal("")),
   name: z.string().trim().min(2).max(120),
   kind: z.enum(["raw_material","wip","finished_good","packaging","dispatch","quarantine","returns","other"]),
 });
@@ -55,7 +55,10 @@ export function ZoneFormDialog({ open, onOpenChange, warehouseId, zone, onSaved 
     if (!parsed.success) { toast.error(parsed.error.issues[0]?.message); return; }
     setBusy(true);
     try {
-      const payload = { warehouse_id: warehouseId, code: parsed.data.code.toUpperCase(), name: parsed.data.name, kind: parsed.data.kind };
+      const payload: { warehouse_id: string; name: string; kind: Kind; code?: string } = {
+        warehouse_id: warehouseId, name: parsed.data.name, kind: parsed.data.kind,
+      };
+      if (parsed.data.code) payload.code = parsed.data.code.toUpperCase();
       if (isEdit && zone) {
         const { error } = await supabase.from("warehouse_zones").update(payload).eq("id", zone.id);
         if (error) throw error;
