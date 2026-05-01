@@ -13,6 +13,7 @@ import { MobileLineCard } from "@/components/quick-order/MobileLineCard";
 import { QuickOrderCustomerCard } from "@/components/quick-order/QuickOrderCustomerCard";
 import { ProductSearchBox } from "@/components/quick-order/ProductSearchBox";
 import { StickyTotals } from "@/components/quick-order/StickyTotals";
+import type { ExtraCharge } from "@/components/quick-order/StickyTotals";
 import { uomFactor, type PickerVariant } from "@/components/quick-order/types";
 import { lineMath, loadTierPrices, resolvePrice, type TierPriceMap } from "@/lib/quick-order-pricing";
 import {
@@ -53,7 +54,7 @@ function QuickOrderPage() {
   const [orderNumber, setOrderNumber] = useState("");
   const [shippingAddress, setShippingAddress] = useState("");
   const [paymentTerms, setPaymentTerms] = useState("");
-  const [otherCharges, setOtherCharges] = useState(0);
+  const [extraCharges, setExtraCharges] = useState<ExtraCharge[]>([]);
   const [lines, setLines] = useState<DraftLine[]>([newLine()]);
   const [tierMap, setTierMap] = useState<TierPriceMap>({});
   const [stockMap, setStockMap] = useState<Record<string, number>>({});
@@ -241,9 +242,17 @@ function QuickOrderPage() {
       units += l.qty * factor;
     }
     const net = subtotal - discount;
-    const shipping = net > 5000 ? 0 : net > 0 ? 90 : 0;
-    return { subtotal, discount, tax, shipping, units, total: net + tax + shipping + (otherCharges || 0) };
-  }, [filled, otherCharges]);
+    const chargesTotal = extraCharges.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+    return {
+      subtotal,
+      discount,
+      tax,
+      shipping: 0,
+      units,
+      total: net + tax + chargesTotal,
+      chargesTotal,
+    };
+  }, [filled, extraCharges]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -308,7 +317,10 @@ function QuickOrderPage() {
       pricing_tier: tier,
       subtotal: totals.subtotal, discount_total: totals.discount,
       tax_total: totals.tax, freight_cost: totals.shipping,
-      grand_total: totals.total, packing_cost: 0, other_charges: otherCharges || 0,
+      grand_total: totals.total,
+      packing_cost: 0,
+      other_charges: totals.chargesTotal,
+      extra_charges: extraCharges,
     };
     const { data: ins, error: insErr } = await supabase
       .from("dispatch_orders").insert(header).select("id").single();
@@ -477,10 +489,12 @@ function QuickOrderPage() {
       </section>
 
       <StickyTotals
-        itemCount={filled.length} unitsTotal={totals.units}
-        subtotal={totals.subtotal} discount={totals.discount}
-        tax={totals.tax} shipping={totals.shipping} total={totals.total}
-        otherCharges={otherCharges} onOtherChargesChange={setOtherCharges}
+        total={totals.total}
+        charges={extraCharges}
+        onAddCharge={(label, amount) =>
+          setExtraCharges((prev) => [...prev, { id: crypto.randomUUID(), label, amount }])
+        }
+        onRemoveCharge={(id) => setExtraCharges((prev) => prev.filter((c) => c.id !== id))}
         saving={saving} canEdit={canEdit}
         onSubmit={() => submit(false)} onSaveDraft={() => submit(true)}
       />
