@@ -94,7 +94,7 @@ function MachineDetailPage() {
             </div>
             <p className="text-xs text-muted-foreground">
               <span className="font-mono">{machine?.code}</span>
-              {machine?.hourly_rate ? ` · ₹${Number(machine.hourly_rate).toFixed(2)}/hr` : ""}
+              {machine?.usage_volume ? ` · vol ${Number(machine.usage_volume).toFixed(2)}` : ""}
             </p>
           </div>
         </div>

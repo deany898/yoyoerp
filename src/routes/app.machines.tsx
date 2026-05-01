@@ -89,7 +89,7 @@ function MachinesPage() {
             </span>
           ),
         },
-        { key: "hourly_rate", label: "₹/hr", className: "font-mono text-right tabular-nums", render: (r) => Number(r.hourly_rate).toFixed(2) },
+        { key: "usage_volume", label: "Volume", className: "font-mono text-right tabular-nums", render: (r) => Number(r.usage_volume ?? 1).toFixed(2) },
         { key: "is_active", label: "", render: (r) => <Badge variant={r.is_active ? "secondary" : "outline"} className="text-[10px]">{r.is_active ? "Active" : "Inactive"}</Badge> },
       ]}
     />
