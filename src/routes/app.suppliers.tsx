@@ -8,6 +8,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Badge } from "@/components/ui/badge";
+import { ExportButton } from "@/components/shared/ExportButton";
 import { Vendor360Sheet } from "@/components/vendors/Vendor360Sheet";
 import { SupplierFormSheet } from "@/components/vendors/SupplierFormSheet";
 import {
@@ -99,11 +100,32 @@ function SuppliersPage() {
             {filtered.length} of {suppliers.length} vendors
           </p>
         </div>
-        {canManage && (
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="mr-1.5 h-4 w-4" /> New supplier
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ExportButton
+            filename="suppliers"
+            capability="suppliers.export"
+            rows={filtered as unknown as Record<string, unknown>[]}
+            columns={[
+              { key: "code", label: "Code" },
+              { key: "name", label: "Name" },
+              { key: "category", label: "Category", format: (v) => (v ? categoryLabel(v as VendorCategory) : "Other") },
+              { key: "contact_name", label: "Contact" },
+              { key: "phone", label: "Phone" },
+              { key: "email", label: "Email" },
+              { key: "city", label: "City" },
+              { key: "state", label: "State" },
+              { key: "gst_number", label: "GST" },
+              { key: "lead_time_days", label: "Lead time (days)" },
+              { key: "credit_days", label: "Credit (days)" },
+              { key: "is_active", label: "Active", format: (v) => (v ? "yes" : "no") },
+            ]}
+          />
+          {canManage && (
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="mr-1.5 h-4 w-4" /> New supplier
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
