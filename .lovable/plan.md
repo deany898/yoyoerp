@@ -1,87 +1,76 @@
-## Scope
+# Fix navigation freeze and snap
 
-Two deliverables, tackled in order:
+## Diagnosis
 
-1. **UOM editor** — real feature, blocks costing accuracy.
-2. **Targeted audit + fixes** — focused on issues that actually move the needle (route splitting, query waterfalls, layout shifts). Not a 200-page report.
+Confirmed by reading the code (no route loaders exist anywhere, no `pendingComponent` configured, `defaultPreload: "intent"` is on, master data is cached 5 min via React Query). The lag is **purely client-side mount cost**, not data fetching. Three root causes:
 
-I'm explicitly *not* doing security re-architecture, full re-skin, or CSS-rewrite passes — RLS is already correct on every table I checked, the design tokens are already wired, and big speculative refactors would risk regressions in the live ERP.
+1. **`PageTransition` cross-fade is keyed on `location.pathname`.** It runs `initial: opacity 0 → animate: opacity 1` (120 ms) every navigation. Because the previous page does not exit, what the user sees is: click link → previous page stays on screen while React mounts the new tree (typically 80–350 ms for table-heavy routes like Inventory/Customers/Products) → new tree appears at opacity 0 → fades up. That gap with the *old page still showing* is what reads as "freeze," and the fade-in at the end is the "snap."
+2. **No skeleton/placeholder for the swap.** There is nothing rendered between the click and the new page's first paint — nothing tells the eye "we're moving."
+3. **Console error `Cannot read properties of undefined (reading '_nonReactive')` inside `router.preloadRoute`.** This is a TanStack preload crash during intent preloading. Because preloading silently throws, hovered links never warm up — every navigation is cold. This makes the freeze worse than it should be.
 
----
+Bonus: `app.tsx` returns a full-screen spinner whenever `authLoading || !user`, which can also cause a brief whole-layout flash on certain re-renders.
 
-## Part 1 · UOM editor
+## Changes
 
-The `uoms` table is already live (PK = `code`, columns: `label`, `factor`, `base_uom`, `is_active`, RLS = manager/admin write, staff read). It's just not editable from the UI yet.
+### 1. Replace `PageTransition` with an instant cross-fade (no zero-opacity start)
 
-**Build:**
+Drop the fade-in-from-zero. Use a near-instant micro-fade on the new tree so the transition looks smooth without holding the new page invisible.
 
-- New `src/components/settings/UomManager.tsx`:
-  - Sortable, searchable table (code · label · factor · base UOM · active toggle · row actions).
-  - Inline-edit row (label/factor/base_uom).
-  - "Add UOM" button → dialog (code, label, factor, base_uom, active).
-  - Delete with guard: blocks delete if the code is referenced in `bom_lines.uom`, `dispatch_order_lines.uom`, `vendor_quotes.uom`, or `product_packaging`. Falls back to "Deactivate" with one-click.
-  - Toast feedback, optimistic update, error rollback.
-- New tab "UOM" in `src/routes/app.settings.tsx`.
-- Reuse the existing `useUoms()` hook; add `upsertUom`, `deleteUom`, `toggleActive` helpers.
+- File: `src/components/shared/PageTransition.tsx`
+- Change `initial` from `{ opacity: 0 }` to `{ opacity: 0.85 }` and shorten duration to ~80 ms with `ease: "linear"`.
+- Remove the `min-h-[60vh]` (it can cause layout jump when content is short).
+- Wrap in `<React.Suspense>` boundary so any lazy chunks render their fallback instead of blocking.
 
-**Seed data** — load your CSV's 16 rows on first save if the table has < 5 rows (idempotent UPSERT migration). I'll merge the duplicate `Gross` rows into one canonical entry (`Gross → 144 unit`) plus add `gross_set → 72 set` as a separate code, since SQL PK can't store two rows with the same code.
+### 2. Add an instant route-change indicator (top progress bar)
 
-**Where it shows up** — Settings → UOM tab. Permission = `admin` or `manager` (matches table RLS).
+Render a thin indeterminate progress bar at the top of `<main>` while the router is in `pending` state. This gives immediate feedback within ~16 ms of the click, killing the "did it click?" feeling.
 
----
+- New file: `src/components/shared/RouteProgressBar.tsx` — uses `useRouterState({ select: (s) => s.isLoading })` from `@tanstack/react-router` to show a 2 px top bar with a CSS-only sliding gradient. No external dep needed.
+- Mount it inside `<main>` in `src/routes/app.tsx` above `<PageTransition>`.
 
-## Part 2 · Targeted performance + UX audit
+### 3. Add a lightweight skeleton during the React mount gap
 
-I'll focus on issues with measurable user-visible impact.
+Wrap `<Outlet />` in a `<Suspense fallback={<RouteSkeleton />}>`. Even though no routes are explicitly lazy, this catches future code-splitting and ensures a graceful fallback. The skeleton is a simple 3-block shimmer matching the typical page header + table layout.
 
-### A. Route-level code splitting (real win)
+- New file: `src/components/shared/RouteSkeleton.tsx` (uses existing `Skeleton` from `@/components/ui/skeleton`).
+- Used inside `app.tsx`.
 
-Currently every `app.*.tsx` route imports its full component tree at the top. TanStack's `autoCodeSplitting` already splits the `component` field out — **but only when components aren't exported**. I'll spot-check the 5 heaviest routes (manufacturing, products, dispatch-orders, work-logs, settings) and verify nothing leaks into the critical bundle. Fix any `export function` that should be a local function.
+### 4. Configure router default pending UX
 
-### B. Page-load waterfalls (real win)
+In `src/router.tsx`, set:
+- `defaultPendingMs: 100` — show pending state quickly instead of the 1-second default.
+- `defaultPendingMinMs: 200` — keep it on screen briefly so it doesn't flicker.
+- `defaultPendingComponent: RouteSkeleton`.
 
-Quick Order page does 5 sequential-looking parallel `Promise.all` calls — fine. But several routes (e.g. `app.products.tsx`, `app.suppliers.tsx`) likely fetch on mount with no skeleton, causing the "jumping UI" the user reports. I'll:
+This is forward-compat for any route we later give a loader.
 
-- Add **skeleton loaders with reserved height** to the top 5 list/table pages so layout doesn't shift.
-- Wrap the main content area's `AnimatePresence` transition with a `min-h` reservation so the page doesn't collapse to 0px between routes (this is the #1 cause of the "flashing" feeling).
+### 5. Stop the preload crash (`_nonReactive` error)
 
-### C. Sidebar / navigation responsiveness
+The error fires from `router.preloadRoute` and aborts intent preloading. The safest fix without chasing the internal TanStack bug:
 
-Verify `defaultPreload: "intent"` is firing (it's set in `router.tsx`). Add `preload="intent"` explicitly on the sidebar `<Link>`s if it isn't being inherited. Should make hovered modules feel instant.
+- In `src/router.tsx`, change `defaultPreload: "intent"` → `defaultPreload: false` and remove `defaultPreloadDelay` / `defaultPreloadStaleTime`.
+- Re-enable preloading **explicitly per-link** on the Sidebar items by adding `preload="intent"` to each `<Link>` in `src/components/layout/Sidebar.tsx` and `src/components/layout/BottomNav.tsx`. This narrows preload surface and avoids the crash that gets triggered by edge-case routes (likely the dynamic `app.machines.$id` / `app.workers.$id` / `app.manufacturing.$moId` ones the global preload trips on).
+- Wrap the whole call site in a try/catch is not needed because we are scoping which links preload.
 
-### D. What I will NOT touch
+### 6. Keep auth-loading from flashing the layout
 
-- RLS policies — every audited table has correct `is_staff` / `has_role` policies.
-- Auth flow — already wired, redirect-on-role works after the recent fix.
-- Tailwind tokens / design system — already consistent.
-- Bundle splitting beyond route-level — diminishing returns and regression risk.
+In `src/routes/app.tsx`, keep the spinner only on the very first auth resolution. After `user` is set, never fall back to the spinner branch on subsequent renders.
 
-### E. Deliverable for Part 2
-
-After implementing the fixes, a **short** written audit report (~1 page) listing:
-
-- What I actually changed and the expected user-visible impact.
-- What I checked and is already fine.
-- Anything that's a real issue but needs your decision before I touch it (e.g. "manufacturing page makes 8 separate queries — want me to consolidate via a server function?").
-
-No giant 200-row table of fake findings.
-
----
+- Track a `hasResolvedOnceRef = useRef(false)`; once `!authLoading && user`, set it true. Render the spinner only when `!hasResolvedOnceRef.current && (authLoading || !user)`.
 
 ## Files
 
-**Created**
-- `src/components/settings/UomManager.tsx`
-- `supabase/migrations/<ts>_seed_uoms.sql` (idempotent seed)
+Created:
+- `src/components/shared/RouteProgressBar.tsx`
+- `src/components/shared/RouteSkeleton.tsx`
 
-**Edited**
-- `src/routes/app.settings.tsx` (add UOM tab)
-- `src/hooks/useErpData.ts` (extend `useUoms` with mutations)
-- `src/routes/app.tsx` (reserve `<main>` min-height to stop layout jump between routes)
-- `src/components/layout/Sidebar.tsx` (explicit preload on nav links if missing)
-- 2-4 list-page route files (skeleton loaders) — exact list confirmed during implementation
+Edited:
+- `src/components/shared/PageTransition.tsx`
+- `src/router.tsx`
+- `src/routes/app.tsx`
+- `src/components/layout/Sidebar.tsx` (per-link `preload="intent"`)
+- `src/components/layout/BottomNav.tsx` (per-link `preload="intent"`)
 
-## Estimated turn count
-1 turn for Part 1 + seed migration (need your approval for migration), 1 turn for Part 2 fixes + audit summary.
+## Expected result
 
-Ready to go on approval.
+Click a sidebar item → top progress bar appears within one frame → previous page stays for ≤80 ms → new page paints at 85 % opacity and finishes to 100 % in 80 ms. No more empty pause, no more pop-in. Preload crash gone, so frequently used pages load instantly on hover.
