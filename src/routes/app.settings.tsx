@@ -14,6 +14,7 @@ import { PermissionMatrix } from "@/components/settings/PermissionMatrix";
 import { ModuleToggles } from "@/components/settings/ModuleToggles";
 import { FormBuilderPanel } from "@/components/settings/FormBuilderPanel";
 import { ComplexityPresets } from "@/components/settings/ComplexityPresets";
+import { UomManager } from "@/components/settings/UomManager";
 import { Shield } from "lucide-react";
 
 export const Route = createFileRoute("/app/settings")({
@@ -57,6 +58,7 @@ function SettingsPage() {
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="custom-fields">Custom Fields</TabsTrigger>
           <TabsTrigger value="locations">Locations</TabsTrigger>
+          <TabsTrigger value="uom">UOM</TabsTrigger>
           <TabsTrigger value="reorder-defaults">Reorder Defaults</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="permissions">Permissions</TabsTrigger>
@@ -81,6 +83,9 @@ function SettingsPage() {
           </TabsContent>
           <TabsContent value="locations">
             <ErrorBoundary><LocationSettings /></ErrorBoundary>
+          </TabsContent>
+          <TabsContent value="uom">
+            <ErrorBoundary><UomManager /></ErrorBoundary>
           </TabsContent>
           <TabsContent value="reorder-defaults">
             <ErrorBoundary><ReorderDefaults /></ErrorBoundary>

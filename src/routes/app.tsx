@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { AnimatePresence } from "framer-motion";
+// AnimatePresence removed: the wait-mode exit fade was the main source of
+// perceived nav lag; PageTransition now cross-fades in place without it.
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -76,11 +77,9 @@ function AppLayout() {
             <Header />
           </div>
           <main className="flex-1 overflow-y-auto p-3 pb-24 md:p-8 md:pb-8">
-            <AnimatePresence mode="wait">
-              <PageTransition routeKey={location.pathname}>
-                <Outlet />
-              </PageTransition>
-            </AnimatePresence>
+            <PageTransition routeKey={location.pathname}>
+              <Outlet />
+            </PageTransition>
           </main>
         </div>
       </div>

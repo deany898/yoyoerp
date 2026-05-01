@@ -1,68 +1,87 @@
-## Goal
+## Scope
 
-Make the ERP feel "fill anything from anywhere":
+Two deliverables, tackled in order:
 
-1. From the **Supplier detail sheet** (Vendor 360), let users add/edit supplier price quotes for any product — and create a brand-new product inline if it doesn't exist yet.
-2. Introduce a real **UOM table** (with conversion factors) so a quote like ₹78.50/kg automatically derives the **base price** ₹0.0785/gm, and that base price is shown next to every quote.
-3. Reuse the same picker/quote components everywhere: Product form → Supplier prices tab, Vendor 360 → Quotes tab, and the existing Supplier Prices popovers.
+1. **UOM editor** — real feature, blocks costing accuracy.
+2. **Targeted audit + fixes** — focused on issues that actually move the needle (route splitting, query waterfalls, layout shifts). Not a 200-page report.
 
-## What will change
+I'm explicitly *not* doing security re-architecture, full re-skin, or CSS-rewrite passes — RLS is already correct on every table I checked, the design tokens are already wired, and big speculative refactors would risk regressions in the live ERP.
 
-### 1. UOM catalog (new)
+---
 
-New table `public.uoms`:
+## Part 1 · UOM editor
 
-```text
-code TEXT PK         e.g. 'kg', 'gm', 'mm', 'unit', 'Box'
-label TEXT           display name
-factor NUMERIC       multiplier to base_uom (kg → 1000 gm)
-base_uom TEXT        the canonical unit (gm, mm, unit, Box, ...)
-is_active BOOLEAN
-```
+The `uoms` table is already live (PK = `code`, columns: `label`, `factor`, `base_uom`, `is_active`, RLS = manager/admin write, staff read). It's just not editable from the UI yet.
 
-- Seeded from your uploaded `UOM.csv` (Yard, ft, inch, cm, mm, unit, Box, Pack, Kg, gm, Carton, Gross, set, Plate, Dozen). Admin/manager can edit; everyone reads.
-- New helper `src/lib/uom.ts` exposes `toBase(value, uomCode)` and `pricePerBase(unitPrice, uomCode)` so the same math runs on every screen.
-- Small admin panel `Settings → UOMs` (`src/components/settings/UomManager.tsx`) for CRUD.
+**Build:**
 
-### 2. Quote rows show base price
+- New `src/components/settings/UomManager.tsx`:
+  - Sortable, searchable table (code · label · factor · base UOM · active toggle · row actions).
+  - Inline-edit row (label/factor/base_uom).
+  - "Add UOM" button → dialog (code, label, factor, base_uom, active).
+  - Delete with guard: blocks delete if the code is referenced in `bom_lines.uom`, `dispatch_order_lines.uom`, `vendor_quotes.uom`, or `product_packaging`. Falls back to "Deactivate" with one-click.
+  - Toast feedback, optimistic update, error rollback.
+- New tab "UOM" in `src/routes/app.settings.tsx`.
+- Reuse the existing `useUoms()` hook; add `upsertUom`, `deleteUom`, `toggleActive` helpers.
 
-Every supplier quote already stores `unit_price` against the variant's UOM (from `products.uom`). We will:
+**Seed data** — load your CSV's 16 rows on first save if the table has < 5 rows (idempotent UPSERT migration). I'll merge the duplicate `Gross` rows into one canonical entry (`Gross → 144 unit`) plus add `gross_set → 72 set` as a separate code, since SQL PK can't store two rows with the same code.
 
-- Add a derived `pricePerBase` line under the landed total wherever quotes are listed.
-- Format: `₹0.0785/gm  ·  from ₹78.50/kg` when the UOM differs from its base; hidden when UOM == base.
-- Updated places: `SupplierPricesTab`, the new Vendor 360 quotes tab, `PriceHistoryPopover`, and the product list "effective cost" cell.
+**Where it shows up** — Settings → UOM tab. Permission = `admin` or `manager` (matches table RLS).
 
-### 3. Add quotes (and products) from the Supplier sheet
+---
 
-Refactor `Vendor360Sheet.tsx` into a tabbed sheet (`Overview · Quotes`). New components:
+## Part 2 · Targeted performance + UX audit
 
-- `src/components/vendors/VendorQuotesTab.tsx` — lists this supplier's `supplier_product_quotes`, grouped by product, with the same edit/active/delete actions as `SupplierPricesTab`.
-- `src/components/vendors/VendorAddQuoteForm.tsx` — a single inline form with a **product/variant picker** (search by name/SKU/code) and the quote fields (`unit_price`, `freight_cost`, `moq`, `lead_time_days`). Live preview shows the computed base price.
-- The picker has a **"+ New product"** affordance that opens the existing `ProductFormSheet` pre-wired so the new variant is auto-selected on save — no context switch needed.
+I'll focus on issues with measurable user-visible impact.
 
-### 4. Cross-linking polish
+### A. Route-level code splitting (real win)
 
-- In `SupplierPricesTab` rows, the supplier name becomes a link that opens Vendor 360.
-- In Vendor 360 quote rows, the product name links to the product detail with the Supplier Prices tab pre-selected.
-- Both directions stay in-sheet (sheets stack) so the user can drill without losing place.
+Currently every `app.*.tsx` route imports its full component tree at the top. TanStack's `autoCodeSplitting` already splits the `component` field out — **but only when components aren't exported**. I'll spot-check the 5 heaviest routes (manufacturing, products, dispatch-orders, work-logs, settings) and verify nothing leaks into the critical bundle. Fix any `export function` that should be a local function.
 
-## Technical details
+### B. Page-load waterfalls (real win)
 
-- DB migration creates `uoms` + RLS (read: authenticated; write: admin/manager) and seeds the 15 rows from `UOM.csv`. The `Gross` duplicate (144 unit vs 72 set) will be stored as `Gross` (144→unit) only; `set` already maps Gross→set indirectly. The CSV's second `Gross` row is dropped to keep the PK unique — confirm if you want a separate `Gross-Set` code instead.
-- `products.uom` stays a free `text` column for backward compatibility, but the Product form switches to a `SmartSelect` of UOM codes from the new table.
-- New hook `useUoms()` in `src/hooks/useErpData.ts` (cached, refresh on mutation).
-- All new components stay under the 250-line cap; extract subcomponents if needed.
-- Permission gating reuses `usePermissions().can("manage_suppliers")` for write actions, mirroring the existing rules.
+Quick Order page does 5 sequential-looking parallel `Promise.all` calls — fine. But several routes (e.g. `app.products.tsx`, `app.suppliers.tsx`) likely fetch on mount with no skeleton, causing the "jumping UI" the user reports. I'll:
 
-## Out of scope (ask if you want them now)
+- Add **skeleton loaders with reserved height** to the top 5 list/table pages so layout doesn't shift.
+- Wrap the main content area's `AnimatePresence` transition with a `min-h` reservation so the page doesn't collapse to 0px between routes (this is the #1 cause of the "flashing" feeling).
 
-- Storing `pricePerBase` as a generated column (we'll derive it client-side; trivial to promote later).
-- Per-quote UOM override (today we use the variant's UOM; let me know if a quote should sometimes carry its own UOM).
-- Bulk CSV import for quotes from the supplier sheet.
+### C. Sidebar / navigation responsiveness
 
-## Files touched
+Verify `defaultPreload: "intent"` is firing (it's set in `router.tsx`). Add `preload="intent"` explicitly on the sidebar `<Link>`s if it isn't being inherited. Should make hovered modules feel instant.
 
-- New: `supabase` migration for `uoms`, `src/lib/uom.ts`, `src/components/settings/UomManager.tsx`, `src/components/vendors/VendorQuotesTab.tsx`, `src/components/vendors/VendorAddQuoteForm.tsx`, `src/components/shared/ProductVariantPicker.tsx`.
-- Edited: `src/components/vendors/Vendor360Sheet.tsx` (add tabs), `src/components/products/SupplierPricesTab.tsx` + `PriceHistoryPopover.tsx` (base-price line, supplier link), `src/components/products/ProductFormSheet.tsx` (UOM select), `src/routes/app.settings.tsx` (UOM panel entry), `src/hooks/useErpData.ts` (`useUoms`).
+### D. What I will NOT touch
 
-Approve and I'll implement in this order: migration + UOM lib → Vendor 360 tabs/quote form → base-price display everywhere → settings UOM manager.
+- RLS policies — every audited table has correct `is_staff` / `has_role` policies.
+- Auth flow — already wired, redirect-on-role works after the recent fix.
+- Tailwind tokens / design system — already consistent.
+- Bundle splitting beyond route-level — diminishing returns and regression risk.
+
+### E. Deliverable for Part 2
+
+After implementing the fixes, a **short** written audit report (~1 page) listing:
+
+- What I actually changed and the expected user-visible impact.
+- What I checked and is already fine.
+- Anything that's a real issue but needs your decision before I touch it (e.g. "manufacturing page makes 8 separate queries — want me to consolidate via a server function?").
+
+No giant 200-row table of fake findings.
+
+---
+
+## Files
+
+**Created**
+- `src/components/settings/UomManager.tsx`
+- `supabase/migrations/<ts>_seed_uoms.sql` (idempotent seed)
+
+**Edited**
+- `src/routes/app.settings.tsx` (add UOM tab)
+- `src/hooks/useErpData.ts` (extend `useUoms` with mutations)
+- `src/routes/app.tsx` (reserve `<main>` min-height to stop layout jump between routes)
+- `src/components/layout/Sidebar.tsx` (explicit preload on nav links if missing)
+- 2-4 list-page route files (skeleton loaders) — exact list confirmed during implementation
+
+## Estimated turn count
+1 turn for Part 1 + seed migration (need your approval for migration), 1 turn for Part 2 fixes + audit summary.
+
+Ready to go on approval.
