@@ -11,6 +11,7 @@ import { SmartSelect } from "@/components/forms/SmartSelect";
 import { TableSkeleton } from "@/components/shared/skeletons";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useProducts, useCategories, type ProductWithVariants } from "@/hooks/useErpData";
+import { useRole } from "@/hooks/useRole";
 import { ExportButton } from "@/components/shared/ExportButton";
 import { ImportButton } from "@/components/shared/ImportButton";
 import { ProductFormSheet } from "@/components/products/ProductFormSheet";
@@ -45,6 +46,8 @@ function ProductsPage() {
   const { products, loading, refresh } = useProducts();
   const { categories } = useCategories();
   const { can } = usePermissions();
+  const { role } = useRole();
+  const isAdmin = role === "admin";
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [formOpen, setFormOpen] = useState(false);
@@ -164,7 +167,7 @@ function ProductsPage() {
               <ProductCard
                 key={p.id}
                 product={p}
-                showCost={can("edit_item")}
+                showCost={isAdmin}
                 onClick={() => can("edit_item") && openEdit(p)}
               />
             ))}

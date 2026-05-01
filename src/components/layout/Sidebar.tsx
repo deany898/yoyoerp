@@ -88,10 +88,9 @@ const navGroups: NavGroup[] = [
   {
     label: "Manufacturing",
     items: [
-      { label: "Stages", href: "/app/stages", icon: Layers },
       { label: "Machines", href: "/app/machines", icon: Cpu },
       { label: "Moulds", href: "/app/moulds", icon: Hammer },
-      { label: "Workers", href: "/app/workers", icon: HardHat },
+      { label: "Team", href: "/app/workers", icon: HardHat },
       { label: "Work logs", href: "/app/work-logs", icon: ClipboardCheck },
     ],
   },
@@ -100,7 +99,6 @@ const navGroups: NavGroup[] = [
     items: [
       { label: "Customers", href: "/app/customers", icon: Users },
       { label: "Suppliers", href: "/app/suppliers", icon: Truck },
-      { label: "Workers", href: "/app/workers", icon: HardHat },
     ],
   },
   {
