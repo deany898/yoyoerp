@@ -187,17 +187,37 @@ function AuthPage() {
 
                 <TabsContent value="signin" className="space-y-4">
                   <form onSubmit={handleSignIn} className="space-y-4">
-                    <AuthIconInput
-                      id="signin-email"
-                      label="Email"
-                      icon={Mail}
-                      type="email"
-                      autoComplete="email"
-                      placeholder="you@company.com"
-                      value={signinEmail}
-                      onChange={(e) => setSigninEmail(e.target.value)}
-                      required
-                    />
+                    <div className="space-y-1.5">
+                      <AuthIconInput
+                        id="signin-email"
+                        label="Email, username, or mobile"
+                        icon={AtSign}
+                        type="text"
+                        autoComplete="username"
+                        placeholder="you@company.com · username · 9876543210"
+                        value={signinEmail}
+                        onChange={(e) => setSigninEmail(e.target.value)}
+                        required
+                      />
+                      {/^[+\d\s-]+$/.test(signinEmail.trim()) && signinEmail.trim().length > 0 && (
+                        <div className="flex items-center gap-2 pt-1">
+                          <span className="text-[11px] text-muted-foreground">Mobile country</span>
+                          <select
+                            aria-label="Mobile country code"
+                            value={signinCountry}
+                            onChange={(e) => setSigninCountry(e.target.value)}
+                            className="h-7 rounded-md border border-input bg-background px-2 text-xs"
+                          >
+                            {/* Dynamically populate */}
+                            {Array.from(new Map(
+                              (await import("@/lib/country-codes")).COUNTRY_CODES.map((c) => [c.iso, c]),
+                            ).values()).map((c) => (
+                              <option key={c.iso} value={c.iso}>{c.flag} +{c.code} {c.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
                     <AuthIconInput
                       id="signin-password"
                       label="Password"
