@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Check, X, Trash2, Loader2 } from "lucide-react";
+import { Plus, Check, X, Trash2, Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { SmartSelect } from "@/components/forms/SmartSelect";
 import { useSuppliers } from "@/hooks/useErpData";
+import { PriceHistoryPopover } from "./PriceHistoryPopover";
 
 interface QuoteRow {
   id: string;
@@ -99,6 +100,43 @@ export function SupplierPricesTab({ variantId }: Props) {
     const { error } = await supabase.from("supplier_product_quotes").delete().eq("id", q.id);
     if (error) return toast.error("Delete failed");
     toast.success("Deleted");
+    void load();
+  };
+
+  // Inline edit state for the price field
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editPrice, setEditPrice] = useState<string>("");
+
+  const startEdit = (q: QuoteRow) => {
+    setEditingId(q.id);
+    setEditPrice(String(q.unit_price));
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditPrice("");
+  };
+
+  const saveEdit = async (q: QuoteRow) => {
+    const next = Number(editPrice);
+    if (!Number.isFinite(next) || next < 0) {
+      toast.error("Enter a valid price");
+      return;
+    }
+    if (next === Number(q.unit_price)) {
+      cancelEdit();
+      return;
+    }
+    const { error } = await supabase
+      .from("supplier_product_quotes")
+      .update({ unit_price: next })
+      .eq("id", q.id);
+    if (error) {
+      toast.error("Update failed", { description: error.message });
+      return;
+    }
+    toast.success("Price updated · history logged");
+    cancelEdit();
     void load();
   };
 
