@@ -1,76 +1,95 @@
-# Fix navigation freeze and snap
+# Fix: logout broken + role silently downgraded to "worker"
 
-## Diagnosis
+## Diagnosis (verified in code)
 
-Confirmed by reading the code (no route loaders exist anywhere, no `pendingComponent` configured, `defaultPreload: "intent"` is on, master data is cached 5 min via React Query). The lag is **purely client-side mount cost**, not data fetching. Three root causes:
+Two real bugs, one shared root cause: the app treats "roles not yet loaded" identically to "user has no role," and silently falls back to `"worker"`.
 
-1. **`PageTransition` cross-fade is keyed on `location.pathname`.** It runs `initial: opacity 0 → animate: opacity 1` (120 ms) every navigation. Because the previous page does not exit, what the user sees is: click link → previous page stays on screen while React mounts the new tree (typically 80–350 ms for table-heavy routes like Inventory/Customers/Products) → new tree appears at opacity 0 → fades up. That gap with the *old page still showing* is what reads as "freeze," and the fade-in at the end is the "snap."
-2. **No skeleton/placeholder for the swap.** There is nothing rendered between the click and the new page's first paint — nothing tells the eye "we're moving."
-3. **Console error `Cannot read properties of undefined (reading '_nonReactive')` inside `router.preloadRoute`.** This is a TanStack preload crash during intent preloading. Because preloading silently throws, hovered links never warm up — every navigation is cold. This makes the freeze worse than it should be.
+### Bug 1 · Role flips to worker
 
-Bonus: `app.tsx` returns a full-screen spinner whenever `authLoading || !user`, which can also cause a brief whole-layout flash on certain re-renders.
+`src/contexts/RoleContext.tsx` line 35:
+```ts
+const realRole = ROLE_PRIORITY.find((r) => authRoles.includes(r)) ?? "worker";
+```
+- `authRoles` is `[]` for the entire window between `user` being set and the `user_roles` query resolving (deferred via `setTimeout`).
+- During that window every user — admin included — is rendered as `worker`.
+- If the `user_roles` query ever fails (network blip, RLS edge case, deleted assignment), the user is **stuck** as worker forever with no error surfaced.
+- Sidebar then hides admin items, route guard kicks them off admin pages → "my role changed to worker."
 
-## Changes
+### Bug 2 · Logout broken
 
-### 1. Replace `PageTransition` with an instant cross-fade (no zero-opacity start)
+`src/contexts/AuthContext.tsx` `signOut()`:
+- Calls `supabase.auth.signOut()` only — no navigation, no error surfacing, no clearing of in-memory state if Supabase rejects.
+- After it resolves, `onAuthStateChange` fires → `user = null` → `roles = []` → `realRole` falls back to `worker`.
+- `src/routes/app.tsx` has TWO `useEffect`s that race:
+  1. role-guard: sees role=worker on `/app/customers`, fires `toast.error("You don't have permission")` and navigates to `/app/dashboard`.
+  2. auth-guard: sees `!user`, navigates to `/auth`.
+- Whichever wins, the user sees a confusing error toast and often lands back inside `/app` instead of on `/auth`. With the `hasResolvedOnceRef` pin we added last turn, the spinner never re-shows either, so the screen visually "doesn't change" → "logout is not working."
 
-Drop the fade-in-from-zero. Use a near-instant micro-fade on the new tree so the transition looks smooth without holding the new page invisible.
+There's also no logout button in the mobile `BottomNav` / mobile menu — only the desktop Sidebar has it. On mobile it genuinely cannot be triggered.
 
-- File: `src/components/shared/PageTransition.tsx`
-- Change `initial` from `{ opacity: 0 }` to `{ opacity: 0.85 }` and shorten duration to ~80 ms with `ease: "linear"`.
-- Remove the `min-h-[60vh]` (it can cause layout jump when content is short).
-- Wrap in `<React.Suspense>` boundary so any lazy chunks render their fallback instead of blocking.
+## Fixes
 
-### 2. Add an instant route-change indicator (top progress bar)
+### 1. AuthContext: track role-loading state and surface failures
 
-Render a thin indeterminate progress bar at the top of `<main>` while the router is in `pending` state. This gives immediate feedback within ~16 ms of the click, killing the "did it click?" feeling.
+`src/contexts/AuthContext.tsx`
+- Add `rolesLoading: boolean` to `AuthContextValue`. Set true while the profiles+roles query is in flight, false on success **and** on error.
+- Add `rolesError: string | null` for diagnostics.
+- Stop using `setTimeout(..., 0)` — it just defers without solving anything; call the query directly inside the effect (still cancellable).
+- Wrap the queries in try/catch; on error, log + set `rolesError`, but never silently leave `roles` as `[]` forever — keep the previous value if there was one.
+- Make `signOut()`:
+  - clear local state synchronously (`setUser(null)`, `setSession(null)`, `setRoles([])`, `setDisplayName(null)`) BEFORE awaiting Supabase, so UI flips immediately;
+  - call `await supabase.auth.signOut({ scope: "local" })` and surface errors via thrown exception so callers can toast;
+  - return after a hard `window.location.assign("/auth")` fallback if the SPA navigation didn't fire within 300 ms (belt-and-suspenders for stuck sessions).
 
-- New file: `src/components/shared/RouteProgressBar.tsx` — uses `useRouterState({ select: (s) => s.isLoading })` from `@tanstack/react-router` to show a 2 px top bar with a CSS-only sliding gradient. No external dep needed.
-- Mount it inside `<main>` in `src/routes/app.tsx` above `<PageTransition>`.
+### 2. RoleContext: do NOT default to worker while loading
 
-### 3. Add a lightweight skeleton during the React mount gap
+`src/contexts/RoleContext.tsx`
+- Pull `rolesLoading` from `useAuth()`.
+- Add `rolesLoading` to `RoleContextValue`.
+- When `rolesLoading` is true OR `authRoles` is empty AND user exists, expose `role` as a special `"unknown"` sentinel (we'll add it to the `UserRoleType` union as a non-routable internal value) and `rolesLoading: true`.
+- Components that need to render based on role (Sidebar, BottomNav, route guard) will skip work while `rolesLoading`.
+- Only when roles really resolve to `[]` after the query finishes do we fall back — and we fall back to `"customer"` (least-privileged real role) instead of `"worker"`, since `worker` has stock-movement write permissions and silently granting those is unsafe. Surface a toast: "No role assigned, contact admin."
 
-Wrap `<Outlet />` in a `<Suspense fallback={<RouteSkeleton />}>`. Even though no routes are explicitly lazy, this catches future code-splitting and ensures a graceful fallback. The skeleton is a simple 3-block shimmer matching the typical page header + table layout.
+### 3. App layout: gate guards on rolesLoading and stop racing logout
 
-- New file: `src/components/shared/RouteSkeleton.tsx` (uses existing `Skeleton` from `@/components/ui/skeleton`).
-- Used inside `app.tsx`.
+`src/routes/app.tsx`
+- Read `rolesLoading` from auth.
+- The role-guard `useEffect` must early-return when `rolesLoading || !user`.
+- The auth-guard runs first; once `!user`, immediately `navigate({ to: "/auth", replace: true })` and `return` — do not run any other effects on this render.
+- Remove the `hasResolvedOnceRef` shortcut for the **logged-out** case: when `user` becomes null after having been logged in, we need to actually show the spinner briefly while we navigate, not keep showing the stale app behind it. Keep the ref only for the initial-mount flash prevention.
+- Wrap the layout in a small `if (!user) return <RedirectingSpinner />;` once auth has resolved at least once and user is null. This guarantees no stale page renders during logout.
 
-### 4. Configure router default pending UX
+### 4. Sidebar + BottomNav: visible logout, single source of truth
 
-In `src/router.tsx`, set:
-- `defaultPendingMs: 100` — show pending state quickly instead of the 1-second default.
-- `defaultPendingMinMs: 200` — keep it on screen briefly so it doesn't flicker.
-- `defaultPendingComponent: RouteSkeleton`.
+`src/components/layout/Sidebar.tsx`
+- `handleSignOut` already navigates to `/auth`, but wrap in try/catch and toast errors; also `await navigate({ to: "/auth", replace: true })` (replace, so back button doesn't re-enter).
+- Show the sign-out button always, including for `customer` role.
 
-This is forward-compat for any route we later give a loader.
+`src/components/layout/BottomNav.tsx`
+- The "Menu" slot opens the Sidebar in a Sheet — already wired. Verify the sign-out button inside the sheet works. No extra slot needed (5 is already maxed).
 
-### 5. Stop the preload crash (`_nonReactive` error)
+`src/components/layout/Header.tsx` (verify)
+- If there's a profile/avatar dropdown, ensure it has a "Sign out" item that calls the same hook; if it doesn't have one yet, add it.
 
-The error fires from `router.preloadRoute` and aborts intent preloading. The safest fix without chasing the internal TanStack bug:
+### 5. Defensive: clear React Query cache on sign-out
 
-- In `src/router.tsx`, change `defaultPreload: "intent"` → `defaultPreload: false` and remove `defaultPreloadDelay` / `defaultPreloadStaleTime`.
-- Re-enable preloading **explicitly per-link** on the Sidebar items by adding `preload="intent"` to each `<Link>` in `src/components/layout/Sidebar.tsx` and `src/components/layout/BottomNav.tsx`. This narrows preload surface and avoids the crash that gets triggered by edge-case routes (likely the dynamic `app.machines.$id` / `app.workers.$id` / `app.manufacturing.$moId` ones the global preload trips on).
-- Wrap the whole call site in a try/catch is not needed because we are scoping which links preload.
-
-### 6. Keep auth-loading from flashing the layout
-
-In `src/routes/app.tsx`, keep the spinner only on the very first auth resolution. After `user` is set, never fall back to the spinner branch on subsequent renders.
-
-- Track a `hasResolvedOnceRef = useRef(false)`; once `!authLoading && user`, set it true. Render the spinner only when `!hasResolvedOnceRef.current && (authLoading || !user)`.
+In `signOut()`, also call `queryClient.clear()` (import the singleton) so cached master data and per-user data from the previous user is wiped before the next login. Otherwise the next user briefly sees the previous user's products/customers cached for 5 min.
 
 ## Files
 
-Created:
-- `src/components/shared/RouteProgressBar.tsx`
-- `src/components/shared/RouteSkeleton.tsx`
-
 Edited:
-- `src/components/shared/PageTransition.tsx`
-- `src/router.tsx`
-- `src/routes/app.tsx`
-- `src/components/layout/Sidebar.tsx` (per-link `preload="intent"`)
-- `src/components/layout/BottomNav.tsx` (per-link `preload="intent"`)
+- `src/contexts/AuthContext.tsx` — add `rolesLoading`, robust `signOut`, query cache clear.
+- `src/contexts/RoleContext.tsx` — expose `rolesLoading`, never silently fall back to `worker`.
+- `src/routes/app.tsx` — gate guards, real redirect spinner on logout.
+- `src/components/layout/Sidebar.tsx` — error-handled `signOut`, replace-history navigate.
+- `src/components/layout/Header.tsx` — confirm/add sign-out menu item.
+- `src/lib/roles.ts` (only if needed) — optional: extend type for the loading sentinel; otherwise handle via the new `rolesLoading` flag without touching the union.
+
+No DB changes. No new packages.
 
 ## Expected result
 
-Click a sidebar item → top progress bar appears within one frame → previous page stays for ≤80 ms → new page paints at 85 % opacity and finishes to 100 % in 80 ms. No more empty pause, no more pop-in. Preload crash gone, so frequently used pages load instantly on hover.
+- On every login/refresh: while roles load, the layout shows a brief skeleton instead of flipping to "worker" view. Admin stays admin, customer stays customer.
+- Clicking "Sign out" (desktop sidebar OR mobile menu sheet): app immediately shows the auth screen, no toast about permissions, no role-guard race, no being stuck inside `/app`.
+- If `signOut` fails (offline), a toast tells the user instead of silently doing nothing.
+- Cache from the previous user is cleared, preventing data leakage across accounts.
