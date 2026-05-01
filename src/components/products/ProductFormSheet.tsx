@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SupplierPricesTab } from "./SupplierPricesTab";
 import { toast } from "sonner";
 import type { CategoryRow, ProductWithVariants } from "@/hooks/useErpData";
 
@@ -156,7 +158,14 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6 space-y-5">
+        <Tabs defaultValue="overview" className="mt-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="prices" disabled={!firstVariant}>
+              Supplier prices
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="overview" className="mt-5 space-y-5">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Product code</Label>
@@ -256,7 +265,11 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>Cancel</Button>
             <Button onClick={submit} disabled={submitting}>{submitting ? "Saving…" : isEdit ? "Save changes" : "Create product"}</Button>
           </div>
-        </div>
+          </TabsContent>
+          <TabsContent value="prices" className="mt-5">
+            <SupplierPricesTab variantId={firstVariant?.id ?? ""} />
+          </TabsContent>
+        </Tabs>
       </SheetContent>
     </Sheet>
   );
