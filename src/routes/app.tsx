@@ -15,6 +15,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { canAccessRoute } from "@/lib/route-guard";
 import { toast } from "sonner";
+import { useAppLock } from "@/hooks/useAppLock";
+import { LockScreen } from "@/components/lock/LockScreen";
 
 export const Route = createFileRoute("/app")({
   component: AppLayout,
@@ -22,7 +24,7 @@ export const Route = createFileRoute("/app")({
 
 function AppLayout() {
   const { role, rolesLoading } = useRole();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, displayName, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [helpOpen, setHelpOpen] = useState(false);
@@ -31,6 +33,17 @@ function AppLayout() {
   if (!authLoading && user) {
     hasResolvedOnceRef.current = true;
   }
+
+  const { locked, unlock, isLockConfigured, idleTooLong } = useAppLock(user?.id ?? null);
+
+  // Force sign-out if idle longer than 15 days.
+  useEffect(() => {
+    if (!user) return;
+    if (idleTooLong()) {
+      void signOut();
+      toast.message("Signed out after 15 days of inactivity");
+    }
+  }, [user, idleTooLong, signOut]);
 
   // Global keyboard shortcuts
   useKeyboardShortcuts({ onHelpOpen: () => setHelpOpen(true) });
@@ -89,6 +102,14 @@ function AppLayout() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background">
+      {locked && isLockConfigured() && (
+        <LockScreen
+          userId={user.id}
+          userLabel={displayName ?? user.email ?? ""}
+          onUnlock={unlock}
+          onSignOut={() => void signOut()}
+        />
+      )}
       <div className="flex flex-1 overflow-hidden">
         <aside className="hidden w-[264px] shrink-0 border-r border-border bg-sidebar md:block">
           <Sidebar />
