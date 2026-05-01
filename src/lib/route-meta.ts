@@ -46,6 +46,7 @@ export const ROUTE_META: Record<string, RouteMeta> = {
   "/app/wip": { label: "Stage WIP", icon: LayersIcon, group: "Manufacturing" },
   "/app/analytics": { label: "Analytics", icon: BarChart3, group: "Intelligence" },
   "/app/ai-insights": { label: "AI insights", icon: Sparkles, group: "Intelligence" },
+  "/app/command-center": { label: "Command center", icon: Sparkles, group: "Intelligence" },
   "/app/settings": { label: "Settings", icon: Settings, group: "Admin" },
   "/app/help": { label: "Help", icon: HelpCircle, group: "Support" },
 };
