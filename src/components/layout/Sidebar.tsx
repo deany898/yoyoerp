@@ -93,7 +93,6 @@ const navGroups: NavGroup[] = [
       { label: "Moulds", href: "/app/moulds", icon: Hammer },
       { label: "Workers", href: "/app/workers", icon: HardHat },
       { label: "Work logs", href: "/app/work-logs", icon: ClipboardCheck },
-      { label: "Production logs", href: "/app/manufacturing", icon: FileText },
     ],
   },
   {
