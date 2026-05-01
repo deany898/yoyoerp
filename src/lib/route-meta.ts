@@ -14,7 +14,6 @@ import {
   HelpCircle,
   Send,
   Users,
-  Factory,
 } from "lucide-react";
 import { ClipboardCheck } from "lucide-react";
 import { Layers as LayersIcon } from "lucide-react";
@@ -41,7 +40,6 @@ export const ROUTE_META: Record<string, RouteMeta> = {
   "/app/purchase-orders": { label: "Purchase orders", icon: ClipboardList, group: "Procurement" },
   "/app/customers": { label: "Customers", icon: Users, group: "Sales" },
   "/app/dispatch-orders": { label: "Dispatch orders", icon: Send, group: "Sales" },
-  "/app/manufacturing": { label: "Production", icon: Factory, group: "Manufacturing" },
   "/app/work-logs": { label: "Work logs", icon: ClipboardCheck, group: "Manufacturing" },
   "/app/wip": { label: "Stage WIP", icon: LayersIcon, group: "Manufacturing" },
   "/app/analytics": { label: "Analytics", icon: BarChart3, group: "Intelligence" },

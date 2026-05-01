@@ -29,7 +29,6 @@ import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppProductsRouteImport } from './routes/app.products'
 import { Route as AppMovementsRouteImport } from './routes/app.movements'
 import { Route as AppMouldsRouteImport } from './routes/app.moulds'
-import { Route as AppManufacturingRouteImport } from './routes/app.manufacturing'
 import { Route as AppMachinesRouteImport } from './routes/app.machines'
 import { Route as AppInventoryRouteImport } from './routes/app.inventory'
 import { Route as AppHelpRouteImport } from './routes/app.help'
@@ -150,11 +149,6 @@ const AppMouldsRoute = AppMouldsRouteImport.update({
   path: '/moulds',
   getParentRoute: () => AppRoute,
 } as any)
-const AppManufacturingRoute = AppManufacturingRouteImport.update({
-  id: '/manufacturing',
-  path: '/manufacturing',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppMachinesRoute = AppMachinesRouteImport.update({
   id: '/machines',
   path: '/machines',
@@ -221,9 +215,9 @@ const AppWorkersIdRoute = AppWorkersIdRouteImport.update({
   getParentRoute: () => AppWorkersRoute,
 } as any)
 const AppManufacturingMoIdRoute = AppManufacturingMoIdRouteImport.update({
-  id: '/$moId',
-  path: '/$moId',
-  getParentRoute: () => AppManufacturingRoute,
+  id: '/manufacturing/$moId',
+  path: '/manufacturing/$moId',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppMachinesIdRoute = AppMachinesIdRouteImport.update({
   id: '/$id',
@@ -268,7 +262,6 @@ export interface FileRoutesByFullPath {
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
   '/app/machines': typeof AppMachinesRouteWithChildren
-  '/app/manufacturing': typeof AppManufacturingRouteWithChildren
   '/app/moulds': typeof AppMouldsRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/products': typeof AppProductsRoute
@@ -309,7 +302,6 @@ export interface FileRoutesByTo {
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
   '/app/machines': typeof AppMachinesRouteWithChildren
-  '/app/manufacturing': typeof AppManufacturingRouteWithChildren
   '/app/moulds': typeof AppMouldsRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/products': typeof AppProductsRoute
@@ -352,7 +344,6 @@ export interface FileRoutesById {
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
   '/app/machines': typeof AppMachinesRouteWithChildren
-  '/app/manufacturing': typeof AppManufacturingRouteWithChildren
   '/app/moulds': typeof AppMouldsRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/products': typeof AppProductsRoute
@@ -396,7 +387,6 @@ export interface FileRouteTypes {
     | '/app/help'
     | '/app/inventory'
     | '/app/machines'
-    | '/app/manufacturing'
     | '/app/moulds'
     | '/app/movements'
     | '/app/products'
@@ -437,7 +427,6 @@ export interface FileRouteTypes {
     | '/app/help'
     | '/app/inventory'
     | '/app/machines'
-    | '/app/manufacturing'
     | '/app/moulds'
     | '/app/movements'
     | '/app/products'
@@ -479,7 +468,6 @@ export interface FileRouteTypes {
     | '/app/help'
     | '/app/inventory'
     | '/app/machines'
-    | '/app/manufacturing'
     | '/app/moulds'
     | '/app/movements'
     | '/app/products'
@@ -654,13 +642,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMouldsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/manufacturing': {
-      id: '/app/manufacturing'
-      path: '/manufacturing'
-      fullPath: '/app/manufacturing'
-      preLoaderRoute: typeof AppManufacturingRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/machines': {
       id: '/app/machines'
       path: '/machines'
@@ -754,10 +735,10 @@ declare module '@tanstack/react-router' {
     }
     '/app/manufacturing/$moId': {
       id: '/app/manufacturing/$moId'
-      path: '/$moId'
+      path: '/manufacturing/$moId'
       fullPath: '/app/manufacturing/$moId'
       preLoaderRoute: typeof AppManufacturingMoIdRouteImport
-      parentRoute: typeof AppManufacturingRoute
+      parentRoute: typeof AppRoute
     }
     '/app/machines/$id': {
       id: '/app/machines/$id'
@@ -827,17 +808,6 @@ const AppMachinesRouteWithChildren = AppMachinesRoute._addFileChildren(
   AppMachinesRouteChildren,
 )
 
-interface AppManufacturingRouteChildren {
-  AppManufacturingMoIdRoute: typeof AppManufacturingMoIdRoute
-}
-
-const AppManufacturingRouteChildren: AppManufacturingRouteChildren = {
-  AppManufacturingMoIdRoute: AppManufacturingMoIdRoute,
-}
-
-const AppManufacturingRouteWithChildren =
-  AppManufacturingRoute._addFileChildren(AppManufacturingRouteChildren)
-
 interface AppWorkersRouteChildren {
   AppWorkersIdRoute: typeof AppWorkersIdRoute
 }
@@ -863,7 +833,6 @@ interface AppRouteChildren {
   AppHelpRoute: typeof AppHelpRoute
   AppInventoryRoute: typeof AppInventoryRoute
   AppMachinesRoute: typeof AppMachinesRouteWithChildren
-  AppManufacturingRoute: typeof AppManufacturingRouteWithChildren
   AppMouldsRoute: typeof AppMouldsRoute
   AppMovementsRoute: typeof AppMovementsRoute
   AppProductsRoute: typeof AppProductsRoute
@@ -881,6 +850,7 @@ interface AppRouteChildren {
   AppWorkLogsRoute: typeof AppWorkLogsRoute
   AppWorkersRoute: typeof AppWorkersRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
+  AppManufacturingMoIdRoute: typeof AppManufacturingMoIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -896,7 +866,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppHelpRoute: AppHelpRoute,
   AppInventoryRoute: AppInventoryRoute,
   AppMachinesRoute: AppMachinesRouteWithChildren,
-  AppManufacturingRoute: AppManufacturingRouteWithChildren,
   AppMouldsRoute: AppMouldsRoute,
   AppMovementsRoute: AppMovementsRoute,
   AppProductsRoute: AppProductsRoute,
@@ -914,6 +883,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppWorkLogsRoute: AppWorkLogsRoute,
   AppWorkersRoute: AppWorkersRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
+  AppManufacturingMoIdRoute: AppManufacturingMoIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

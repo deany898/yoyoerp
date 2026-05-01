@@ -23,7 +23,7 @@ import {
   Sliders,
   ScrollText,
 } from "lucide-react";
-import { Cpu, Hammer, HardHat, Zap, FileText, Lightbulb } from "lucide-react";
+import { Cpu, Hammer, HardHat, Zap, Lightbulb } from "lucide-react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/hooks/useRole";
@@ -93,7 +93,6 @@ const navGroups: NavGroup[] = [
       { label: "Moulds", href: "/app/moulds", icon: Hammer },
       { label: "Workers", href: "/app/workers", icon: HardHat },
       { label: "Work logs", href: "/app/work-logs", icon: ClipboardCheck },
-      { label: "Production logs", href: "/app/manufacturing", icon: FileText },
     ],
   },
   {

@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2, Search, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { usePermissions } from "@/hooks/usePermissions";
+import { useRole } from "@/hooks/useRole";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { notify } from "@/lib/notify";
@@ -23,7 +23,7 @@ interface AuditRow {
 }
 
 function AdminAuditPage() {
-  const { cap } = usePermissions();
+  const { role } = useRole();
   const navigate = useNavigate();
   const [rows, setRows] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,11 +31,11 @@ function AdminAuditPage() {
   const [filter, setFilter] = useState("");
 
   useEffect(() => {
-    if (!cap("settings.view")) {
+    if (role && role !== "admin" && role !== "manager") {
       notify.error("Access denied");
       navigate({ to: "/app/dashboard" });
     }
-  }, [cap, navigate]);
+  }, [role, navigate]);
 
   useEffect(() => {
     (async () => {
