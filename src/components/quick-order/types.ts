@@ -26,16 +26,18 @@ export interface UomOption {
 
 /**
  * Build the UOM list a given product/variant actually supports.
- * - "each" is always present (the base unit).
- * - "pack" appears only if the variant's units_per_pack > 1.
+ * - "pack" appears when the variant's units_per_pack > 1.
  * - Anything in product_packaging for the same product is appended.
+ * - "each" is included only as a last resort, when the product has no
+ *   pack/case/pallet of its own — so a generic "Each" never shows up
+ *   alongside the product's real units.
  */
 export function getUomOptions(
   variant: PickerVariant | null,
   packaging: PackagingRow[],
 ): UomOption[] {
-  const out: UomOption[] = [{ value: "each", label: "Each", factor: 1 }];
-  if (!variant) return out;
+  if (!variant) return [{ value: "each", label: "Each", factor: 1 }];
+  const out: UomOption[] = [];
   if (variant.units_per_pack > 1) {
     out.push({
       value: "pack",
@@ -48,6 +50,9 @@ export function getUomOptions(
     const value = `pkg:${p.name}`;
     if (out.some((o) => o.value === value)) continue;
     out.push({ value, label: p.name, factor: Number(p.units_per_pack) });
+  }
+  if (out.length === 0) {
+    out.push({ value: "each", label: "Each", factor: 1 });
   }
   return out;
 }
