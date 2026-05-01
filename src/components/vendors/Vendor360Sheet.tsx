@@ -44,7 +44,6 @@ export function Vendor360Sheet({ supplier, open, onOpenChange }: Props) {
             value={[supplier.address, supplier.city, supplier.state].filter(Boolean).join(", ") || "—"}
           />
           <Field label="Payment terms" value={supplier.payment_terms || "—"} />
-          <Field label="Min order qty" value={supplier.min_order_qty?.toString() || "—"} />
           {supplier.notes && <Field label="Notes" value={supplier.notes} />}
         </div>
 
