@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_config_flags: {
+        Row: {
+          category: string
+          description: string | null
+          enabled: boolean
+          key: string
+          label: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          category?: string
+          description?: string | null
+          enabled?: boolean
+          key: string
+          label: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          category?: string
+          description?: string | null
+          enabled?: boolean
+          key?: string
+          label?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      app_field_config: {
+        Row: {
+          field_key: string
+          label_override: string | null
+          module: string
+          required: boolean
+          sort_order: number
+          updated_at: string
+          visible: boolean
+        }
+        Insert: {
+          field_key: string
+          label_override?: string | null
+          module: string
+          required?: boolean
+          sort_order?: number
+          updated_at?: string
+          visible?: boolean
+        }
+        Update: {
+          field_key?: string
+          label_override?: string | null
+          module?: string
+          required?: boolean
+          sort_order?: number
+          updated_at?: string
+          visible?: boolean
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
@@ -2696,6 +2756,67 @@ export type Database = {
           },
           {
             foreignKeyName: "stock_movements_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_price_history: {
+        Row: {
+          changed_by: string | null
+          effective_at: string
+          id: string
+          lead_time_days: number
+          moq: number
+          new_price: number
+          note: string | null
+          previous_price: number
+          supplier_id: string
+          variant_id: string
+        }
+        Insert: {
+          changed_by?: string | null
+          effective_at?: string
+          id?: string
+          lead_time_days?: number
+          moq?: number
+          new_price: number
+          note?: string | null
+          previous_price?: number
+          supplier_id: string
+          variant_id: string
+        }
+        Update: {
+          changed_by?: string | null
+          effective_at?: string
+          id?: string
+          lead_time_days?: number
+          moq?: number
+          new_price?: number
+          note?: string | null
+          previous_price?: number
+          supplier_id?: string
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_price_history_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_price_history_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_scorecard"
+            referencedColumns: ["supplier_id"]
+          },
+          {
+            foreignKeyName: "supplier_price_history_variant_id_fkey"
             columns: ["variant_id"]
             isOneToOne: false
             referencedRelation: "product_variants"
