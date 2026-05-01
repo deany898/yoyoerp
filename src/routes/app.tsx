@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { AnimatePresence } from "framer-motion";
+// AnimatePresence removed: the wait-mode exit fade was the main source of
+// perceived nav lag; PageTransition now cross-fades in place without it.
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { BottomNav } from "@/components/layout/BottomNav";
