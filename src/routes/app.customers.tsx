@@ -18,6 +18,8 @@ import {
 import { SmartSelect } from "@/components/forms/SmartSelect";
 import { useRole } from "@/hooks/useRole";
 import { ExportButton } from "@/components/shared/ExportButton";
+import { useAppConfig } from "@/contexts/AppConfigContext";
+import { FLAGS } from "@/lib/feature-flags";
 
 export const Route = createFileRoute("/app/customers")({
   component: CustomersPage,
@@ -54,6 +56,8 @@ function emptyDraft(): Partial<CustomerRow> {
 function CustomersPage() {
   const { role } = useRole();
   const canEdit = ["admin", "manager", "sales"].includes(role);
+  const { isEnabled } = useAppConfig();
+  const showFinance = isEnabled(FLAGS.customers.showFinanceFields, true);
   const [rows, setRows] = useState<CustomerRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -211,9 +215,9 @@ function CustomersPage() {
                     searchPlaceholder="Search tier…"
                   />
                 </div>
-                <div><Label>GST number</Label><Input value={draft.gst_number ?? ""} onChange={(e) => setDraft({ ...draft, gst_number: e.target.value })} /></div>
-                <div><Label>PAN</Label><Input value={draft.pan_number ?? ""} onChange={(e) => setDraft({ ...draft, pan_number: e.target.value })} /></div>
-                <div><Label>Payment terms</Label><Input value={draft.payment_terms ?? ""} onChange={(e) => setDraft({ ...draft, payment_terms: e.target.value })} placeholder="e.g. Net 30" /></div>
+                {showFinance && <div><Label>GST number</Label><Input value={draft.gst_number ?? ""} onChange={(e) => setDraft({ ...draft, gst_number: e.target.value })} /></div>}
+                {showFinance && <div><Label>PAN</Label><Input value={draft.pan_number ?? ""} onChange={(e) => setDraft({ ...draft, pan_number: e.target.value })} /></div>}
+                {showFinance && <div><Label>Payment terms</Label><Input value={draft.payment_terms ?? ""} onChange={(e) => setDraft({ ...draft, payment_terms: e.target.value })} placeholder="e.g. Net 30" /></div>}
                 <div><Label>Transporter</Label><Input value={draft.transporter ?? ""} onChange={(e) => setDraft({ ...draft, transporter: e.target.value })} /></div>
                 <div><Label>City</Label><Input value={draft.city ?? ""} onChange={(e) => setDraft({ ...draft, city: e.target.value })} /></div>
                 <div><Label>State</Label><Input value={draft.state ?? ""} onChange={(e) => setDraft({ ...draft, state: e.target.value })} /></div>
