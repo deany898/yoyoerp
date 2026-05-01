@@ -50,50 +50,29 @@ function SettingsPage() {
         </Link>
       </div>
 
-      <Tabs defaultValue="categories" className="w-full">
+      <Tabs defaultValue="operations" className="w-full">
         <TabsList className="w-full justify-start overflow-x-auto">
-          <TabsTrigger value="modules">Modules</TabsTrigger>
-          <TabsTrigger value="form-builder">Form builder</TabsTrigger>
-          <TabsTrigger value="presets">Presets</TabsTrigger>
-          <TabsTrigger value="categories">Categories</TabsTrigger>
-          <TabsTrigger value="custom-fields">Custom Fields</TabsTrigger>
-          <TabsTrigger value="locations">Locations</TabsTrigger>
-          <TabsTrigger value="uom">UOM</TabsTrigger>
-          <TabsTrigger value="reorder-defaults">Reorder Defaults</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="permissions">Permissions</TabsTrigger>
+          <TabsTrigger value="operations">Operations</TabsTrigger>
+          <TabsTrigger value="catalog">Catalog</TabsTrigger>
+          <TabsTrigger value="access">Access</TabsTrigger>
           <TabsTrigger value="system">System</TabsTrigger>
         </TabsList>
 
         <div className="mt-6">
-          <TabsContent value="modules">
+          <TabsContent value="operations" className="space-y-8">
+            <ErrorBoundary><LocationSettings /></ErrorBoundary>
+            <ErrorBoundary><UomManager /></ErrorBoundary>
+            <ErrorBoundary><ReorderDefaults /></ErrorBoundary>
             <ErrorBoundary><ModuleToggles /></ErrorBoundary>
           </TabsContent>
-          <TabsContent value="form-builder">
+          <TabsContent value="catalog" className="space-y-8">
+            <ErrorBoundary><CategoryManager /></ErrorBoundary>
+            <ErrorBoundary><CustomFieldManager /></ErrorBoundary>
             <ErrorBoundary><FormBuilderPanel /></ErrorBoundary>
-          </TabsContent>
-          <TabsContent value="presets">
             <ErrorBoundary><ComplexityPresets /></ErrorBoundary>
           </TabsContent>
-          <TabsContent value="categories">
-            <ErrorBoundary><CategoryManager /></ErrorBoundary>
-          </TabsContent>
-          <TabsContent value="custom-fields">
-            <ErrorBoundary><CustomFieldManager /></ErrorBoundary>
-          </TabsContent>
-          <TabsContent value="locations">
-            <ErrorBoundary><LocationSettings /></ErrorBoundary>
-          </TabsContent>
-          <TabsContent value="uom">
-            <ErrorBoundary><UomManager /></ErrorBoundary>
-          </TabsContent>
-          <TabsContent value="reorder-defaults">
-            <ErrorBoundary><ReorderDefaults /></ErrorBoundary>
-          </TabsContent>
-          <TabsContent value="users">
+          <TabsContent value="access" className="space-y-8">
             <ErrorBoundary><UserManagement /></ErrorBoundary>
-          </TabsContent>
-          <TabsContent value="permissions">
             <ErrorBoundary><PermissionMatrix /></ErrorBoundary>
           </TabsContent>
           <TabsContent value="system">
