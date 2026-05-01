@@ -27,6 +27,8 @@ import { useRole } from "@/hooks/useRole";
 import { Logo } from "@/components/brand/Logo";
 import { isRouteVisibleToRole } from "@/lib/role-nav";
 import { useAuth } from "@/hooks/useAuth";
+import { useAppConfig } from "@/contexts/AppConfigContext";
+import { ROUTE_FLAGS } from "@/lib/feature-flags";
 
 
 const ROLE_LABELS: Record<string, string> = {
@@ -124,6 +126,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const { role } = useRole();
   const { user, displayName: authDisplayName, signOut } = useAuth();
   const navigate = useNavigate();
+  const { isEnabled } = useAppConfig();
 
   const displayName = authDisplayName ?? user?.email?.split("@")[0] ?? "Account";
   const initial = displayName.trim().charAt(0).toUpperCase() || "U";
@@ -143,7 +146,12 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const visibleGroups = navGroups
     .map((g) => ({
       ...g,
-      items: g.items.filter((i) => isRouteVisibleToRole(i.href, role)),
+      items: g.items.filter((i) => {
+        if (!isRouteVisibleToRole(i.href, role)) return false;
+        const flag = ROUTE_FLAGS[i.href];
+        if (flag && !isEnabled(flag)) return false;
+        return true;
+      }),
     }))
     .filter((g) => g.items.length > 0);
 
