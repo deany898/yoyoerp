@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
@@ -17,51 +18,49 @@ export interface ProductWithVariants extends ProductRow {
 }
 
 export function useProducts() {
-  const [data, setData] = useState<ProductWithVariants[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    const { data: rows, error } = await supabase
-      .from("products")
-      .select("*, variants:product_variants(*), category:categories(*)")
-      .order("created_at", { ascending: false });
-    if (error) {
-      toast.error("Failed to load products", { description: error.message });
-      setData([]);
-    } else {
-      setData((rows ?? []) as unknown as ProductWithVariants[]);
-    }
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  return { products: data, loading, refresh };
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: ["erp", "products"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*, variants:product_variants(*), category:categories(*)")
+        .order("created_at", { ascending: false });
+      if (error) {
+        toast.error("Failed to load products", { description: error.message });
+        throw error;
+      }
+      return (data ?? []) as unknown as ProductWithVariants[];
+    },
+  });
+  const refresh = useCallback(
+    () => qc.invalidateQueries({ queryKey: ["erp", "products"] }),
+    [qc],
+  );
+  return { products: q.data ?? [], loading: q.isLoading, refresh };
 }
 
 export function useCategories() {
-  const [data, setData] = useState<CategoryRow[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    const { data: rows, error } = await supabase
-      .from("categories")
-      .select("*")
-      .order("sort_order");
-    if (error) toast.error("Failed to load categories", { description: error.message });
-    setData(rows ?? []);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  return { categories: data, loading, refresh };
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: ["erp", "categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .order("sort_order");
+      if (error) {
+        toast.error("Failed to load categories", { description: error.message });
+        throw error;
+      }
+      return data ?? [];
+    },
+  });
+  const refresh = useCallback(
+    () => qc.invalidateQueries({ queryKey: ["erp", "categories"] }),
+    [qc],
+  );
+  return { categories: q.data ?? [], loading: q.isLoading, refresh };
 }
 
 export interface WarehouseWithZones extends WarehouseRow {
@@ -69,25 +68,26 @@ export interface WarehouseWithZones extends WarehouseRow {
 }
 
 export function useWarehouses() {
-  const [data, setData] = useState<WarehouseWithZones[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    const { data: rows, error } = await supabase
-      .from("warehouses")
-      .select("*, zones:warehouse_zones(*)")
-      .order("created_at");
-    if (error) toast.error("Failed to load warehouses", { description: error.message });
-    setData((rows ?? []) as unknown as WarehouseWithZones[]);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  return { warehouses: data, loading, refresh };
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: ["erp", "warehouses"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("warehouses")
+        .select("*, zones:warehouse_zones(*)")
+        .order("created_at");
+      if (error) {
+        toast.error("Failed to load warehouses", { description: error.message });
+        throw error;
+      }
+      return (data ?? []) as unknown as WarehouseWithZones[];
+    },
+  });
+  const refresh = useCallback(
+    () => qc.invalidateQueries({ queryKey: ["erp", "warehouses"] }),
+    [qc],
+  );
+  return { warehouses: q.data ?? [], loading: q.isLoading, refresh };
 }
 
 // ===================== Inventory =====================
@@ -101,43 +101,54 @@ export type SupplierRow = Database["public"]["Tables"]["suppliers"]["Row"];
 export type SupplierInsert = Database["public"]["Tables"]["suppliers"]["Insert"];
 
 export function useSuppliers() {
-  const [data, setData] = useState<SupplierRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    const { data: rows, error } = await supabase
-      .from("suppliers").select("*").order("name");
-    if (error) toast.error("Failed to load suppliers", { description: error.message });
-    setData(rows ?? []);
-    setLoading(false);
-  }, []);
-  useEffect(() => { refresh(); }, [refresh]);
-  return { suppliers: data, loading, refresh };
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: ["erp", "suppliers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("suppliers").select("*").order("name");
+      if (error) {
+        toast.error("Failed to load suppliers", { description: error.message });
+        throw error;
+      }
+      return data ?? [];
+    },
+  });
+  const refresh = useCallback(
+    () => qc.invalidateQueries({ queryKey: ["erp", "suppliers"] }),
+    [qc],
+  );
+  return { suppliers: q.data ?? [], loading: q.isLoading, refresh };
 }
 
 // ===================== UOMs =====================
 import type { UomDef } from "@/lib/uom";
 
 export function useUoms(opts: { activeOnly?: boolean } = { activeOnly: true }) {
-  const [data, setData] = useState<UomDef[]>([]);
-  const [loading, setLoading] = useState(true);
+  const qc = useQueryClient();
   const activeOnly = opts.activeOnly !== false;
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    // `uoms` table is freshly created · types may not be regenerated yet.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let q = (supabase as any)
-      .from("uoms")
-      .select("code,label,factor,base_uom,is_active")
-      .order("code");
-    if (activeOnly) q = q.eq("is_active", true);
-    const { data: rows, error } = await q;
-    if (error) toast.error("Failed to load UOMs", { description: error.message });
-    setData((rows as UomDef[]) ?? []);
-    setLoading(false);
-  }, [activeOnly]);
-  useEffect(() => { refresh(); }, [refresh]);
-  return { uoms: data, loading, refresh };
+  const q = useQuery({
+    queryKey: ["erp", "uoms", { activeOnly }],
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let qb = (supabase as any)
+        .from("uoms")
+        .select("code,label,factor,base_uom,is_active")
+        .order("code");
+      if (activeOnly) qb = qb.eq("is_active", true);
+      const { data, error } = await qb;
+      if (error) {
+        toast.error("Failed to load UOMs", { description: error.message });
+        throw error;
+      }
+      return (data as UomDef[]) ?? [];
+    },
+  });
+  const refresh = useCallback(
+    () => qc.invalidateQueries({ queryKey: ["erp", "uoms"] }),
+    [qc],
+  );
+  return { uoms: q.data ?? [], loading: q.isLoading, refresh };
 }
 
 // ===================== Purchase Orders =====================
