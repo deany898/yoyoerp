@@ -351,22 +351,21 @@ function QuickOrderPage() {
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-[1600px] flex-col gap-3 pb-24">
-      {/* Desktop: existing dense header */}
+      {/* Desktop: light header with shipping + terms + DO number (no customer field — captured below) */}
       <div className="hidden md:block">
-      <QuickOrderHeader
-        customers={customers}
-        customerId={customerId}
-        shippingAddress={shippingAddress} paymentTerms={paymentTerms}
-        orderNumber={orderNumber}
-        hideCustomer={isCustomer}
-        onCustomer={setCustomerId}
-        onShipping={setShippingAddress} onPaymentTerms={setPaymentTerms}
-      />
+        <QuickOrderHeader
+          customers={customers}
+          customerId={customerId}
+          shippingAddress={shippingAddress} paymentTerms={paymentTerms}
+          orderNumber={orderNumber}
+          hideCustomer
+          onCustomer={setCustomerId}
+          onShipping={setShippingAddress} onPaymentTerms={setPaymentTerms}
+        />
       </div>
 
-      {/* Mobile: customer card with free-text + autocomplete (hidden for self-service customers) */}
+      {/* Customer capture card · works on every screen, saves a new customer on submit if not picked */}
       {!isCustomer && (
-      <div className="md:hidden">
         <QuickOrderCustomerCard
           customers={customers}
           customerId={customerId}
@@ -384,6 +383,7 @@ function QuickOrderPage() {
               if (c.phone) setPhone(c.phone);
               if (c.city) setCity(c.city);
               if (c.delivery_address) setShippingAddress(c.delivery_address);
+              if (c.payment_terms) setPaymentTerms(c.payment_terms);
             }
           }}
           onName={setCustomerName}
@@ -393,7 +393,6 @@ function QuickOrderPage() {
           onNote={setNote}
           onShipping={setShippingAddress}
         />
-      </div>
       )}
 
       <QuickActionsBar
