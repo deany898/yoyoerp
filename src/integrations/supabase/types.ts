@@ -443,6 +443,7 @@ export type Database = {
           dispatched_at: string | null
           do_number: string
           expected_dispatch_date: string | null
+          extra_charges: Json
           freight_cost: number
           grand_total: number
           id: string
@@ -475,6 +476,7 @@ export type Database = {
           dispatched_at?: string | null
           do_number: string
           expected_dispatch_date?: string | null
+          extra_charges?: Json
           freight_cost?: number
           grand_total?: number
           id?: string
@@ -507,6 +509,7 @@ export type Database = {
           dispatched_at?: string | null
           do_number?: string
           expected_dispatch_date?: string | null
+          extra_charges?: Json
           freight_cost?: number
           grand_total?: number
           id?: string

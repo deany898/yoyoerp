@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
-import { Loader2, Mail, Lock, User as UserIcon } from "lucide-react";
+import { Loader2, Mail, Lock, User as UserIcon, AtSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand/Logo";
 import { lovable } from "@/integrations/lovable/index";
@@ -12,6 +12,8 @@ import { notify, friendlyAuthError } from "@/lib/notify";
 import { AuthIconInput } from "@/components/auth/AuthIconInput";
 import { GoogleIcon } from "@/components/auth/GoogleIcon";
 import { ForgotPasswordDialog } from "@/components/auth/ForgotPasswordDialog";
+import { PhoneInput } from "@/components/auth/PhoneInput";
+import { COUNTRY_CODES, DEFAULT_COUNTRY_ISO, digitsOnly, toE164 } from "@/lib/country-codes";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -33,6 +35,7 @@ const signupSchema = z.object({
   email: z.string().trim().email("Enter a valid email").max(255),
   password: z.string().min(8, "Password must be at least 8 characters").max(72),
   displayName: z.string().trim().min(2, "Name must be at least 2 characters").max(80),
+  mobile: z.string().trim().min(6, "Enter a valid mobile").max(20),
 });
 
 function AuthPage() {
@@ -43,10 +46,13 @@ function AuthPage() {
 
   const [signinEmail, setSigninEmail] = useState("");
   const [signinPassword, setSigninPassword] = useState("");
+  const [signinCountry, setSigninCountry] = useState(DEFAULT_COUNTRY_ISO);
 
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
+  const [signupMobile, setSignupMobile] = useState("");
+  const [signupCountry, setSignupCountry] = useState(DEFAULT_COUNTRY_ISO);
 
   useEffect(() => {
     if (!loading && user) {
@@ -65,6 +71,12 @@ function AuthPage() {
     let identifier = parsed.data.email.trim();
     // Resolve username / mobile to the email used for auth (server-side)
     if (!identifier.includes("@")) {
+      // If input is digits-only it's a mobile; prefix country code so server can match.
+      const digits = digitsOnly(identifier);
+      const isMobile = digits.length >= 6 && digits === identifier.replace(/[+\s-]/g, "");
+      if (isMobile && !identifier.startsWith("+")) {
+        identifier = toE164(signinCountry, digits);
+      }
       const { data: resolved, error: resolveErr } = await supabase.rpc(
         "resolve_identifier_email",
         { _identifier: identifier },
@@ -95,6 +107,7 @@ function AuthPage() {
       displayName: signupName,
       email: signupEmail,
       password: signupPassword,
+      mobile: signupMobile,
     });
     if (!parsed.success) {
       notify.warning(parsed.error.issues[0]?.message ?? "Invalid input");
@@ -106,7 +119,10 @@ function AuthPage() {
       password: parsed.data.password,
       options: {
         emailRedirectTo: `${window.location.origin}/app/dashboard`,
-        data: { display_name: parsed.data.displayName },
+        data: {
+          display_name: parsed.data.displayName,
+          mobile: toE164(signupCountry, parsed.data.mobile),
+        },
       },
     });
     setSubmitting(false);
@@ -171,17 +187,34 @@ function AuthPage() {
 
                 <TabsContent value="signin" className="space-y-4">
                   <form onSubmit={handleSignIn} className="space-y-4">
-                    <AuthIconInput
-                      id="signin-email"
-                      label="Email"
-                      icon={Mail}
-                      type="email"
-                      autoComplete="email"
-                      placeholder="you@company.com"
-                      value={signinEmail}
-                      onChange={(e) => setSigninEmail(e.target.value)}
-                      required
-                    />
+                    <div className="space-y-1.5">
+                      <AuthIconInput
+                        id="signin-email"
+                        label="Email, username, or mobile"
+                        icon={AtSign}
+                        type="text"
+                        autoComplete="username"
+                        placeholder="you@company.com · username · 9876543210"
+                        value={signinEmail}
+                        onChange={(e) => setSigninEmail(e.target.value)}
+                        required
+                      />
+                      {/^[+\d\s-]+$/.test(signinEmail.trim()) && signinEmail.trim().length > 0 && (
+                        <div className="flex items-center gap-2 pt-1">
+                          <span className="text-[11px] text-muted-foreground">Mobile country</span>
+                          <select
+                            aria-label="Mobile country code"
+                            value={signinCountry}
+                            onChange={(e) => setSigninCountry(e.target.value)}
+                            className="h-7 rounded-md border border-input bg-background px-2 text-xs"
+                          >
+                            {COUNTRY_CODES.map((c) => (
+                              <option key={`${c.iso}-${c.code}`} value={c.iso}>{c.flag} +{c.code} {c.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
                     <AuthIconInput
                       id="signin-password"
                       label="Password"
@@ -230,6 +263,14 @@ function AuthPage() {
                       placeholder="Jane Doe"
                       value={signupName}
                       onChange={(e) => setSignupName(e.target.value)}
+                      required
+                    />
+                    <PhoneInput
+                      id="signup-mobile"
+                      countryIso={signupCountry}
+                      onCountryIsoChange={setSignupCountry}
+                      value={signupMobile}
+                      onChange={setSignupMobile}
                       required
                     />
                     <AuthIconInput
