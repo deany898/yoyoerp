@@ -14,7 +14,6 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     "/app/movements",
     "/app/requests",
     "/app/suppliers",
-    "/app/purchase-orders",
     "/app/dispatch-orders",
     "/app/quick-order",
     "/app/customers",
@@ -39,7 +38,6 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     "/app/movements",
     "/app/requests",
     "/app/suppliers",
-    "/app/purchase-orders",
     "/app/dispatch-orders",
     "/app/quick-order",
     "/app/customers",
@@ -104,10 +102,10 @@ export function isRouteVisibleToRole(href: string, role: UserRoleType): boolean 
 
 /** Top items shown in the mobile bottom nav (max 4 + More). */
 const ROLE_BOTTOM_NAV: Record<UserRoleType, string[]> = {
-  admin: ["/app/dashboard", "/app/inventory", "/app/products", "/app/movements"],
-  manager: ["/app/dashboard", "/app/inventory", "/app/dispatch-orders", "/app/purchase-orders"],
-  supervisor: ["/app/dashboard", "/app/inventory", "/app/movements", "/app/requests"],
-  worker: ["/app/dashboard", "/app/inventory", "/app/movements"],
+  admin: ["/app/dashboard", "/app/inventory", "/app/products", "/app/manufacturing"],
+  manager: ["/app/dashboard", "/app/dispatch-orders", "/app/manufacturing", "/app/inventory"],
+  supervisor: ["/app/dashboard", "/app/manufacturing", "/app/movements", "/app/requests"],
+  worker: ["/app/dashboard", "/app/manufacturing", "/app/movements"],
   dispatch: ["/app/dashboard", "/app/dispatch-orders", "/app/movements", "/app/inventory"],
   sales: ["/app/dashboard", "/app/dispatch-orders", "/app/customers", "/app/products"],
   customer: ["/app/dashboard", "/app/help"],

@@ -31,6 +31,7 @@ const schema = z.object({
   reorder_point: z.coerce.number().min(0),
   safety_stock: z.coerce.number().min(0),
   reorder_qty: z.coerce.number().min(0),
+  manual_purchase_cost: z.coerce.number().min(0).optional(),
 });
 
 interface Props {
@@ -59,6 +60,7 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
     reorder_point: 0,
     safety_stock: 0,
     reorder_qty: 0,
+    manual_purchase_cost: "" as string,
   });
 
   useEffect(() => {
@@ -76,6 +78,10 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
         reorder_point: Number(firstVariant?.reorder_point ?? 0),
         safety_stock: Number(firstVariant?.safety_stock ?? 0),
         reorder_qty: Number(firstVariant?.reorder_qty ?? 0),
+        manual_purchase_cost:
+          firstVariant?.manual_purchase_cost == null
+            ? ""
+            : String(firstVariant.manual_purchase_cost),
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -116,6 +122,10 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
         reorder_point: parsed.data.reorder_point,
         safety_stock: parsed.data.safety_stock,
         reorder_qty: parsed.data.reorder_qty,
+        manual_purchase_cost:
+          form.manual_purchase_cost === "" ? null : Number(form.manual_purchase_cost),
+        manual_cost_updated_at:
+          form.manual_purchase_cost === "" ? null : new Date().toISOString(),
       };
       if (isEdit && firstVariant) {
         const { error } = await supabase.from("product_variants").update(variantPayload).eq("id", firstVariant.id);
@@ -221,6 +231,25 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
               <Label>Reorder qty</Label>
               <Input type="number" min={0} value={form.reorder_qty} onChange={(e) => setForm((f) => ({ ...f, reorder_qty: Number(e.target.value) }))} />
             </div>
+          </div>
+
+          <Separator />
+          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Purchase price
+          </div>
+          <div className="space-y-1.5">
+            <Label>Manual purchase cost (₹) · overrides supplier quote</Label>
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              placeholder="Leave blank to use latest supplier quote"
+              value={form.manual_purchase_cost}
+              onChange={(e) => setForm((f) => ({ ...f, manual_purchase_cost: e.target.value }))}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              When set, this value is used as the effective purchase cost instead of the latest supplier quote.
+            </p>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

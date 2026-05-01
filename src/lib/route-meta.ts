@@ -14,6 +14,7 @@ import {
   HelpCircle,
   Send,
   Users,
+  Factory,
 } from "lucide-react";
 
 export interface RouteMeta {
@@ -38,6 +39,7 @@ export const ROUTE_META: Record<string, RouteMeta> = {
   "/app/purchase-orders": { label: "Purchase orders", icon: ClipboardList, group: "Procurement" },
   "/app/customers": { label: "Customers", icon: Users, group: "Sales" },
   "/app/dispatch-orders": { label: "Dispatch orders", icon: Send, group: "Sales" },
+  "/app/manufacturing": { label: "Production", icon: Factory, group: "Manufacturing" },
   "/app/analytics": { label: "Analytics", icon: BarChart3, group: "Intelligence" },
   "/app/ai-insights": { label: "AI insights", icon: Sparkles, group: "Intelligence" },
   "/app/settings": { label: "Settings", icon: Settings, group: "Admin" },
