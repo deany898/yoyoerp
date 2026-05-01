@@ -12,6 +12,7 @@ import { notify, friendlyAuthError } from "@/lib/notify";
 import { AuthIconInput } from "@/components/auth/AuthIconInput";
 import { GoogleIcon } from "@/components/auth/GoogleIcon";
 import { ForgotPasswordDialog } from "@/components/auth/ForgotPasswordDialog";
+import { OtpLoginForm } from "@/components/auth/OtpLoginForm";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -39,6 +40,7 @@ function AuthPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState<"signin" | "signup">("signin");
+  const [authMode, setAuthMode] = useState<"password" | "otp">("password");
   const [submitting, setSubmitting] = useState(false);
 
   const [signinEmail, setSigninEmail] = useState("");
@@ -175,6 +177,25 @@ function AuthPage() {
                 </TabsList>
 
                 <TabsContent value="signin" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted/40 p-1 text-xs font-medium">
+                    <button
+                      type="button"
+                      onClick={() => setAuthMode("password")}
+                      className={`h-8 rounded-md transition ${authMode === "password" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      Password
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAuthMode("otp")}
+                      className={`h-8 rounded-md transition ${authMode === "otp" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      Email OTP
+                    </button>
+                  </div>
+                  {authMode === "otp" ? (
+                    <OtpLoginForm onSuccess={() => navigate({ to: "/app/dashboard" })} />
+                  ) : (
                   <form onSubmit={handleSignIn} className="space-y-4">
                     <AuthIconInput
                       id="signin-email"
@@ -223,6 +244,7 @@ function AuthPage() {
                       </button>
                     </div>
                   </form>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="signup" className="space-y-4">

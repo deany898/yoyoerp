@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/Header";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { RoleSimulatorBar } from "@/components/layout/RoleSimulatorBar";
 import { ShortcutsHelpDialog } from "@/components/command/ShortcutsHelpDialog";
+import { GlobalSearchPalette } from "@/components/command/GlobalSearchPalette";
 import { PageTransition } from "@/components/shared/PageTransition";
 import { useRole } from "@/hooks/useRole";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,9 +24,22 @@ function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [helpOpen, setHelpOpen] = useState(false);
+  const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
 
   // Global keyboard shortcuts
   useKeyboardShortcuts({ onHelpOpen: () => setHelpOpen(true) });
+
+  // ⌘⇧K opens the authorized global search palette
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === "K" || e.key === "k")) {
+        e.preventDefault();
+        setGlobalSearchOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   // Role-based route guard
   useEffect(() => {
@@ -73,6 +87,7 @@ function AppLayout() {
       <BottomNav />
       <ShortcutsHelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
       <RoleSimulatorBar />
+      <GlobalSearchPalette open={globalSearchOpen} onOpenChange={setGlobalSearchOpen} />
     </div>
   );
 }
