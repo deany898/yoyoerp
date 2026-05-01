@@ -304,17 +304,18 @@ function GroupStagesPanel() {
 
 /* ---------------- New group dialog ---------------- */
 function NewGroupDialog({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
-  const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { if (open) { setCode(""); setName(""); setDescription(""); } }, [open]);
+  useEffect(() => { if (open) { setName(""); setDescription(""); } }, [open]);
 
   const submit = async () => {
-    if (!code.trim() || !name.trim()) return;
+    if (!name.trim()) return;
     setSaving(true);
-    const { error } = await supabase.from("stage_groups").insert({ code: code.trim(), name: name.trim(), description: description.trim() || null });
+    // Auto-generate stage group code · SG-<short-uuid>
+    const autoCode = `SG-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    const { error } = await supabase.from("stage_groups").insert({ code: autoCode, name: name.trim(), description: description.trim() || null });
     setSaving(false);
     if (error) return notify.error("Could not create group", { description: error.message });
     notify.success("Group created");
@@ -330,10 +331,7 @@ function NewGroupDialog({ open, onClose, onCreated }: { open: boolean; onClose: 
           <SheetDescription>Reusable template · add stages and link products after creating.</SheetDescription>
         </SheetHeader>
         <div className="mt-6 space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium">Code</label>
-            <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="e.g. INJ-STD" />
-          </div>
+          <AutoCodeField label="Code" />
           <div className="space-y-1.5">
             <label className="text-xs font-medium">Name</label>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Standard injection moulding" />
