@@ -11,6 +11,9 @@ import { ReorderDefaults } from "@/components/settings/ReorderDefaults";
 import { SystemSettings } from "@/components/settings/SystemSettings";
 import { UserManagement } from "@/components/settings/UserManagement";
 import { PermissionMatrix } from "@/components/settings/PermissionMatrix";
+import { ModuleToggles } from "@/components/settings/ModuleToggles";
+import { FormBuilderPanel } from "@/components/settings/FormBuilderPanel";
+import { ComplexityPresets } from "@/components/settings/ComplexityPresets";
 import { Shield } from "lucide-react";
 
 export const Route = createFileRoute("/app/settings")({
@@ -48,6 +51,9 @@ function SettingsPage() {
 
       <Tabs defaultValue="categories" className="w-full">
         <TabsList className="w-full justify-start overflow-x-auto">
+          <TabsTrigger value="modules">Modules</TabsTrigger>
+          <TabsTrigger value="form-builder">Form builder</TabsTrigger>
+          <TabsTrigger value="presets">Presets</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="custom-fields">Custom Fields</TabsTrigger>
           <TabsTrigger value="locations">Locations</TabsTrigger>
@@ -58,6 +64,15 @@ function SettingsPage() {
         </TabsList>
 
         <div className="mt-6">
+          <TabsContent value="modules">
+            <ErrorBoundary><ModuleToggles /></ErrorBoundary>
+          </TabsContent>
+          <TabsContent value="form-builder">
+            <ErrorBoundary><FormBuilderPanel /></ErrorBoundary>
+          </TabsContent>
+          <TabsContent value="presets">
+            <ErrorBoundary><ComplexityPresets /></ErrorBoundary>
+          </TabsContent>
           <TabsContent value="categories">
             <ErrorBoundary><CategoryManager /></ErrorBoundary>
           </TabsContent>
