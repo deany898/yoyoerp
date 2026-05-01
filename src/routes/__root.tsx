@@ -10,11 +10,16 @@ import { ConfirmProvider } from "@/components/forms/ConfirmDialog";
 
 import appCss from "../styles.css?url";
 
-// Module-level fallback client used when the router context isn't available
-// during early SSR shell render. Real client lives in router.tsx.
-const fallbackQueryClient = new QueryClient({
+// App-wide React Query client. Master-data hooks (products, UOMs, warehouses,
+// categories, suppliers) cache for 5 min so route changes don't refetch them.
+const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false, retry: 1 },
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
   },
 });
 
@@ -77,7 +82,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   return (
-    <QueryClientProvider client={fallbackQueryClient}>
+    <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <RoleSimulatorProvider>
         <RoleProvider>
