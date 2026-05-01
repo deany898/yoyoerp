@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { useDemo } from "@/hooks/useDemo";
 import type {
   Item,
   Category,
@@ -9,7 +8,21 @@ import type {
   PurchaseOrder,
   InventoryRequest,
 } from "@/types/inventory";
-import type { ItemFilters, StockSummary } from "@/lib/demo-store";
+
+export interface ItemFilters {
+  categoryId?: string | null;
+  supplierId?: string | null;
+  status?: string | null;
+  search?: string | null;
+  locationId?: string | null;
+}
+
+export interface StockSummary {
+  total: number;
+  inStock: number;
+  lowStock: number;
+  outOfStock: number;
+}
 
 interface QueryResult<T> {
   data: T;
@@ -17,78 +30,43 @@ interface QueryResult<T> {
   error: Error | null;
 }
 
-export function useItems(filters?: ItemFilters): QueryResult<Item[]> {
-  const { isDemo, demoStore, version } = useDemo();
-  return useMemo(() => {
-    if (isDemo && demoStore) return { data: demoStore.getItems(filters), isLoading: false, error: null };
-    return { data: [] as Item[], isLoading: false, error: null };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDemo, demoStore, version, filters?.categoryId, filters?.supplierId, filters?.status, filters?.search, filters?.locationId]);
+const empty = { isLoading: false, error: null };
+
+export function useItems(_filters?: ItemFilters): QueryResult<Item[]> {
+  return useMemo(() => ({ data: [] as Item[], ...empty }), []);
 }
 
-export function useItemById(id: string): QueryResult<Item | undefined> {
-  const { isDemo, demoStore, version } = useDemo();
-  return useMemo(() => {
-    if (isDemo && demoStore) return { data: demoStore.getItemById(id), isLoading: false, error: null };
-    return { data: undefined, isLoading: false, error: null };
-  }, [isDemo, demoStore, version, id]);
+export function useItemById(_id: string): QueryResult<Item | undefined> {
+  return useMemo(() => ({ data: undefined, ...empty }), []);
 }
 
 export function useCategories(): QueryResult<Category[]> {
-  const { isDemo, demoStore, version } = useDemo();
-  return useMemo(() => {
-    if (isDemo && demoStore) return { data: demoStore.getCategories(), isLoading: false, error: null };
-    return { data: [] as Category[], isLoading: false, error: null };
-  }, [isDemo, demoStore, version]);
+  return useMemo(() => ({ data: [] as Category[], ...empty }), []);
 }
 
 export function useSuppliers(): QueryResult<Supplier[]> {
-  const { isDemo, demoStore, version } = useDemo();
-  return useMemo(() => {
-    if (isDemo && demoStore) return { data: [...demoStore.getSuppliers()], isLoading: false, error: null };
-    return { data: [] as Supplier[], isLoading: false, error: null };
-  }, [isDemo, demoStore, version]);
+  return useMemo(() => ({ data: [] as Supplier[], ...empty }), []);
 }
 
 export function useLocations(): QueryResult<Location[]> {
-  const { isDemo, demoStore, version } = useDemo();
-  return useMemo(() => {
-    if (isDemo && demoStore) return { data: demoStore.getLocations(), isLoading: false, error: null };
-    return { data: [] as Location[], isLoading: false, error: null };
-  }, [isDemo, demoStore, version]);
+  return useMemo(() => ({ data: [] as Location[], ...empty }), []);
 }
 
-export function useMovements(limit?: number): QueryResult<StockMovement[]> {
-  const { isDemo, demoStore, version } = useDemo();
-  return useMemo(() => {
-    if (isDemo && demoStore) {
-      const data = limit ? demoStore.getRecentMovements(limit) : demoStore.getMovements();
-      return { data, isLoading: false, error: null };
-    }
-    return { data: [] as StockMovement[], isLoading: false, error: null };
-  }, [isDemo, demoStore, version, limit]);
+export function useMovements(_limit?: number): QueryResult<StockMovement[]> {
+  return useMemo(() => ({ data: [] as StockMovement[], ...empty }), []);
 }
 
 export function useStockSummary(): QueryResult<StockSummary> {
-  const { isDemo, demoStore, version } = useDemo();
-  return useMemo(() => {
-    if (isDemo && demoStore) return { data: demoStore.getStockSummary(), isLoading: false, error: null };
-    return { data: { total: 0, inStock: 0, lowStock: 0, outOfStock: 0 }, isLoading: false, error: null };
-  }, [isDemo, demoStore, version]);
+  return useMemo(
+    () => ({ data: { total: 0, inStock: 0, lowStock: 0, outOfStock: 0 }, ...empty }),
+    [],
+  );
 }
 
 export function usePurchaseOrders(): QueryResult<PurchaseOrder[]> {
-  const { isDemo, demoStore, version } = useDemo();
-  return useMemo(() => {
-    if (isDemo && demoStore) return { data: [...demoStore.getPurchaseOrders()], isLoading: false, error: null };
-    return { data: [] as PurchaseOrder[], isLoading: false, error: null };
-  }, [isDemo, demoStore, version]);
+  return useMemo(() => ({ data: [] as PurchaseOrder[], ...empty }), []);
 }
 
 export function useRequests(): QueryResult<InventoryRequest[]> {
-  const { isDemo, demoStore, version } = useDemo();
-  return useMemo(() => {
-    if (isDemo && demoStore) return { data: [...demoStore.getRequests()], isLoading: false, error: null };
-    return { data: [] as InventoryRequest[], isLoading: false, error: null };
-  }, [isDemo, demoStore, version]);
+  return useMemo(() => ({ data: [] as InventoryRequest[], ...empty }), []);
 }
