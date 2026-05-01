@@ -263,6 +263,7 @@ export async function postMouldingRun(input: {
       qty: units,
       to_zone_id: input.fg_zone_id,
       notes: `Moulding · ${input.shots_good} shots × ${input.cavity_used} cav`,
+      skip_bom: true,
     });
   }
 
@@ -323,6 +324,7 @@ export async function postPackingRun(input: {
     qty: input.packs,
     to_zone_id: input.fg_zone_id,
     notes: `Packing · ${input.packs} packs of ${input.units_per_pack}`,
+    skip_bom: true,
   });
 
   // 4. Audit
