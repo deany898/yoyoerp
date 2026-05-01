@@ -1392,6 +1392,7 @@ export type Database = {
       payroll_config: {
         Row: {
           daily_wage: number
+          duty_hours: number
           hourly_rate: number
           monthly_salary: number
           notes: string | null
@@ -1403,6 +1404,7 @@ export type Database = {
         }
         Insert: {
           daily_wage?: number
+          duty_hours?: number
           hourly_rate?: number
           monthly_salary?: number
           notes?: string | null
@@ -1414,6 +1416,7 @@ export type Database = {
         }
         Update: {
           daily_wage?: number
+          duty_hours?: number
           hourly_rate?: number
           monthly_salary?: number
           notes?: string | null
@@ -2287,6 +2290,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      role_module_access: {
+        Row: {
+          granted: boolean
+          module: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+        }
+        Insert: {
+          granted?: boolean
+          module: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Update: {
+          granted?: boolean
+          module?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Relationships: []
       }
       role_permissions: {
         Row: {

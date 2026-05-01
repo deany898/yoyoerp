@@ -98,7 +98,6 @@ const navGroups: NavGroup[] = [
   {
     label: "Contacts",
     items: [
-      { label: "User management", href: "/app/users", icon: ShieldCheck },
       { label: "Customers", href: "/app/customers", icon: Users },
       { label: "Suppliers", href: "/app/suppliers", icon: Truck },
       { label: "Workers", href: "/app/workers", icon: HardHat },

@@ -352,6 +352,16 @@ async function adjustStockBucket(
 }
 
 export async function postMovement(input: PostMovementInput) {
+  // Respect the global "Track inventory" toggle. When disabled, skip all stock writes.
+  const { data: trackFlag } = await supabase
+    .from("app_config_flags")
+    .select("enabled")
+    .eq("key", "inventory.track_stock")
+    .maybeSingle();
+  if (trackFlag && trackFlag.enabled === false) {
+    return;
+  }
+
   const { data: user } = await supabase.auth.getUser();
   const performed_by = user.user?.id ?? null;
 

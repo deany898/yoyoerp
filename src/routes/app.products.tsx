@@ -12,6 +12,7 @@ import { TableSkeleton } from "@/components/shared/skeletons";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useProducts, useCategories, type ProductWithVariants } from "@/hooks/useErpData";
 import { ExportButton } from "@/components/shared/ExportButton";
+import { ImportButton } from "@/components/shared/ImportButton";
 import { ProductFormSheet } from "@/components/products/ProductFormSheet";
 import { ProductCard } from "@/components/products/ProductCard";
 import { usePermissions, PermissionGate } from "@/hooks/usePermissions";
@@ -72,35 +73,51 @@ function ProductsPage() {
             {loading ? "Loading…" : `${products.length} product${products.length === 1 ? "" : "s"} · ${products.reduce((s, p) => s + p.variants.length, 0)} SKUs`}
           </p>
         </div>
-        <PermissionGate permission="create_item">
-          <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> New product</Button>
-        </PermissionGate>
-        <ExportButton
-          filename="products"
-          capability="products.export"
-          rows={products.flatMap((p) =>
-            p.variants.map((v) => ({
-              product_code: p.code,
-              product_name: p.name,
-              product_type: p.product_type ?? "",
-              variant_sku: v.sku ?? "",
-              variant_label: (v as unknown as { variant_label?: string }).variant_label ?? "",
-              effective_cost: v.effective_cost ?? 0,
-              base_uom: (v as unknown as { base_uom?: string }).base_uom ?? "",
-              is_active: v.is_active ? "yes" : "no",
-            })),
-          )}
-          columns={[
-            { key: "product_code", label: "Product code" },
-            { key: "product_name", label: "Product name" },
-            { key: "product_type", label: "Type" },
-            { key: "variant_sku", label: "SKU" },
-            { key: "variant_label", label: "Variant" },
-            { key: "effective_cost", label: "Effective cost" },
-            { key: "base_uom", label: "UoM" },
-            { key: "is_active", label: "Active" },
-          ]}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <ImportButton
+            table="products"
+            entityName="products"
+            capability="products.import"
+            onImported={refresh}
+            fields={[
+              { key: "code", label: "Code", required: true },
+              { key: "name", label: "Name", required: true },
+              { key: "product_type", label: "Type" },
+              { key: "uom", label: "UoM" },
+              { key: "hsn_code", label: "HSN" },
+              { key: "description", label: "Description" },
+            ]}
+          />
+          <ExportButton
+            filename="products"
+            capability="products.export"
+            rows={products.flatMap((p) =>
+              p.variants.map((v) => ({
+                product_code: p.code,
+                product_name: p.name,
+                product_type: p.product_type ?? "",
+                variant_sku: v.sku ?? "",
+                variant_label: (v as unknown as { variant_label?: string }).variant_label ?? "",
+                effective_cost: v.effective_cost ?? 0,
+                base_uom: (v as unknown as { base_uom?: string }).base_uom ?? "",
+                is_active: v.is_active ? "yes" : "no",
+              })),
+            )}
+            columns={[
+              { key: "product_code", label: "Product code" },
+              { key: "product_name", label: "Product name" },
+              { key: "product_type", label: "Type" },
+              { key: "variant_sku", label: "SKU" },
+              { key: "variant_label", label: "Variant" },
+              { key: "effective_cost", label: "Effective cost" },
+              { key: "base_uom", label: "UoM" },
+              { key: "is_active", label: "Active" },
+            ]}
+          />
+          <PermissionGate permission="create_item">
+            <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> New product</Button>
+          </PermissionGate>
+        </div>
       </header>
 
       <div className="flex flex-col gap-2 md:flex-row">

@@ -57,6 +57,9 @@ export const FLAGS = {
   customers: {
     showFinanceFields: "customers.show_finance_fields",
   },
+  inventory: {
+    trackStock: "inventory.track_stock",
+  },
   nav: {
     showQuickOrder: "nav.show_quick_order",
     showCommandCenter: "nav.show_command_center",
@@ -80,4 +83,7 @@ export const ROUTE_FLAGS: Record<string, string> = {
   "/app/stations": FLAGS.modules.stations,
   "/app/stages": FLAGS.modules.stages,
   "/app/quick-order": FLAGS.nav.showQuickOrder,
+  "/app/inventory": FLAGS.inventory.trackStock,
+  "/app/movements": FLAGS.inventory.trackStock,
+  "/app/requests": FLAGS.inventory.trackStock,
 };
