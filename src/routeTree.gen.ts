@@ -14,6 +14,7 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppWorkersRouteImport } from './routes/app.workers'
+import { Route as AppWorkLogsRouteImport } from './routes/app.work-logs'
 import { Route as AppWarehousesRouteImport } from './routes/app.warehouses'
 import { Route as AppUsersRouteImport } from './routes/app.users'
 import { Route as AppSuppliersRouteImport } from './routes/app.suppliers'
@@ -62,6 +63,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppWorkersRoute = AppWorkersRouteImport.update({
   id: '/workers',
   path: '/workers',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppWorkLogsRoute = AppWorkLogsRouteImport.update({
+  id: '/work-logs',
+  path: '/work-logs',
   getParentRoute: () => AppRoute,
 } as any)
 const AppWarehousesRoute = AppWarehousesRouteImport.update({
@@ -212,6 +218,7 @@ export interface FileRoutesByFullPath {
   '/app/suppliers': typeof AppSuppliersRoute
   '/app/users': typeof AppUsersRoute
   '/app/warehouses': typeof AppWarehousesRoute
+  '/app/work-logs': typeof AppWorkLogsRoute
   '/app/workers': typeof AppWorkersRoute
   '/app/': typeof AppIndexRoute
   '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
@@ -242,6 +249,7 @@ export interface FileRoutesByTo {
   '/app/suppliers': typeof AppSuppliersRoute
   '/app/users': typeof AppUsersRoute
   '/app/warehouses': typeof AppWarehousesRoute
+  '/app/work-logs': typeof AppWorkLogsRoute
   '/app/workers': typeof AppWorkersRoute
   '/app': typeof AppIndexRoute
   '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
@@ -274,6 +282,7 @@ export interface FileRoutesById {
   '/app/suppliers': typeof AppSuppliersRoute
   '/app/users': typeof AppUsersRoute
   '/app/warehouses': typeof AppWarehousesRoute
+  '/app/work-logs': typeof AppWorkLogsRoute
   '/app/workers': typeof AppWorkersRoute
   '/app/': typeof AppIndexRoute
   '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
@@ -307,6 +316,7 @@ export interface FileRouteTypes {
     | '/app/suppliers'
     | '/app/users'
     | '/app/warehouses'
+    | '/app/work-logs'
     | '/app/workers'
     | '/app/'
     | '/app/manufacturing/$moId'
@@ -337,6 +347,7 @@ export interface FileRouteTypes {
     | '/app/suppliers'
     | '/app/users'
     | '/app/warehouses'
+    | '/app/work-logs'
     | '/app/workers'
     | '/app'
     | '/app/manufacturing/$moId'
@@ -368,6 +379,7 @@ export interface FileRouteTypes {
     | '/app/suppliers'
     | '/app/users'
     | '/app/warehouses'
+    | '/app/work-logs'
     | '/app/workers'
     | '/app/'
     | '/app/manufacturing/$moId'
@@ -414,6 +426,13 @@ declare module '@tanstack/react-router' {
       path: '/workers'
       fullPath: '/app/workers'
       preLoaderRoute: typeof AppWorkersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/work-logs': {
+      id: '/app/work-logs'
+      path: '/work-logs'
+      fullPath: '/app/work-logs'
+      preLoaderRoute: typeof AppWorkLogsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/warehouses': {
@@ -622,6 +641,7 @@ interface AppRouteChildren {
   AppSuppliersRoute: typeof AppSuppliersRoute
   AppUsersRoute: typeof AppUsersRoute
   AppWarehousesRoute: typeof AppWarehousesRoute
+  AppWorkLogsRoute: typeof AppWorkLogsRoute
   AppWorkersRoute: typeof AppWorkersRoute
   AppIndexRoute: typeof AppIndexRoute
 }
@@ -650,6 +670,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSuppliersRoute: AppSuppliersRoute,
   AppUsersRoute: AppUsersRoute,
   AppWarehousesRoute: AppWarehousesRoute,
+  AppWorkLogsRoute: AppWorkLogsRoute,
   AppWorkersRoute: AppWorkersRoute,
   AppIndexRoute: AppIndexRoute,
 }
