@@ -2,6 +2,7 @@ import { Outlet, createRootRoute, HeadContent, Scripts, Link } from "@tanstack/r
 import { RoleProvider } from "@/contexts/RoleContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { RoleSimulatorProvider } from "@/contexts/RoleSimulatorContext";
+import { AppConfigProvider } from "@/contexts/AppConfigContext";
 import { Toaster } from "@/components/ui/sonner";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { ConfirmProvider } from "@/components/forms/ConfirmDialog";
@@ -70,11 +71,13 @@ function RootComponent() {
     <AuthProvider>
       <RoleSimulatorProvider>
         <RoleProvider>
+        <AppConfigProvider>
         <ConfirmProvider>
           <ErrorBoundary>
             <Outlet />
           </ErrorBoundary>
         </ConfirmProvider>
+        </AppConfigProvider>
         <Toaster
           position="top-right"
           richColors
