@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { useInventory, useWarehouses } from "@/hooks/useErpData";
 import { StockMovementSheet } from "@/components/inventory/StockMovementSheet";
 import { PermissionGate } from "@/hooks/usePermissions";
+import { ExportButton } from "@/components/shared/ExportButton";
 
 export const Route = createFileRoute("/app/inventory")({
   head: () => ({
@@ -64,11 +65,30 @@ function InventoryPage() {
           <h1 className="text-2xl font-semibold text-foreground">Inventory</h1>
           <p className="text-sm text-muted-foreground">Live stock by warehouse zone · weighted-average costing</p>
         </div>
-        <PermissionGate permission="log_movement">
-          <Button onClick={() => setMoveOpen(true)} className="gap-1.5">
-            <Plus className="h-4 w-4" /> Post movement
-          </Button>
-        </PermissionGate>
+        <div className="flex items-center gap-2">
+          <ExportButton
+            filename="inventory"
+            capability="inventory.export"
+            rows={filtered as unknown as Record<string, unknown>[]}
+            columns={[
+              { key: "product_name", label: "Product" },
+              { key: "variant_name", label: "Variant" },
+              { key: "sku", label: "SKU" },
+              { key: "warehouse_name", label: "Warehouse" },
+              { key: "zone_name", label: "Zone" },
+              { key: "on_hand", label: "On hand" },
+              { key: "reserved", label: "Reserved" },
+              { key: "available", label: "Available" },
+              { key: "avg_cost", label: "Avg cost" },
+              { key: "reorder_point", label: "Reorder point" },
+            ]}
+          />
+          <PermissionGate permission="log_movement">
+            <Button onClick={() => setMoveOpen(true)} className="gap-1.5">
+              <Plus className="h-4 w-4" /> Post movement
+            </Button>
+          </PermissionGate>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

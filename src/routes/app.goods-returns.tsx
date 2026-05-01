@@ -26,6 +26,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ExportButton } from "@/components/shared/ExportButton";
 
 export const Route = createFileRoute("/app/goods-returns")({
   component: GoodsReturnsPage,
@@ -335,7 +336,22 @@ function GoodsReturnsPage() {
             {loading ? "Loading…" : `${returns.length} return${returns.length === 1 ? "" : "s"}`}
           </p>
         </div>
-        {canEdit && <Button onClick={openCreate} className="gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"><Plus className="h-4 w-4" /> New goods return</Button>}
+        <div className="flex items-center gap-2">
+          <ExportButton
+            filename="goods_returns"
+            capability="returns.export"
+            rows={returns as unknown as Record<string, unknown>[]}
+            columns={[
+              { key: "gr_number", label: "GR #" },
+              { key: "customer", label: "Customer", format: (v) => (v as { name?: string } | null)?.name ?? "" },
+              { key: "dispatch_order", label: "Linked DO", format: (v) => (v as { do_number?: string } | null)?.do_number ?? "" },
+              { key: "status", label: "Status" },
+              { key: "return_date", label: "Return date" },
+              { key: "refund_amount", label: "Refund" },
+            ]}
+          />
+          {canEdit && <Button onClick={openCreate} className="gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"><Plus className="h-4 w-4" /> New goods return</Button>}
+        </div>
       </header>
 
       <div className="rounded-xl border border-border bg-card overflow-x-auto">

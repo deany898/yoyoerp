@@ -26,6 +26,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ExportButton } from "@/components/shared/ExportButton";
 
 export const Route = createFileRoute("/app/requests")({
   component: RequestsPage,
@@ -165,9 +166,23 @@ function RequestsPage() {
           <h1 className="text-2xl font-semibold text-foreground">Inventory requests</h1>
           <p className="text-sm text-muted-foreground">{requests.length} requests</p>
         </div>
-        <Button size="sm" onClick={openCreate}>
-          <Plus className="mr-1.5 h-4 w-4" /> New request
-        </Button>
+        <div className="flex items-center gap-2">
+          <ExportButton
+            filename="inventory_requests"
+            capability="movements.export"
+            rows={requests as unknown as Record<string, unknown>[]}
+            columns={[
+              { key: "request_number", label: "Request #" },
+              { key: "status", label: "Status" },
+              { key: "lines", label: "Lines", format: (v) => Array.isArray(v) ? v.length : 0 },
+              { key: "reason", label: "Reason" },
+              { key: "created_at", label: "Created", format: (v) => v ? new Date(v as string).toISOString() : "" },
+            ]}
+          />
+          <Button size="sm" onClick={openCreate}>
+            <Plus className="mr-1.5 h-4 w-4" /> New request
+          </Button>
+        </div>
       </div>
 
       {loading ? (
