@@ -289,31 +289,18 @@ function AuthPage() {
                   Continue with Google
                 </Button>
 
-                <p className="mt-6 text-center text-sm text-muted-foreground">
-                  {tab === "signin" ? (
-                    <>
-                      New here?{" "}
-                      <button
-                        type="button"
-                        onClick={() => setTab("signup")}
-                        className="font-medium text-primary hover:underline"
-                      >
-                        Create an account
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      Already have an account?{" "}
-                      <button
-                        type="button"
-                        onClick={() => setTab("signin")}
-                        className="font-medium text-primary hover:underline"
-                      >
-                        Sign in
-                      </button>
-                    </>
-                  )}
-                </p>
+                {tab === "signup" && (
+                  <p className="mt-6 text-center text-sm text-muted-foreground">
+                    Already have an account?{" "}
+                    <button
+                      type="button"
+                      onClick={() => setTab("signin")}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      Sign in
+                    </button>
+                  </p>
+                )}
               </Tabs>
         </div>
       </main>
