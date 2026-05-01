@@ -14,6 +14,7 @@ import { QuickOrderCustomerCard } from "@/components/quick-order/QuickOrderCusto
 import { ProductSearchBox } from "@/components/quick-order/ProductSearchBox";
 import { StickyTotals } from "@/components/quick-order/StickyTotals";
 import type { ExtraCharge } from "@/components/quick-order/StickyTotals";
+import { LeaveGuard } from "@/components/quick-order/LeaveGuard";
 import { uomFactor, getUomOptions, type PickerVariant, type PackagingRow } from "@/components/quick-order/types";
 import { lineMath, loadTierPrices, resolvePrice, type TierPriceMap } from "@/lib/quick-order-pricing";
 import {
@@ -385,8 +386,34 @@ function QuickOrderPage() {
   const recentVariants = recentIds.map((id) => variantsById.get(id)).filter(Boolean) as PickerVariant[];
   const frequentVariants = frequentIds.map((id) => variantsById.get(id)).filter(Boolean) as PickerVariant[];
 
+  // Track whether the user has anything worth saving. We only prompt
+  // on leave when this is true and the page is not actively submitting.
+  const dirty = !saving && (
+    filled.length > 0 ||
+    !!customerName.trim() ||
+    !!customerId
+  );
+
+  async function saveDraftOnLeave() {
+    if (filled.length === 0 && !customerName.trim()) return;
+    if (!canEdit) return;
+    try {
+      await submit(true);
+    } catch {
+      // submit() handles its own error toasts; swallow so navigation can proceed.
+    }
+  }
+
+  function discardOrder() {
+    clearDraft();
+    setLines([newLine()]);
+    setExtraCharges([]);
+    toast.info("Order discarded");
+  }
+
   return (
     <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-[1600px] flex-col gap-3 pb-24">
+      <LeaveGuard dirty={dirty} onSaveDraft={saveDraftOnLeave} onDiscard={discardOrder} />
       {/* Desktop: light header with shipping + terms + DO number (no customer field — captured below) */}
       <div className="hidden md:block">
         <QuickOrderHeader
