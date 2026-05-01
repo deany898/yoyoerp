@@ -48,7 +48,6 @@ interface CustomerRow {
 
 function emptyDraft(): Partial<CustomerRow> {
   return {
-    code: `C-${Math.floor(Math.random() * 9000 + 1000)}`,
     name: "", pricing_tier: "standard", is_active: true,
   };
 }
@@ -91,8 +90,8 @@ function CustomersPage() {
   async function save() {
     if (!draft?.name?.trim()) { toast.error("Name is required"); return; }
     setSaving(true);
-    const payload = {
-      code: draft.code!, name: draft.name!, contact_name: draft.contact_name ?? null,
+    const basePayload = {
+      name: draft.name!, contact_name: draft.contact_name ?? null,
       phone: draft.phone ?? null, email: draft.email ?? null,
       gst_number: draft.gst_number ?? null, pan_number: draft.pan_number ?? null,
       pricing_tier: draft.pricing_tier ?? "standard",
@@ -104,8 +103,8 @@ function CustomersPage() {
       is_active: draft.is_active ?? true,
     };
     const res = draft.id
-      ? await supabase.from("customers").update(payload).eq("id", draft.id)
-      : await supabase.from("customers").insert(payload);
+      ? await supabase.from("customers").update({ ...basePayload, code: draft.code! }).eq("id", draft.id)
+      : await supabase.from("customers").insert({ ...basePayload, code: "" });
     setSaving(false);
     if (res.error) { toast.error("Save failed", { description: res.error.message }); return; }
     toast.success(draft.id ? "Customer updated" : "Customer created");
