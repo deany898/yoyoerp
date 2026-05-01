@@ -54,6 +54,12 @@ export async function postMoOutput(input: {
   qty: number;
   to_zone_id: string;
   notes?: string | null;
+  /**
+   * Skip the BOM auto-deduction. Set true when the caller has already
+   * issued raw materials explicitly (e.g. moulding/packing runs).
+   * Defaults to false → BOM is consumed automatically.
+   */
+  skip_bom?: boolean;
 }) {
   await postMovement({
     variant_id: input.variant_id,
@@ -88,6 +94,106 @@ export async function postMoOutput(input: {
       .update({ qty_produced: Number(mo.qty_produced) + input.qty })
       .eq("id", input.mo_id);
   }
+
+  // Auto-deduct components per active BOM (best-effort · skipped for callers
+  // that already issued materials, like moulding / packing runs).
+  if (!input.skip_bom) {
+    try {
+      await consumeBomForOutput({
+        mo_id: input.mo_id,
+        variant_id: input.variant_id,
+        qty: input.qty,
+      });
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error("BOM auto-deduction failed", e);
+    }
+  }
+}
+
+/**
+ * Resolve the active BOM for a produced variant and issue every component
+ * proportionally to the produced quantity. Pulls each component from the
+ * first active raw_material zone in the MO's warehouse, falling back to any
+ * active zone in that warehouse. Skips silently if no BOM exists.
+ */
+export async function consumeBomForOutput(input: {
+  mo_id: string;
+  variant_id: string;
+  qty: number;
+}): Promise<{ posted: number; skipped: number }> {
+  // Find active BOM for this variant
+  const { data: bom } = await supabase
+    .from("bom_master")
+    .select("id, yield_qty")
+    .eq("variant_id", input.variant_id)
+    .eq("is_active", true)
+    .order("version", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!bom) return { posted: 0, skipped: 0 };
+
+  const { data: lines } = await supabase
+    .from("bom_lines")
+    .select("component_variant_id, qty_per, scrap_pct")
+    .eq("bom_id", bom.id);
+  if (!lines || lines.length === 0) return { posted: 0, skipped: 0 };
+
+  // Resolve source zone via the MO's warehouse
+  const { data: mo } = await supabase
+    .from("manufacturing_orders")
+    .select("warehouse_id, mo_number")
+    .eq("id", input.mo_id)
+    .maybeSingle();
+
+  let fromZoneId: string | null = null;
+  if (mo?.warehouse_id) {
+    const { data: rz } = await supabase
+      .from("warehouse_zones")
+      .select("id")
+      .eq("warehouse_id", mo.warehouse_id)
+      .eq("kind", "raw_material")
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+    fromZoneId = rz?.id ?? null;
+    if (!fromZoneId) {
+      const { data: any } = await supabase
+        .from("warehouse_zones")
+        .select("id")
+        .eq("warehouse_id", mo.warehouse_id)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      fromZoneId = any?.id ?? null;
+    }
+  }
+  if (!fromZoneId) return { posted: 0, skipped: lines.length };
+
+  const yieldQty = Number(bom.yield_qty) || 1;
+  const factor = Number(input.qty) / yieldQty;
+
+  let posted = 0;
+  for (const l of lines) {
+    const consumeQty = Number(l.qty_per) * (1 + Number(l.scrap_pct ?? 0) / 100) * factor;
+    if (!consumeQty || consumeQty <= 0) continue;
+    try {
+      await postMovement({
+        variant_id: l.component_variant_id,
+        qty: consumeQty,
+        reason: "consumption",
+        from_zone_id: fromZoneId,
+        reference_type: "manufacturing_order",
+        reference_id: input.mo_id,
+        notes: `BOM auto · ${mo?.mo_number ?? ""}`,
+      });
+      posted++;
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error("BOM line consumption failed", e);
+    }
+  }
+  return { posted, skipped: lines.length - posted };
 }
 
 /**
@@ -157,6 +263,7 @@ export async function postMouldingRun(input: {
       qty: units,
       to_zone_id: input.fg_zone_id,
       notes: `Moulding · ${input.shots_good} shots × ${input.cavity_used} cav`,
+      skip_bom: true,
     });
   }
 
@@ -217,6 +324,7 @@ export async function postPackingRun(input: {
     qty: input.packs,
     to_zone_id: input.fg_zone_id,
     notes: `Packing · ${input.packs} packs of ${input.units_per_pack}`,
+    skip_bom: true,
   });
 
   // 4. Audit

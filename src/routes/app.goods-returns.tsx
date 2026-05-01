@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Undo2, Pencil, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useProducts, useWarehouses } from "@/hooks/useErpData";
+import { useProducts, useWarehouses, postMovement } from "@/hooks/useErpData";
 import { useRole } from "@/hooks/useRole";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -282,37 +282,30 @@ function GoodsReturnsPage() {
     if (!id) { setBusyTransition(null); return; }
 
     if (t === "receive") {
-      const { data: { user } } = await supabase.auth.getUser();
-      const movements = updated.lines.map((l) => ({
-        variant_id: l.variant_id,
-        qty: l.qty,
-        to_zone_id: l.condition === "resaleable" ? l.restock_zone_id : null,
-        from_zone_id: null,
-        reason: (l.condition === "resaleable" ? "return" : "scrap") as "return" | "scrap",
-        reference_type: "goods_return",
-        reference_id: id,
-        unit_cost: l.unit_price,
-        performed_by: user?.id ?? null,
-        notes: `GR ${updated.gr_number} · ${l.condition}`,
-      })).filter((m) => m.qty > 0);
-      const { error: mErr } = await supabase.from("stock_movements").insert(movements);
-      if (mErr) { setBusyTransition(null); toast.error("Stock movement failed", { description: mErr.message }); return; }
-      for (const m of movements.filter((x) => x.to_zone_id)) {
-        const { data: stock } = await supabase
-          .from("inventory_stock")
-          .select("id, on_hand")
-          .eq("variant_id", m.variant_id).eq("zone_id", m.to_zone_id!).maybeSingle();
-        if (stock) {
-          await supabase.from("inventory_stock")
-            .update({ on_hand: Number(stock.on_hand) + m.qty })
-            .eq("id", stock.id);
-        } else {
-          await supabase.from("inventory_stock").insert({
-            variant_id: m.variant_id, zone_id: m.to_zone_id!, on_hand: m.qty,
+      // Re-route through postMovement so we honour the global Track Inventory
+      // toggle, write to the audit log, and keep all stock buckets consistent.
+      let posted = 0;
+      for (const l of updated.lines) {
+        if (!l.qty || l.qty <= 0) continue;
+        try {
+          await postMovement({
+            variant_id: l.variant_id,
+            qty: l.qty,
+            reason: l.condition === "resaleable" ? "return" : "scrap",
+            to_zone_id: l.condition === "resaleable" ? l.restock_zone_id : null,
+            from_zone_id: null,
+            unit_cost: l.unit_price ?? null,
+            reference_type: "goods_return",
+            reference_id: id,
+            notes: `GR ${updated.gr_number} · ${l.condition}`,
           });
+          posted++;
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error("GR receive movement failed", err);
         }
       }
-      toast.success(`Return received · ${movements.length} item(s) processed`);
+      toast.success(`Return received · ${posted} item${posted === 1 ? "" : "s"} processed`);
     } else {
       toast.success(`Return ${nextStatus.replace(/_/g, " ")}`);
     }
