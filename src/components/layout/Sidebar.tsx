@@ -16,9 +16,14 @@ import {
   ClipboardCheck,
   Undo2,
   LogOut,
-  Settings,
+  Tags,
+  Zap as ZapIcon,
+  Wrench,
+  Database,
+  Sliders,
+  ScrollText,
 } from "lucide-react";
-import { Cpu, Hammer, HardHat, Zap } from "lucide-react";
+import { Cpu, Hammer, HardHat, Zap, FileText, Lightbulb } from "lucide-react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/hooks/useRole";
@@ -54,39 +59,44 @@ interface NavGroup {
 
 const navGroups: NavGroup[] = [
   {
-    label: "Operations",
+    label: "Products",
     items: [
       { label: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard },
       { label: "Products", href: "/app/products", icon: Boxes },
-      { label: "Warehouses", href: "/app/warehouses", icon: Warehouse },
+      { label: "Categories", href: "/app/categories", icon: Tags },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
       { label: "Inventory", href: "/app/inventory", icon: Layers },
       { label: "Movements", href: "/app/movements", icon: ArrowLeftRight },
       { label: "Requests", href: "/app/requests", icon: Inbox },
-    ],
-  },
-  {
-    label: "Suppliers",
-    items: [
-      { label: "Suppliers", href: "/app/suppliers", icon: Truck },
-      { label: "Purchase orders", href: "/app/purchase-orders", icon: ClipboardList },
-    ],
-  },
-  {
-    label: "Sales",
-    items: [
-      { label: "Customers", href: "/app/customers", icon: Users },
       { label: "Quick order", href: "/app/quick-order", icon: Zap },
       { label: "Dispatch orders", href: "/app/dispatch-orders", icon: Send },
       { label: "Goods returns", href: "/app/goods-returns", icon: Undo2 },
+      { label: "Purchase orders", href: "/app/purchase-orders", icon: ClipboardList },
+      { label: "Warehouses", href: "/app/warehouses", icon: Warehouse },
+      { label: "Utilities", href: "/app/utilities", icon: Lightbulb },
     ],
   },
   {
     label: "Manufacturing",
     items: [
-      { label: "Work logs", href: "/app/work-logs", icon: ClipboardCheck },
       { label: "Stages", href: "/app/stages", icon: Layers },
       { label: "Machines", href: "/app/machines", icon: Cpu },
       { label: "Moulds", href: "/app/moulds", icon: Hammer },
+      { label: "Workers", href: "/app/workers", icon: HardHat },
+      { label: "Work logs", href: "/app/work-logs", icon: ClipboardCheck },
+      { label: "Production logs", href: "/app/manufacturing", icon: FileText },
+    ],
+  },
+  {
+    label: "Contacts",
+    items: [
+      { label: "User management", href: "/app/users", icon: ShieldCheck },
+      { label: "Customers", href: "/app/customers", icon: Users },
+      { label: "Suppliers", href: "/app/suppliers", icon: Truck },
       { label: "Workers", href: "/app/workers", icon: HardHat },
     ],
   },
@@ -94,12 +104,15 @@ const navGroups: NavGroup[] = [
     label: "Admin",
     items: [
       { label: "User management", href: "/app/users", icon: ShieldCheck },
+      { label: "System config", href: "/app/admin/system", icon: Sliders },
+      { label: "Presets", href: "/app/admin/presets", icon: Wrench },
+      { label: "Inventory settings", href: "/app/admin/inventory-settings", icon: Database },
+      { label: "Audit log", href: "/app/admin/audit", icon: ScrollText },
     ],
   },
   {
     label: "Support",
     items: [
-      { label: "Settings", href: "/app/settings", icon: Settings },
       { label: "Help", href: "/app/help", icon: HelpCircle },
     ],
   },
