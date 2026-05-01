@@ -567,13 +567,15 @@ function GoodsReturnsPage() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-3 border-t border-border pt-3">
-                <div>
-                  <Label>Refund amount ₹</Label>
-                  <Input type="number" min={0} step="any" value={draft.refund_amount || refundAuto}
-                    onChange={(e) => patchDraft({ refund_amount: Number(e.target.value) })} disabled={isReceived} />
-                  <p className="mt-1 text-[11px] text-muted-foreground">Auto from line totals · ₹{refundAuto.toLocaleString("en-IN")}</p>
-                </div>
+              <div className={`grid ${showFinance ? "grid-cols-2" : "grid-cols-1"} gap-3 border-t border-border pt-3`}>
+                {showFinance && (
+                  <div>
+                    <Label>Refund amount ₹</Label>
+                    <Input type="number" min={0} step="any" value={draft.refund_amount || refundAuto}
+                      onChange={(e) => patchDraft({ refund_amount: Number(e.target.value) })} disabled={isReceived} />
+                    <p className="mt-1 text-[11px] text-muted-foreground">Auto from line totals · ₹{refundAuto.toLocaleString("en-IN")}</p>
+                  </div>
+                )}
                 <div><Label>Notes</Label><Textarea rows={2} value={draft.notes} onChange={(e) => patchDraft({ notes: e.target.value })} disabled={isReceived} /></div>
               </div>
 
