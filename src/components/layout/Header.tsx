@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Menu, Wifi, WifiOff, Plus } from "lucide-react";
+import { Search, Menu, Wifi, WifiOff } from "lucide-react";
 import { Breadcrumbs } from "@/components/shell/Breadcrumbs";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { NotificationPreferences } from "@/components/notifications/NotificationPreferences";
@@ -11,7 +11,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Sidebar } from "./Sidebar";
-import { QuickEntryMode } from "@/components/data/QuickEntryMode";
 import { CommandPalette } from "@/components/command/CommandPalette";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { useRole } from "@/hooks/useRole";
@@ -40,7 +39,6 @@ const ROLE_LABELS: Record<string, string> = {
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [quickEntryOpen, setQuickEntryOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [prefsOpen, setPrefsOpen] = useState(false);
@@ -90,15 +88,6 @@ export function Header() {
         <kbd className="ml-auto hidden rounded-md border border-border bg-card px-1.5 py-0.5 font-mono text-[10px] font-medium md:inline-block">⌘K</kbd>
       </button>
 
-      <Button
-        size="sm"
-        onClick={() => setQuickEntryOpen(true)}
-        className="hidden h-10 gap-1.5 rounded-xl bg-secondary px-3.5 text-secondary-foreground shadow-sm hover:bg-secondary/90 md:inline-flex"
-      >
-        <Plus className="h-4 w-4" />
-        Quick entry
-      </Button>
-
       <span
         className={`hidden items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide md:inline-flex ${
           online
@@ -128,7 +117,6 @@ export function Header() {
         </SheetContent>
       </Sheet>
 
-      <QuickEntryMode open={quickEntryOpen} onOpenChange={setQuickEntryOpen} />
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <NotificationCenter open={notifOpen} onOpenChange={setNotifOpen} onOpenPrefs={() => { setNotifOpen(false); setTimeout(() => setPrefsOpen(true), 300); }} />
       <NotificationPreferences open={prefsOpen} onOpenChange={setPrefsOpen} />
