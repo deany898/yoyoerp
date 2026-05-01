@@ -373,7 +373,7 @@ function GoodsReturnsPage() {
                 <TableHead>Linked DO</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Return date</TableHead>
-                <TableHead className="text-right font-mono">Refund ₹</TableHead>
+                {showFinance && <TableHead className="text-right font-mono">Refund ₹</TableHead>}
                 <TableHead className="w-32"></TableHead>
               </TableRow>
             </TableHeader>
@@ -385,7 +385,7 @@ function GoodsReturnsPage() {
                   <TableCell className="font-mono text-xs text-muted-foreground">{r.dispatch_order?.do_number ?? "—"}</TableCell>
                   <TableCell><Badge variant="outline" className={STATUS_TONE[r.status]}>{r.status.replace(/_/g, " ")}</Badge></TableCell>
                   <TableCell className="text-sm text-muted-foreground">{r.return_date}</TableCell>
-                  <TableCell className="text-right font-mono">{Number(r.refund_amount).toLocaleString("en-IN")}</TableCell>
+                  {showFinance && <TableCell className="text-right font-mono">{Number(r.refund_amount).toLocaleString("en-IN")}</TableCell>}
                   <TableCell>
                     {canEdit && (
                       <div className="flex justify-end gap-1">
