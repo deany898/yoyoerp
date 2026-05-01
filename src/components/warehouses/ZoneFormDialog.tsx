@@ -22,7 +22,7 @@ const KINDS = [
 type Kind = (typeof KINDS)[number]["v"];
 
 const schema = z.object({
-  code: z.string().trim().min(1).max(20),
+  code: z.string().trim().max(20).optional().or(z.literal("")),
   name: z.string().trim().min(2).max(120),
   kind: z.enum(["raw_material","wip","finished_good","packaging","dispatch","quarantine","returns","other"]),
 });
@@ -55,12 +55,20 @@ export function ZoneFormDialog({ open, onOpenChange, warehouseId, zone, onSaved 
     if (!parsed.success) { toast.error(parsed.error.issues[0]?.message); return; }
     setBusy(true);
     try {
-      const payload = { warehouse_id: warehouseId, code: parsed.data.code.toUpperCase(), name: parsed.data.name, kind: parsed.data.kind };
+      const payload = {
+        warehouse_id: warehouseId,
+        name: parsed.data.name,
+        kind: parsed.data.kind,
+        code: parsed.data.code ? parsed.data.code.toUpperCase() : "",
+      };
       if (isEdit && zone) {
         const { error } = await supabase.from("warehouse_zones").update(payload).eq("id", zone.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("warehouse_zones").insert(payload);
+        // Strip code on insert so the DB trigger can auto-generate it
+        const { code: _code, ...insertPayload } = payload;
+        void _code;
+        const { error } = await supabase.from("warehouse_zones").insert(insertPayload as typeof payload);
         if (error) throw error;
       }
       toast.success(isEdit ? "Zone updated" : "Zone added");
@@ -77,7 +85,7 @@ export function ZoneFormDialog({ open, onOpenChange, warehouseId, zone, onSaved 
         <DialogHeader><DialogTitle>{isEdit ? "Edit zone" : "Add zone"}</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5"><Label>Code</Label><Input value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))} /></div>
+            <div className="space-y-1.5"><Label>Code</Label><Input value={isEdit ? form.code : "Auto-generated on save"} disabled className="bg-muted/40" /></div>
             <div className="space-y-1.5">
               <Label>Kind</Label>
               <Select value={form.kind} onValueChange={(v) => setForm((f) => ({ ...f, kind: v as Kind }))}>

@@ -48,7 +48,6 @@ interface CustomerRow {
 
 function emptyDraft(): Partial<CustomerRow> {
   return {
-    code: `C-${Math.floor(Math.random() * 9000 + 1000)}`,
     name: "", pricing_tier: "standard", is_active: true,
   };
 }
@@ -91,8 +90,8 @@ function CustomersPage() {
   async function save() {
     if (!draft?.name?.trim()) { toast.error("Name is required"); return; }
     setSaving(true);
-    const payload = {
-      code: draft.code!, name: draft.name!, contact_name: draft.contact_name ?? null,
+    const basePayload = {
+      name: draft.name!, contact_name: draft.contact_name ?? null,
       phone: draft.phone ?? null, email: draft.email ?? null,
       gst_number: draft.gst_number ?? null, pan_number: draft.pan_number ?? null,
       pricing_tier: draft.pricing_tier ?? "standard",
@@ -104,8 +103,8 @@ function CustomersPage() {
       is_active: draft.is_active ?? true,
     };
     const res = draft.id
-      ? await supabase.from("customers").update(payload).eq("id", draft.id)
-      : await supabase.from("customers").insert(payload);
+      ? await supabase.from("customers").update({ ...basePayload, code: draft.code! }).eq("id", draft.id)
+      : await supabase.from("customers").insert({ ...basePayload, code: "" });
     setSaving(false);
     if (res.error) { toast.error("Save failed", { description: res.error.message }); return; }
     toast.success(draft.id ? "Customer updated" : "Customer created");
@@ -197,7 +196,7 @@ function CustomersPage() {
             <div className="mt-6 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Name *</Label><Input value={draft.name ?? ""} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></div>
-                <div><Label>Code</Label><Input value={draft.code ?? ""} onChange={(e) => setDraft({ ...draft, code: e.target.value })} /></div>
+                <div><Label>Code</Label><Input value={(draft.code ?? "") || "Auto-generated on save"} disabled className="bg-muted/40" /></div>
                 <div><Label>Contact name</Label><Input value={draft.contact_name ?? ""} onChange={(e) => setDraft({ ...draft, contact_name: e.target.value })} /></div>
                 <div><Label>Phone</Label><Input value={draft.phone ?? ""} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} /></div>
                 <div><Label>Email</Label><Input type="email" value={draft.email ?? ""} onChange={(e) => setDraft({ ...draft, email: e.target.value })} /></div>

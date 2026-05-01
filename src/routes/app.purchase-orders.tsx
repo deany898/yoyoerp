@@ -291,7 +291,7 @@ function POPage() {
           {draft && (
             <div className="mt-6 space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>PO number</Label><Input value={draft.po_number} onChange={(e) => setDraft({ ...draft, po_number: e.target.value })} /></div>
+                <div><Label>PO number</Label><Input value={draft.po_number || "Auto-generated on save"} disabled className="bg-muted/40" /></div>
                 <div>
                   <Label>Status</Label>
                   <SmartSelect

@@ -424,7 +424,7 @@ function GoodsReturnsPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>GR number</Label><Input value={draft.gr_number} onChange={(e) => patchDraft({ gr_number: e.target.value })} disabled={isReceived} /></div>
+                <div><Label>GR number</Label><Input value={draft.gr_number || "Auto-generated on save"} disabled className="bg-muted/40" /></div>
                 <div>
                   <Label>Status</Label>
                   <SmartSelect

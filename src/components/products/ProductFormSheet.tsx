@@ -24,7 +24,7 @@ const PRODUCT_TYPES = [
 ] as const;
 
 const schema = z.object({
-  code: z.string().trim().min(2).max(64),
+  code: z.string().trim().max(64).optional().or(z.literal("")),
   name: z.string().trim().min(2).max(200),
   description: z.string().max(2000).optional(),
   product_type: z.enum(["raw_material", "packaging", "wip", "finished_good"]),
@@ -105,7 +105,7 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
     try {
       let productId = product?.id;
       const productPayload = {
-        code: parsed.data.code,
+        code: parsed.data.code || "",
         name: parsed.data.name,
         description: parsed.data.description || null,
         product_type: parsed.data.product_type,
@@ -118,7 +118,9 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
         const { error } = await supabase.from("products").update(productPayload).eq("id", productId);
         if (error) throw error;
       } else {
-        const { data, error } = await supabase.from("products").insert(productPayload).select("id").single();
+        const { code: _code, ...insertPayload } = productPayload;
+        void _code;
+        const { data, error } = await supabase.from("products").insert(insertPayload as typeof productPayload).select("id").single();
         if (error) throw error;
         productId = data.id;
       }
@@ -182,7 +184,7 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Product code</Label>
-              <Input value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))} placeholder="YOY-1001" />
+              <Input value={form.code || "Auto-generated on save"} disabled className="bg-muted/40" />
             </div>
             <div className="space-y-1.5">
               <Label>Type</Label>
