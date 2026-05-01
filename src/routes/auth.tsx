@@ -190,11 +190,11 @@ function AuthPage() {
                     <div className="space-y-1.5">
                       <AuthIconInput
                         id="signin-email"
-                        label="Email, username, or mobile"
+                        label="LOGIN"
                         icon={AtSign}
                         type="text"
                         autoComplete="username"
-                        placeholder="you@company.com · username · 9876543210"
+                        placeholder=""
                         value={signinEmail}
                         onChange={(e) => setSigninEmail(e.target.value)}
                         required
@@ -221,7 +221,7 @@ function AuthPage() {
                       icon={Lock}
                       password
                       autoComplete="current-password"
-                      placeholder="••••••••"
+                      placeholder=""
                       value={signinPassword}
                       onChange={(e) => setSigninPassword(e.target.value)}
                       required
