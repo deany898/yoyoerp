@@ -19,6 +19,7 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     "/app/customers",
     "/app/goods-returns",
     "/app/manufacturing",
+    "/app/work-logs",
     "/app/stations",
     "/app/stages",
     "/app/machines",
@@ -43,6 +44,7 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     "/app/customers",
     "/app/goods-returns",
     "/app/manufacturing",
+    "/app/work-logs",
     "/app/stations",
     "/app/stages",
     "/app/machines",
@@ -60,6 +62,7 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     "/app/requests",
     "/app/dispatch-orders",
     "/app/manufacturing",
+    "/app/work-logs",
     "/app/workers",
     "/app/analytics",
     "/app/help",
@@ -69,6 +72,7 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     "/app/inventory",
     "/app/movements",
     "/app/manufacturing",
+    "/app/work-logs",
     "/app/help",
   ],
   dispatch: [
@@ -102,10 +106,10 @@ export function isRouteVisibleToRole(href: string, role: UserRoleType): boolean 
 
 /** Top items shown in the mobile bottom nav (max 4 + More). */
 const ROLE_BOTTOM_NAV: Record<UserRoleType, string[]> = {
-  admin: ["/app/dashboard", "/app/inventory", "/app/products", "/app/manufacturing"],
-  manager: ["/app/dashboard", "/app/dispatch-orders", "/app/manufacturing", "/app/inventory"],
-  supervisor: ["/app/dashboard", "/app/manufacturing", "/app/movements", "/app/requests"],
-  worker: ["/app/dashboard", "/app/manufacturing", "/app/movements"],
+  admin: ["/app/dashboard", "/app/work-logs", "/app/inventory", "/app/manufacturing"],
+  manager: ["/app/dashboard", "/app/work-logs", "/app/dispatch-orders", "/app/manufacturing"],
+  supervisor: ["/app/dashboard", "/app/work-logs", "/app/manufacturing", "/app/movements"],
+  worker: ["/app/dashboard", "/app/work-logs", "/app/manufacturing"],
   dispatch: ["/app/dashboard", "/app/dispatch-orders", "/app/movements", "/app/inventory"],
   sales: ["/app/dashboard", "/app/dispatch-orders", "/app/customers", "/app/products"],
   customer: ["/app/dashboard", "/app/help"],

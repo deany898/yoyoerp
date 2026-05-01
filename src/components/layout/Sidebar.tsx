@@ -15,6 +15,7 @@ import {
   Send,
   Users,
   ShieldCheck,
+  ClipboardCheck,
   Undo2,
   LogOut,
   Settings,
@@ -82,6 +83,7 @@ const navGroups: NavGroup[] = [
     label: "Manufacturing",
     items: [
       { label: "Production logs", href: "/app/manufacturing", icon: Factory },
+      { label: "Work logs", href: "/app/work-logs", icon: ClipboardCheck },
       { label: "Stations", href: "/app/stations", icon: Wrench },
       { label: "Stages", href: "/app/stages", icon: Layers },
       { label: "Machines", href: "/app/machines", icon: Cpu },
