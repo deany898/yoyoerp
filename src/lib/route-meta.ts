@@ -17,6 +17,7 @@ import {
   Factory,
 } from "lucide-react";
 import { ClipboardCheck } from "lucide-react";
+import { Layers as LayersIcon } from "lucide-react";
 
 export interface RouteMeta {
   label: string;
@@ -42,6 +43,7 @@ export const ROUTE_META: Record<string, RouteMeta> = {
   "/app/dispatch-orders": { label: "Dispatch orders", icon: Send, group: "Sales" },
   "/app/manufacturing": { label: "Production", icon: Factory, group: "Manufacturing" },
   "/app/work-logs": { label: "Work logs", icon: ClipboardCheck, group: "Manufacturing" },
+  "/app/wip": { label: "Stage WIP", icon: LayersIcon, group: "Manufacturing" },
   "/app/analytics": { label: "Analytics", icon: BarChart3, group: "Intelligence" },
   "/app/ai-insights": { label: "AI insights", icon: Sparkles, group: "Intelligence" },
   "/app/settings": { label: "Settings", icon: Settings, group: "Admin" },

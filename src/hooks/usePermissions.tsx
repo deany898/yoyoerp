@@ -12,7 +12,7 @@ const ACTION_ROLES: Record<PermissionAction, UserRoleType[]> = {
   create_item: ["admin", "manager"],
   edit_item: ["admin", "manager"],
   delete_item: ["admin", "manager"],
-  log_movement: ["admin", "manager"],
+  log_movement: ["admin", "manager", "supervisor", "worker", "dispatch"],
   create_po: ["admin", "manager"],
   approve_request: ["admin", "manager"],
   manage_users: ["admin"],
