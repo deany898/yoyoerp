@@ -198,43 +198,6 @@ export function SupplierFormSheet({ open, onOpenChange, supplier }: SupplierForm
               )}
             />
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="leadTimeDays"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Lead Time (days)</FormLabel>
-                    <FormControl><Input type="number" min={0} {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="minOrderQuantity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Min Order Qty</FormLabel>
-                    <FormControl><Input type="number" min={0} {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="paymentTerms"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Payment Terms</FormLabel>
-                  <FormControl><Input {...field} placeholder="Net 30, COD, etc." /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <FormField
               control={form.control}
               name="notes"
