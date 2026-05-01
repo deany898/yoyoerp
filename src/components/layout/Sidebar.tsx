@@ -20,7 +20,7 @@ import {
   LogOut,
   Settings,
 } from "lucide-react";
-import { Factory, Cpu, Hammer, HardHat, Wrench, Zap } from "lucide-react";
+import { Factory, Cpu, Hammer, HardHat, Wrench, Zap, Activity } from "lucide-react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/hooks/useRole";
@@ -94,6 +94,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Intelligence",
     items: [
+      { label: "Command center", href: "/app/command-center", icon: Activity },
       { label: "Analytics", href: "/app/analytics", icon: BarChart3 },
       { label: "AI insights", href: "/app/ai-insights", icon: Sparkles },
     ],
