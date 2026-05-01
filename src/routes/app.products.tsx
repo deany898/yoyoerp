@@ -12,6 +12,7 @@ import { TableSkeleton } from "@/components/shared/skeletons";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useProducts, useCategories, type ProductWithVariants } from "@/hooks/useErpData";
 import { ProductFormSheet } from "@/components/products/ProductFormSheet";
+import { ProductCard } from "@/components/products/ProductCard";
 import { usePermissions, PermissionGate } from "@/hooks/usePermissions";
 
 export const Route = createFileRoute("/app/products")({
@@ -108,7 +109,20 @@ function ProductsPage() {
             onAction={products.length === 0 && can("create_item") ? openCreate : undefined}
           />
         ) : (
-          <Table>
+          <>
+          {/* Mobile cards · <md */}
+          <div className="grid grid-cols-1 gap-2.5 p-2.5 sm:grid-cols-2 md:hidden">
+            {filtered.map((p) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                showCost={can("edit_item")}
+                onClick={() => can("edit_item") && openEdit(p)}
+              />
+            ))}
+          </div>
+          {/* Desktop table · md+ */}
+          <Table className="hidden md:table">
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
@@ -147,6 +161,7 @@ function ProductsPage() {
               })}
             </TableBody>
           </Table>
+          </>
         )}
       </div>
 
