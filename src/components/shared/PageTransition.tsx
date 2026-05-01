@@ -7,18 +7,17 @@ interface Props {
 }
 
 /**
- * Lightweight cross-fade. No exit animation + no y-translate keeps route swaps
- * feeling instant; AnimatePresence is intentionally not used in `wait` mode by
- * the parent since that doubles perceived latency.
+ * Near-instant micro-fade. Starts at 0.85 opacity (not 0) so the new tree is
+ * visible the frame it mounts — eliminates the "freeze then snap" perception
+ * caused by holding the page invisible while React mounts.
  */
 export function PageTransition({ children, routeKey }: Props) {
   return (
     <motion.div
       key={routeKey}
-      initial={{ opacity: 0 }}
+      initial={{ opacity: 0.85 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.12, ease: "easeOut" }}
-      className="min-h-[60vh]"
+      transition={{ duration: 0.08, ease: "linear" }}
     >
       {children}
     </motion.div>

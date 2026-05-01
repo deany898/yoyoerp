@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 // AnimatePresence removed: the wait-mode exit fade was the main source of
 // perceived nav lag; PageTransition now cross-fades in place without it.
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -9,6 +9,8 @@ import { RoleSimulatorBar } from "@/components/layout/RoleSimulatorBar";
 import { ShortcutsHelpDialog } from "@/components/command/ShortcutsHelpDialog";
 import { GlobalSearchPalette } from "@/components/command/GlobalSearchPalette";
 import { PageTransition } from "@/components/shared/PageTransition";
+import { RouteProgressBar } from "@/components/shared/RouteProgressBar";
+import { RouteSkeleton } from "@/components/shared/RouteSkeleton";
 import { useRole } from "@/hooks/useRole";
 import { useAuth } from "@/hooks/useAuth";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
@@ -26,6 +28,10 @@ function AppLayout() {
   const location = useLocation();
   const [helpOpen, setHelpOpen] = useState(false);
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
+  const hasResolvedOnceRef = useRef(false);
+  if (!authLoading && user) {
+    hasResolvedOnceRef.current = true;
+  }
 
   // Global keyboard shortcuts
   useKeyboardShortcuts({ onHelpOpen: () => setHelpOpen(true) });
@@ -58,7 +64,7 @@ function AppLayout() {
     }
   }, [user, authLoading, navigate]);
 
-  if (authLoading || !user) {
+  if (!hasResolvedOnceRef.current && (authLoading || !user)) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground" />
@@ -76,9 +82,12 @@ function AppLayout() {
           <div className="hidden md:block">
             <Header />
           </div>
-          <main className="flex-1 overflow-y-auto p-3 pb-24 md:p-8 md:pb-8">
+          <main className="relative flex-1 overflow-y-auto p-3 pb-24 md:p-8 md:pb-8">
+            <RouteProgressBar />
             <PageTransition routeKey={location.pathname}>
-              <Outlet />
+              <Suspense fallback={<RouteSkeleton />}>
+                <Outlet />
+              </Suspense>
             </PageTransition>
           </main>
         </div>
