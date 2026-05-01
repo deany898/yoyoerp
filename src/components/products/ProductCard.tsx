@@ -1,4 +1,4 @@
-import { Boxes, Truck } from "lucide-react";
+import { Boxes } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { ProductWithVariants } from "@/hooks/useErpData";
