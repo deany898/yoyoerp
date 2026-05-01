@@ -76,11 +76,9 @@ function AppLayout() {
             <Header />
           </div>
           <main className="flex-1 overflow-y-auto p-3 pb-24 md:p-8 md:pb-8">
-            <AnimatePresence mode="wait">
-              <PageTransition routeKey={location.pathname}>
-                <Outlet />
-              </PageTransition>
-            </AnimatePresence>
+            <PageTransition routeKey={location.pathname}>
+              <Outlet />
+            </PageTransition>
           </main>
         </div>
       </div>
