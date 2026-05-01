@@ -10,6 +10,7 @@ import { PermissionGate } from "@/hooks/usePermissions";
 import { useManufacturingOrders, type MOStatus } from "@/hooks/useMfgData";
 import { MoCreateSheet } from "@/components/manufacturing/MoCreateSheet";
 import { useNavigate } from "@tanstack/react-router";
+import { ExportButton } from "@/components/shared/ExportButton";
 
 export const Route = createFileRoute("/app/manufacturing")({
   head: () => ({
@@ -73,9 +74,25 @@ function ManufacturingPage() {
             {loading ? "Loading…" : `${orders.length} log${orders.length === 1 ? "" : "s"} · plan, issue materials and receive output.`}
           </p>
         </div>
-        <PermissionGate permission="create_item">
-          <Button onClick={() => setCreateOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> New log</Button>
-        </PermissionGate>
+        <div className="flex items-center gap-2">
+          <ExportButton
+            filename="manufacturing_logs"
+            capability="manufacturing.export"
+            rows={orders as unknown as Record<string, unknown>[]}
+            columns={[
+              { key: "mo_number", label: "Log #" },
+              { key: "variant", label: "Variant", format: (v) => (v as { variant_name?: string } | null)?.variant_name ?? "" },
+              { key: "variant", label: "SKU", format: (v) => (v as { sku?: string } | null)?.sku ?? "" },
+              { key: "qty_planned", label: "Planned" },
+              { key: "qty_produced", label: "Produced" },
+              { key: "status", label: "Status" },
+              { key: "source_do", label: "Source DO", format: (v) => (v as { do_number?: string } | null)?.do_number ?? "" },
+            ]}
+          />
+          <PermissionGate permission="create_item">
+            <Button onClick={() => setCreateOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> New log</Button>
+          </PermissionGate>
+        </div>
       </header>
 
       <div className="flex flex-wrap gap-2">

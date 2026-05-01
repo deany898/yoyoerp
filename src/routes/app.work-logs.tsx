@@ -8,6 +8,7 @@ import { TableSkeleton } from "@/components/shared/skeletons";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SmartSelect } from "@/components/forms/SmartSelect";
 import { AddLogSheet } from "@/components/work-logs/AddLogSheet";
+import { ExportButton } from "@/components/shared/ExportButton";
 import {
   useWorkLogs,
   WORK_TYPE_LABEL,
@@ -83,6 +84,22 @@ function WorkLogsPage() {
           <Button variant="outline" size="sm" onClick={refresh} className="gap-1.5">
             <RefreshCw className="h-4 w-4" /> Refresh
           </Button>
+          <ExportButton
+            filename="work_logs"
+            capability="work_logs.export"
+            rows={filtered as unknown as Record<string, unknown>[]}
+            columns={[
+              { key: "wl_number", label: "Log #" },
+              { key: "work_type", label: "Type" },
+              { key: "status", label: "Status" },
+              { key: "worker", label: "Worker", format: (v) => (v as { name?: string } | null)?.name ?? "" },
+              { key: "warehouse", label: "Warehouse", format: (v) => (v as { name?: string } | null)?.name ?? "" },
+              { key: "station", label: "Station", format: (v) => (v as { name?: string } | null)?.name ?? "" },
+              { key: "started_at", label: "Started" },
+              { key: "ended_at", label: "Ended" },
+              { key: "duration_minutes", label: "Duration (min)" },
+            ]}
+          />
           <Button size="sm" onClick={() => setAddOpen(true)} className="gap-1.5">
             <Plus className="h-4 w-4" /> Add log
           </Button>
