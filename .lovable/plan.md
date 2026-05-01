@@ -1,66 +1,75 @@
 ## Goal
 
-Every "code" or "document number" field across the app should be **system-generated and locked** in the UI. Users never type or edit these. All other fields (name, qty, price, dates, notes, etc.) stay fully editable.
+Stop letting users pick `product_type` manually. Derive it automatically from BOM relationships using these rules:
 
-Codes/numbers are already generated server-side by Postgres triggers (`auto_set_code`, `auto_po_number`, `auto_do_number`, `auto_mo_number`, `auto_gr_number`, `auto_request_number`, `auto_wl_number`, `next_doc_number(...)`) and worker auto-code triggers. We just need to remove the input controls or render them disabled with an "Auto-generated on save" placeholder, and stop sending user-entered values.
+- **Raw material** — product has NO active BOM (it is not produced from other items)
+- **Semi-finished (WIP)** — product IS produced by a BOM AND at least one of its variants is consumed as a `bom_lines.component_variant_id` in some other product's BOM
+- **Finished good** — product IS produced by a BOM AND none of its variants are used as a component anywhere else
 
-## Scope · forms to update
+Apply this on every BOM change and as a one-time backfill across all existing products.
 
-### Master data (code field)
-- **Stations** (`src/routes/app.stations.tsx`) — remove the `code` field from `MasterListPage` `fields`, keep it in `columns`.
-- **Moulds** (`src/routes/app.moulds.tsx`) — same treatment.
-- **Machines** (`src/routes/app.machines.tsx`) — same.
-- **Stages / stage groups** (`src/routes/app.stages.tsx`) — drop the `code` input from the inline create form; rely on trigger-generated value. Display in table only.
-- **Workers** (`src/components/workers/WorkerFormSheet.tsx`) — already auto, but verify the form does not show a code input on create; on edit show as disabled.
-- **Categories** (`src/routes/app.categories.tsx`) — auto-generate `CAT-###` via a small client helper or a new `next_doc_number('CAT')` (DB allow-list update needed). Lock the input.
-- **Suppliers** (`src/routes/app.suppliers.tsx` + `src/components/vendors/SupplierFormSheet.tsx`) — already uses `nextSupplierCode()`; replace the editable input with a disabled "Auto-generated" placeholder and stop reading user value.
-- **Customers** (`src/routes/app.customers.tsx`) — currently inserts `code: ""`; switch to a `nextCustomerCode()` client helper (mirror suppliers) and disable the input.
-- **Products** (`src/components/products/ProductFormSheet.tsx`) — `code` is already optional; render it disabled with an auto-suggested value (`PRD-####`) on create. **SKU** stays user-editable (it's a real business identifier, not a system code) — confirm with user only if you want SKU auto'd too.
+## Database changes (migration)
 
-### Transactional documents (number field)
-All of these already have DB triggers; UI just needs the input gone.
-- **Purchase Orders** (`src/routes/app.purchase-orders.tsx`) — `po_number` field is already `disabled`. Keep, but also remove the `Label`/section on create (show as a small badge `PO # · auto-generated on save`) so it stops looking like a form field.
-- **Dispatch Orders** (`src/routes/app.dispatch-orders.tsx`) — same as PO.
-- **Goods Returns** (`src/routes/app.goods-returns.tsx`) — same.
-- **Inventory Requests** (`src/routes/app.requests.tsx`) — currently pre-fills `REQ-YYMM-####` and exposes an editable input. Lock it (read-only) and let the DB trigger overwrite it on insert.
-- **Manufacturing Orders** (`src/components/manufacturing/MoCreateSheet.tsx`) — `mo_number` is fetched via `next_doc_number('MO')`; ensure it never appears as an editable input.
-- **Work Logs / Handoffs** — `wl_number` and `ho_number` are auto by trigger; verify no UI input exposes them.
+1. **Function** `public.recalc_product_type(p_product_id uuid)`
+   - Look up if the product has any active BOM (`bom_master.is_active` joined via variants).
+   - Look up if any of its variants appear in `bom_lines.component_variant_id`.
+   - Update `products.product_type`:
+     - no BOM → `'raw_material'`
+     - BOM + used as component → `'wip'`
+     - BOM + not used → `'finished_good'`
+   - SECURITY DEFINER, search_path = public.
 
-### Stays editable (no change)
-SKU, names, descriptions, prices, quantities, dates, addresses, contact info, notes, status dropdowns, line items.
+2. **Trigger function** `public.trg_recalc_product_type_from_bom()`
+   - Fires AFTER INSERT/UPDATE/DELETE on `bom_master` and `bom_lines`.
+   - For `bom_master`: recalc the variant's product (NEW and OLD).
+   - For `bom_lines`: recalc the BOM's parent product (via `bom_master.variant_id → product_id`) AND the component's product (because being added/removed as a component flips parent ↔ semi).
+   - Cascade: any product whose status flips between `wip` and `finished_good` may itself be a component of another BOM — but the rule only depends on direct usage, so a single-level recalc per affected product is sufficient.
 
-## Technical approach
+3. **Backfill** — one-time `UPDATE` running the same logic across every row in `products`.
 
-1. **Shared "auto code" display component** — create `src/components/shared/AutoCodeField.tsx`:
-   - Renders a small badge: `Code · auto-generated on save` (or shows the code on edit, disabled).
-   - Used everywhere we previously had `<Input value={code} disabled />`.
+4. Keep the existing `product_type` enum values (`raw_material`, `packaging`, `finished_good`, `wip`) untouched. `packaging` is preserved for packaging items but is no longer auto-assigned (those continue to be managed via the `product_packaging` flow / `variant_kind`).
 
-2. **`MasterRecordSheet` enhancement** — add a new field kind `"auto-code"` so master pages can declare:
-   ```ts
-   { key: "code", label: "Code", kind: "auto-code" }
-   ```
-   When `kind === "auto-code"`:
-   - On create: render the AutoCodeField placeholder, never send `code` in the payload (DB trigger fills it).
-   - On edit: render AutoCodeField showing the existing code, disabled.
+## Frontend changes
 
-3. **Update master pages** (`stations`, `moulds`, `machines`, `stages`, `categories`) to use `kind: "auto-code"` instead of removing the row entirely, so users still see "this gets a code".
+### `src/components/products/ProductFormSheet.tsx`
+- Remove the `product_type` Select control.
+- Drop `product_type` from the create/update payload (DB derives it).
+- Show a small read-only badge in the form header: "Type · auto from BOM" with the current value when editing.
+- Remove `product_type` from the Zod schema (or keep it optional and ignore on submit).
 
-4. **Suppliers / Customers** — switch from `nextSupplierCode()` editable input to `<AutoCodeField pendingCode={nextSupplierCode()} />`. Continue inserting the generated code (no DB trigger exists for these yet).
+### `src/routes/app.products.tsx`
+- Keep the type filter and the type column (display only) — values now come from the auto-classified DB field.
+- Add a one-line helper under the filter: "Type is set automatically: Raw (no BOM) · Semi (used in another BOM) · Finished (produced, not reused)."
+- Update the type labels so the UI reads **Raw**, **Semi-finished**, **Finished good**, **Packaging**.
 
-5. **Inventory Requests** — change the `<Input>` for `request_number` to `<AutoCodeField />` and stop sending `request_number` in the insert (trigger fills it).
+### `src/components/products/ProductCard.tsx`
+- Use the same updated label map. No edit affordance for type.
 
-6. **PO / DO / GR / MO** — replace the current `<div><Label>... <Input disabled /></div>` block with a single `<AutoCodeField pendingCode="…" />` line for visual consistency.
+### `src/components/manufacturing/MouldingRunDialog.tsx`
+- Already only reads `product_type` for filtering — no change needed beyond verifying labels.
 
-7. **Memory** — add `mem://ui/auto-codes.md` documenting the rule: "All code/number identifiers are system-generated. Never expose an editable input for them."
+### Anywhere else creating products programmatically (BOM bootstrap, seed scripts)
+- Stop passing `product_type`; let the trigger handle it.
 
-## Out of scope
+## Edge cases
 
-- SKU on products (real business field, often user-defined).
-- HSN code, GST number, tax IDs (external identifiers, not system codes).
-- Names, descriptions, qty, price, all transactional line data.
+- **Packaging items**: trigger leaves `product_type = 'packaging'` alone (only flips between `raw_material` / `wip` / `finished_good`). Packaging classification stays manual via `variant_kind` and the packaging tab.
+- **Inactive BOMs**: only `bom_master.is_active = true` counts as "produced by BOM".
+- **Self-reference**: a product whose BOM consumes its own variant won't flip itself — we only look at BOM lines whose parent product ≠ this product.
+- **Deleting a BOM line**: trigger recalcs both the parent product AND the (formerly) consumed component product.
 
-## Verification checklist
+## Files touched
 
-After implementation, every create form across these pages must show codes as a non-editable badge / disabled input, and saving must succeed without the user touching that field:
+- New SQL migration (function + trigger + backfill).
+- `src/components/products/ProductFormSheet.tsx` — remove type Select, drop from payload.
+- `src/routes/app.products.tsx` — relabel + helper text.
+- `src/components/products/ProductCard.tsx` — relabel.
+- `mem://ui/auto-codes.md` (or a new `mem://features/product-type-auto.md`) — record that `product_type` is system-derived from BOM topology.
 
-Stations · Moulds · Machines · Stages · Stage groups · Workers · Categories · Suppliers · Customers · Products · Purchase Orders · Dispatch Orders · Goods Returns · Inventory Requests · Manufacturing Orders.
+## Verification
+
+After applying, run:
+```sql
+SELECT product_type, count(*) FROM products GROUP BY 1;
+```
+and spot-check 3 products: one with no BOM (Raw), one BOM-produced and consumed elsewhere (Semi), one BOM-produced and not reused (Finished). Then add a `bom_lines` row that consumes a current "Finished" variant and confirm it auto-flips to `wip`.
