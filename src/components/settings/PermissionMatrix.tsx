@@ -16,6 +16,7 @@ type RoleRow = { role: UserRoleType; capability: string; granted: boolean };
 type OverrideRow = { user_id: string; capability: string; granted: boolean };
 type ProfileRow = { user_id: string; display_name: string | null };
 type UserRoleRow = { user_id: string; role: UserRoleType };
+type ModuleAccessRow = { role: UserRoleType; module: string; granted: boolean };
 
 function moduleOf(cap: string): string {
   return cap.split(".")[0];
@@ -28,6 +29,7 @@ export function PermissionMatrix() {
   const [overrides, setOverrides] = useState<OverrideRow[]>([]);
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [userRoles, setUserRoles] = useState<UserRoleRow[]>([]);
+  const [moduleAccess, setModuleAccess] = useState<ModuleAccessRow[]>([]);
   const [filter, setFilter] = useState("");
   const [tab, setTab] = useState<"roles" | "users">("roles");
   const [selectedUser, setSelectedUser] = useState<string>("");
@@ -35,16 +37,18 @@ export function PermissionMatrix() {
 
   const reload = async () => {
     setLoading(true);
-    const [d, o, p, r] = await Promise.all([
+    const [d, o, p, r, m] = await Promise.all([
       supabase.from("role_permissions").select("role,capability,granted"),
       supabase.from("user_permission_overrides").select("user_id,capability,granted"),
       supabase.from("profiles").select("user_id,display_name").order("display_name"),
       supabase.from("user_roles").select("user_id,role"),
+      supabase.from("role_module_access").select("role,module,granted"),
     ]);
     setDefaults((d.data ?? []) as RoleRow[]);
     setOverrides((o.data ?? []) as OverrideRow[]);
     setProfiles((p.data ?? []) as ProfileRow[]);
     setUserRoles((r.data ?? []) as UserRoleRow[]);
+    setModuleAccess((m.data ?? []) as ModuleAccessRow[]);
     setLoading(false);
   };
 
@@ -64,6 +68,25 @@ export function PermissionMatrix() {
 
   const isGranted = (role: UserRoleType, cap: string) =>
     defaults.find((d) => d.role === role && d.capability === cap)?.granted ?? false;
+
+  const hasModule = (role: UserRoleType, mod: string) =>
+    role === "admin" || (moduleAccess.find((m) => m.role === role && m.module === mod)?.granted ?? false);
+
+  const toggleModule = async (role: UserRoleType, mod: string) => {
+    if (role === "admin") return;
+    const next = !hasModule(role, mod);
+    setSaving(`m:${role}:${mod}`);
+    const { error } = await supabase
+      .from("role_module_access")
+      .upsert({ role, module: mod, granted: next }, { onConflict: "role,module" });
+    setSaving(null);
+    if (error) { notify.error("Could not update module access"); return; }
+    setModuleAccess((prev) => {
+      const i = prev.findIndex((x) => x.role === role && x.module === mod);
+      if (i === -1) return [...prev, { role, module: mod, granted: next }];
+      const c = [...prev]; c[i] = { ...c[i], granted: next }; return c;
+    });
+  };
 
   const toggleRole = async (role: UserRoleType, cap: string) => {
     const next = !isGranted(role, cap);
@@ -154,9 +177,32 @@ export function PermissionMatrix() {
                 {Object.entries(grouped).map(([mod, caps]) => (
                   <>
                     <tr key={`h-${mod}`} className="bg-muted/30">
-                      <td colSpan={visibleRoles.length + 1} className="px-2 py-1 text-[11px] font-semibold uppercase text-muted-foreground">
+                      <td className="px-2 py-1 text-[11px] font-semibold uppercase text-muted-foreground">
                         {MODULE_LABEL[mod as keyof typeof MODULE_LABEL] ?? mod}
                       </td>
+                      {visibleRoles.map((role) => {
+                        const granted = hasModule(role, mod);
+                        const isSaving = saving === `m:${role}:${mod}`;
+                        return (
+                          <td key={`m-${role}-${mod}`} className="p-1.5 text-center">
+                            {isSaving ? (
+                              <Loader2 className="mx-auto h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                            ) : editing && role !== "admin" ? (
+                              <Switch
+                                checked={granted}
+                                onCheckedChange={() => toggleModule(role, mod)}
+                                className="mx-auto data-[state=checked]:bg-sky-600"
+                                aria-label={`Toggle ${mod} access for ${role}`}
+                              />
+                            ) : (
+                              <span
+                                className={`mx-auto inline-block h-2 w-6 rounded-full ${granted ? "bg-sky-500" : "bg-muted-foreground/20"}`}
+                                title={granted ? "Module enabled" : "Module disabled"}
+                              />
+                            )}
+                          </td>
+                        );
+                      })}
                     </tr>
                     {caps.map((cap) => (
                       <tr key={cap} className="border-t border-border">
@@ -164,10 +210,13 @@ export function PermissionMatrix() {
                         {visibleRoles.map((role) => {
                           const granted = isGranted(role, cap);
                           const isSaving = saving === `${role}:${cap}`;
+                          const moduleOn = hasModule(role, mod);
                           return (
                                 <td key={role} className="p-1.5 text-center">
                                   {isSaving ? (
                                     <Loader2 className="mx-auto h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                                  ) : !moduleOn ? (
+                                    <span className="mx-auto inline-block text-[10px] text-muted-foreground/40" title="Module disabled for this role">·</span>
                                   ) : editing ? (
                                     <Switch
                                       checked={granted}
