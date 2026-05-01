@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SmartSelect } from "@/components/forms/SmartSelect";
+import { ExportButton } from "@/components/shared/ExportButton";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
@@ -256,7 +257,22 @@ function DispatchOrdersPage() {
             {loading ? "Loading…" : `${orders.length} order${orders.length === 1 ? "" : "s"}`}
           </p>
         </div>
-        {canEdit && <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> New dispatch order</Button>}
+        <div className="flex items-center gap-2">
+          <ExportButton
+            filename="dispatch_orders"
+            capability="dispatch.export"
+            rows={orders as unknown as Record<string, unknown>[]}
+            columns={[
+              { key: "do_number", label: "DO #" },
+              { key: "customer", label: "Customer", format: (v) => (v as { name?: string } | null)?.name ?? "" },
+              { key: "status", label: "Status" },
+              { key: "order_date", label: "Order date" },
+              { key: "expected_dispatch_date", label: "Expected dispatch" },
+              { key: "grand_total", label: "Total" },
+            ]}
+          />
+          {canEdit && <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> New dispatch order</Button>}
+        </div>
       </header>
 
       <div className="rounded-xl border border-border bg-card overflow-x-auto">

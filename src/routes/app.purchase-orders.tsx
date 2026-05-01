@@ -23,6 +23,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { PODocumentsPanel } from "@/components/purchase-orders/PODocumentsPanel";
+import { ExportButton } from "@/components/shared/ExportButton";
 
 export const Route = createFileRoute("/app/purchase-orders")({
   component: POPage,
@@ -210,11 +211,26 @@ function POPage() {
           <h1 className="text-2xl font-semibold text-foreground">Purchase orders</h1>
           <p className="text-sm text-muted-foreground">{purchaseOrders.length} POs</p>
         </div>
-        {canManage && (
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="mr-1.5 h-4 w-4" /> New PO
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ExportButton
+            filename="purchase_orders"
+            capability="purchase_orders.export"
+            rows={purchaseOrders as unknown as Record<string, unknown>[]}
+            columns={[
+              { key: "po_number", label: "PO #" },
+              { key: "supplier", label: "Supplier", format: (v) => (v as { name?: string } | null)?.name ?? "" },
+              { key: "status", label: "Status" },
+              { key: "order_date", label: "Order date" },
+              { key: "expected_date", label: "Expected" },
+              { key: "total", label: "Total" },
+            ]}
+          />
+          {canManage && (
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="mr-1.5 h-4 w-4" /> New PO
+            </Button>
+          )}
+        </div>
       </div>
 
       {loading ? (
