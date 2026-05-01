@@ -167,7 +167,7 @@ function CustomersPage() {
                 <TableHead>Contact</TableHead>
                 <TableHead>City</TableHead>
                 <TableHead>Tier</TableHead>
-                <TableHead>GST</TableHead>
+                {showFinance && <TableHead>GST</TableHead>}
                 <TableHead className="w-12"></TableHead>
               </TableRow>
             </TableHeader>
@@ -178,7 +178,7 @@ function CustomersPage() {
                   <TableCell className="text-sm text-muted-foreground">{r.contact_name ?? "—"} {r.phone ? `· ${r.phone}` : ""}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{r.city ?? "—"}</TableCell>
                   <TableCell><Badge variant="outline">{r.pricing_tier}</Badge></TableCell>
-                  <TableCell className="font-mono text-xs">{r.gst_number ?? "—"}</TableCell>
+                  {showFinance && <TableCell className="font-mono text-xs">{r.gst_number ?? "—"}</TableCell>}
                   <TableCell>{canEdit && <Pencil className="h-3.5 w-3.5 text-muted-foreground" />}</TableCell>
                 </TableRow>
               ))}
