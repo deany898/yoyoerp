@@ -2,11 +2,13 @@ import { Badge } from "@/components/ui/badge";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { categoryLabel } from "./vendor-constants";
 import type { SupplierRow } from "@/hooks/useErpData";
 import { useAppConfig } from "@/contexts/AppConfigContext";
 import { FLAGS } from "@/lib/feature-flags";
 import { DynamicField } from "@/components/shared/DynamicField";
+import { VendorQuotesTab } from "./VendorQuotesTab";
 
 interface Props {
   supplier: SupplierRow | null;
@@ -20,7 +22,7 @@ interface Props {
  * Simplified supplier detail · YOYO ERP V1 is a price-memory + sales ERP,
  * not a procurement accounting system. Payments + scorecard removed.
  */
-export function Vendor360Sheet({ supplier, open, onOpenChange }: Props) {
+export function Vendor360Sheet({ supplier, open, onOpenChange, canManage }: Props) {
   if (!supplier) return null;
   const cat = supplier.category;
   const { isEnabled } = useAppConfig();
@@ -39,7 +41,12 @@ export function Vendor360Sheet({ supplier, open, onOpenChange }: Props) {
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6 space-y-3">
+        <Tabs defaultValue="overview" className="mt-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="quotes">Quotes &amp; products</TabsTrigger>
+          </TabsList>
+          <TabsContent value="overview" className="mt-5 space-y-3">
           <DynamicField module="suppliers" fieldKey="contact_name">
             <Field label="Contact" value={supplier.contact_name || "—"} />
           </DynamicField>
@@ -70,11 +77,11 @@ export function Vendor360Sheet({ supplier, open, onOpenChange }: Props) {
               <Field label="Notes" value={supplier.notes} />
             </DynamicField>
           )}
-        </div>
-
-        <div className="mt-8 rounded-lg border border-dashed border-border bg-muted/30 p-4 text-xs text-muted-foreground">
-          Supplier price memory · update product quotes from the product detail.
-        </div>
+          </TabsContent>
+          <TabsContent value="quotes" className="mt-5">
+            <VendorQuotesTab supplierId={supplier.id} canManage={canManage} />
+          </TabsContent>
+        </Tabs>
       </SheetContent>
     </Sheet>
   );
