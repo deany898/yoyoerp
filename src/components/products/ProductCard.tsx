@@ -6,7 +6,7 @@ import type { ProductWithVariants } from "@/hooks/useErpData";
 const TYPE_LABEL: Record<string, string> = {
   raw_material: "Raw",
   packaging: "Pack",
-  wip: "WIP",
+  wip: "Semi",
   finished_good: "FG",
 };
 
