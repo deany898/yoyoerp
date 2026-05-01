@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/select";
 import { VENDOR_CATEGORIES, type VendorCategory } from "./vendor-constants";
 import type { SupplierRow } from "@/hooks/useErpData";
+import { useAppConfig } from "@/contexts/AppConfigContext";
+import { FLAGS } from "@/lib/feature-flags";
 
 type Editable = Partial<SupplierRow>;
 
@@ -23,6 +25,9 @@ interface Props {
 }
 
 export function SupplierFormSheet({ open, onOpenChange, editing, setEditing, onSave, saving }: Props) {
+  const { isEnabled } = useAppConfig();
+  const showFinance = isEnabled(FLAGS.suppliers.showFinanceFields, true);
+  const showLedger = isEnabled(FLAGS.suppliers.showLedger, false);
   if (!editing) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
@@ -57,17 +62,21 @@ export function SupplierFormSheet({ open, onOpenChange, editing, setEditing, onS
                 </SelectContent>
               </Select>
             </div>
+            {showLedger && (
+              <div>
+                <Label>Credit days</Label>
+                <Input type="number" min={0} value={e.credit_days ?? 0}
+                  onChange={(ev) => set({ credit_days: Number(ev.target.value) })} />
+              </div>
+            )}
+          </div>
+          {showLedger && (
             <div>
-              <Label>Credit days</Label>
-              <Input type="number" min={0} value={e.credit_days ?? 0}
-                onChange={(ev) => set({ credit_days: Number(ev.target.value) })} />
+              <Label>Opening balance (INR)</Label>
+              <Input type="number" min={0} step="0.01" value={e.opening_balance ?? 0}
+                onChange={(ev) => set({ opening_balance: Number(ev.target.value) })} />
             </div>
-          </div>
-          <div>
-            <Label>Opening balance (INR)</Label>
-            <Input type="number" min={0} step="0.01" value={e.opening_balance ?? 0}
-              onChange={(ev) => set({ opening_balance: Number(ev.target.value) })} />
-          </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div><Label>Contact name</Label><Input value={e.contact_name ?? ""} onChange={(ev) => set({ contact_name: ev.target.value })} /></div>
             <div><Label>Phone</Label><Input value={e.phone ?? ""} onChange={(ev) => set({ phone: ev.target.value })} /></div>
@@ -78,10 +87,12 @@ export function SupplierFormSheet({ open, onOpenChange, editing, setEditing, onS
             <div><Label>City</Label><Input value={e.city ?? ""} onChange={(ev) => set({ city: ev.target.value })} /></div>
             <div><Label>State</Label><Input value={e.state ?? ""} onChange={(ev) => set({ state: ev.target.value })} /></div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><Label>GST number</Label><Input value={e.gst_number ?? ""} onChange={(ev) => set({ gst_number: ev.target.value })} /></div>
-            <div><Label>Payment terms</Label><Input value={e.payment_terms ?? ""} onChange={(ev) => set({ payment_terms: ev.target.value })} placeholder="Net 30" /></div>
-          </div>
+          {showFinance && (
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>GST number</Label><Input value={e.gst_number ?? ""} onChange={(ev) => set({ gst_number: ev.target.value })} /></div>
+              <div><Label>Payment terms</Label><Input value={e.payment_terms ?? ""} onChange={(ev) => set({ payment_terms: ev.target.value })} placeholder="Net 30" /></div>
+            </div>
+          )}
           <div><Label>Notes</Label><Textarea rows={2} value={e.notes ?? ""} onChange={(ev) => set({ notes: ev.target.value })} /></div>
           <div className="flex justify-end gap-2 pt-4">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
