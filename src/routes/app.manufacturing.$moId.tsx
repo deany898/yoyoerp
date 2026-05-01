@@ -12,6 +12,8 @@ import { OutputReceiveDialog } from "@/components/manufacturing/OutputReceiveDia
 import { MouldingRunDialog } from "@/components/manufacturing/MouldingRunDialog";
 import { PackingRunDialog } from "@/components/manufacturing/PackingRunDialog";
 import { useConfirm } from "@/components/forms/ConfirmDialog";
+import { useAppConfig } from "@/contexts/AppConfigContext";
+import { FLAGS } from "@/lib/feature-flags";
 
 export const Route = createFileRoute("/app/manufacturing/$moId")({
   head: () => ({ meta: [{ title: "Production log · YOYO ERP" }] }),
@@ -44,6 +46,9 @@ const STATUS_TONE: Record<MOStatus, string> = {
 function MoDetailPage() {
   const { moId } = Route.useParams();
   const navigate = useNavigate();
+  const { isEnabled } = useAppConfig();
+  const showMaterialIssues = isEnabled(FLAGS.manufacturing.materialIssues, true);
+  const showMoulds = isEnabled(FLAGS.manufacturing.moulds, true);
   const [mo, setMo] = useState<MOFull | null>(null);
   const [bom, setBom] = useState<BomLineRow[]>([]);
   const [issues, setIssues] = useState<MOIssueRow[]>([]);
@@ -163,7 +168,9 @@ function MoDetailPage() {
         <div className="flex flex-wrap gap-2">
           {(mo.status === "released" || mo.status === "in_progress") && mo.variant && (
             <>
-              <Button onClick={() => setMouldOpen(true)} variant="outline" className="gap-2"><Hammer className="h-4 w-4" /> Moulding run</Button>
+              {showMoulds && (
+                <Button onClick={() => setMouldOpen(true)} variant="outline" className="gap-2"><Hammer className="h-4 w-4" /> Moulding run</Button>
+              )}
               <Button onClick={() => setPackOpen(true)} variant="outline" className="gap-2"><PackageOpen className="h-4 w-4" /> Packing run</Button>
             </>
           )}
@@ -234,15 +241,17 @@ function MoDetailPage() {
                         </div>
                       </td>
                       <td className="px-3 py-3 text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="gap-1"
-                          disabled={mo.status === "draft" || mo.status === "cancelled" || mo.status === "done"}
-                          onClick={() => { setIssueComponent(line); setIssueOpen(true); }}
-                        >
-                          <Package className="h-3.5 w-3.5" /> Issue
-                        </Button>
+                        {showMaterialIssues && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1"
+                            disabled={mo.status === "draft" || mo.status === "cancelled" || mo.status === "done"}
+                            onClick={() => { setIssueComponent(line); setIssueOpen(true); }}
+                          >
+                            <Package className="h-3.5 w-3.5" /> Issue
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -254,6 +263,7 @@ function MoDetailPage() {
       </section>
 
       <div className="grid gap-4 lg:grid-cols-2">
+        {showMaterialIssues && (
         <section className="rounded-xl border border-border bg-card p-5">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Material issues</h2>
           {issues.length === 0 ? (
@@ -269,6 +279,7 @@ function MoDetailPage() {
             </ul>
           )}
         </section>
+        )}
 
         <section className="rounded-xl border border-border bg-card p-5">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Outputs received</h2>
@@ -287,7 +298,7 @@ function MoDetailPage() {
         </section>
       </div>
 
-      {issueComponent && (
+      {issueComponent && showMaterialIssues && (
         <MaterialIssueDialog
           open={issueOpen}
           onOpenChange={setIssueOpen}
@@ -311,15 +322,17 @@ function MoDetailPage() {
 
       {mo.variant && (
         <>
-          <MouldingRunDialog
-            open={mouldOpen}
-            onOpenChange={setMouldOpen}
-            moId={mo.id}
-            baseVariantId={mo.variant.id}
-            baseVariantLabel={mo.variant.variant_name}
-            warehouseId={mo.warehouse_id}
-            onPosted={load}
-          />
+          {showMoulds && (
+            <MouldingRunDialog
+              open={mouldOpen}
+              onOpenChange={setMouldOpen}
+              moId={mo.id}
+              baseVariantId={mo.variant.id}
+              baseVariantLabel={mo.variant.variant_name}
+              warehouseId={mo.warehouse_id}
+              onPosted={load}
+            />
+          )}
           <PackingRunDialog
             open={packOpen}
             onOpenChange={setPackOpen}
