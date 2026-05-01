@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { Menu, LayoutDashboard, Send, ClipboardCheck, Search } from "lucide-react";
 import { useState, type ComponentType } from "react";
 import { cn } from "@/lib/utils";
@@ -37,7 +37,6 @@ interface Slot {
 
 export function BottomNav() {
   const location = useLocation();
-  const navigate = useNavigate();
   const { role } = useRole();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -101,13 +100,7 @@ export function BottomNav() {
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
         <SheetContent side="left" className="w-[284px] p-0">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
-          <Sidebar
-            onNavigate={() => setMenuOpen(false)}
-            onProfileClick={() => {
-              setMenuOpen(false);
-              navigate({ to: "/app/profile" });
-            }}
-          />
+          <Sidebar onNavigate={() => setMenuOpen(false)} />
         </SheetContent>
       </Sheet>
 
