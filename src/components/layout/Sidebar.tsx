@@ -169,18 +169,25 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-3 py-2.5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-semibold text-primary-foreground shadow-sm">
-            {initial}
-          </div>
-          <div className="flex min-w-0 flex-1 flex-col leading-tight">
-            <span className="truncate text-[13px] font-semibold text-foreground">
-              {displayName}
-            </span>
-            <span className="truncate text-[11px] text-muted-foreground">
-              {roleLabel}
-            </span>
-          </div>
+        <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/40 px-2 py-2">
+          <Link
+            to="/app/profile"
+            onClick={onNavigate}
+            className="group flex min-w-0 flex-1 items-center gap-3 rounded-lg px-1 py-0.5 transition-colors hover:bg-background"
+            aria-label="Open profile"
+          >
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-semibold text-primary-foreground shadow-sm">
+              {initial}
+            </div>
+            <div className="flex min-w-0 flex-1 flex-col leading-tight">
+              <span className="truncate text-[13px] font-semibold text-foreground">
+                {displayName}
+              </span>
+              <span className="truncate text-[11px] text-muted-foreground">
+                {roleLabel}
+              </span>
+            </div>
+          </Link>
           <button
             type="button"
             onClick={handleSignOut}
