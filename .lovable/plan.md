@@ -1,95 +1,119 @@
-# Fix: logout broken + role silently downgraded to "worker"
+## Scope
 
-## Diagnosis (verified in code)
+Six related changes across auth, navigation, Quick Order, Settings, and the permission matrix. No database structure changes for tables — only one trigger update and one signup-flow update so new self-registered users become `customer` instead of `requestor`.
 
-Two real bugs, one shared root cause: the app treats "roles not yet loaded" identically to "user has no role," and silently falls back to `"worker"`.
+---
 
-### Bug 1 · Role flips to worker
+## 1) Auth · login by email / username / mobile + India-default phone
 
-`src/contexts/RoleContext.tsx` line 35:
-```ts
-const realRole = ROLE_PRIORITY.find((r) => authRoles.includes(r)) ?? "worker";
+**Sign-in form (`src/routes/auth.tsx`)**
+- Replace the single "Email" input with one "Email, username, or mobile" input.
+- Below it, add an optional country-code select (defaults to `+91 India`, includes US, UK, UAE, Singapore, Australia, Canada — small curated list with flag emojis).
+- When the user types digits only (mobile), prefix with selected country code before calling `resolve_identifier_email` so server matching works against `profiles.mobile` stored as full international format.
+- Existing `resolve_identifier_email` RPC already accepts username, email, or raw mobile — extend it to also try matching with/without leading country code so `+919876543210` resolves whether stored as `9876543210` or `+919876543210`.
+
+**Sign-up form**
+- Add fields: Name, Mobile (with same country-code dropdown defaulting to +91), Email, Password.
+- On signup, store mobile + display name in `auth.users.raw_user_meta_data` and have `handle_new_user()` copy it into `public.profiles.mobile` and `public.profiles.display_name`.
+- Update `handle_new_user()` so the bootstrap rule becomes: first-ever signup → `admin`; everyone else → `customer` (currently assigns `requestor`).
+
+**Migrations**
+- Update `public.handle_new_user()` (replace requestor with customer, copy mobile from metadata).
+- Update `public.resolve_identifier_email()` to normalize mobile (strip non-digits, also try `'+' || country || digits`).
+
+---
+
+## 2) Sidebar · remove Intelligence and merge duplicates
+
+In `src/components/layout/Sidebar.tsx`:
+- Remove the entire **Intelligence** group (Command center, Analytics, AI insights).
+- Move **Analytics** into Operations (or drop it; user said dashboard analysis is enough — drop it from sidebar but keep route accessible via direct URL for now).
+- Manufacturing group: remove duplicates
+  - Keep **Work logs** (drop "Production logs" entry — they point to the same module conceptually). Rename href to /app/work-logs and remove the `/app/manufacturing` shortcut OR keep manufacturing as the canonical "Work logs" link and remove `/app/work-logs`. Decision: keep `/app/work-logs` labeled "Work logs", remove the separate "Production logs" item.
+  - Keep **Machines**, drop **Stations** (same concept). Update `/app/stations` route to redirect to `/app/machines`.
+- Update `src/lib/role-nav.ts` to drop `/app/command-center`, `/app/ai-insights`, `/app/stations` from every role's allowed list, and remove from bottom-nav presets.
+
+Keep route files in place so deep links still work, but they won't appear in the sidebar.
+
+---
+
+## 3) Settings · align navigation with the rest of the app
+
+`src/routes/app.settings.tsx` is currently a flat 11-tab strip. Reorganize into 4 grouped sections that mirror sidebar groups, so Settings feels connected:
+
+```text
+Settings
+├── Operations         → Locations & warehouses (LocationSettings) · UOM · Reorder defaults
+├── Catalog            → Categories · Custom fields · Form builder · Presets
+├── Access             → Users (link to /app/users) · Permissions matrix
+└── System (admin)     → Modules · BRE blueprint · About
 ```
-- `authRoles` is `[]` for the entire window between `user` being set and the `user_roles` query resolving (deferred via `setTimeout`).
-- During that window every user — admin included — is rendered as `worker`.
-- If the `user_roles` query ever fails (network blip, RLS edge case, deleted assignment), the user is **stuck** as worker forever with no error surfaced.
-- Sidebar then hides admin items, route guard kicks them off admin pages → "my role changed to worker."
 
-### Bug 2 · Logout broken
+- Inside the **Operations · Locations** sub-tab, add a header link "Open Warehouses" → `/app/warehouses` so locations and warehouses feel connected.
+- Inside **Access · Users**, embed the same user table component used on `/app/users` (or render an iframe-less inline view) so the Settings page is no longer just a "go to Users" button.
+- Use a vertical sub-nav on the left (consistent with module landing pages) instead of the horizontal scroll tab bar.
 
-`src/contexts/AuthContext.tsx` `signOut()`:
-- Calls `supabase.auth.signOut()` only — no navigation, no error surfacing, no clearing of in-memory state if Supabase rejects.
-- After it resolves, `onAuthStateChange` fires → `user = null` → `roles = []` → `realRole` falls back to `worker`.
-- `src/routes/app.tsx` has TWO `useEffect`s that race:
-  1. role-guard: sees role=worker on `/app/customers`, fires `toast.error("You don't have permission")` and navigates to `/app/dashboard`.
-  2. auth-guard: sees `!user`, navigates to `/auth`.
-- Whichever wins, the user sees a confusing error toast and often lands back inside `/app` instead of on `/auth`. With the `hasResolvedOnceRef` pin we added last turn, the spinner never re-shows either, so the screen visually "doesn't change" → "logout is not working."
+---
 
-There's also no logout button in the mobile `BottomNav` / mobile menu — only the desktop Sidebar has it. On mobile it genuinely cannot be triggered.
+## 4) System tab · Admin-only BRE blueprint & workflow doc
 
-## Fixes
+In `src/components/settings/SystemSettings.tsx`, render (admin-gated via `usePermissions().can('access_settings')` + role check):
 
-### 1. AuthContext: track role-loading state and surface failures
+- **App overview**: high-level description of YOYO ERP modules.
+- **BRE (Business Rule Engine) blueprint**: rendered as collapsible cards covering each rule domain — pricing tiers, stock movement validations, role-permission resolution (role default → user override), document number sequences (`next_doc_number`), reorder thresholds.
+- **Workflow diagrams**: ASCII / mermaid-style flow for the core lifecycles already in the system: Quick Order → Dispatch Order → Goods Return; Purchase Order → Receiving → Inventory; Manufacturing Order → Work Logs → Output.
+- Content lives in a new `src/lib/bre-blueprint.tsx` module so it stays under the 250-line file limit.
 
-`src/contexts/AuthContext.tsx`
-- Add `rolesLoading: boolean` to `AuthContextValue`. Set true while the profiles+roles query is in flight, false on success **and** on error.
-- Add `rolesError: string | null` for diagnostics.
-- Stop using `setTimeout(..., 0)` — it just defers without solving anything; call the query directly inside the effect (still cancellable).
-- Wrap the queries in try/catch; on error, log + set `rolesError`, but never silently leave `roles` as `[]` forever — keep the previous value if there was one.
-- Make `signOut()`:
-  - clear local state synchronously (`setUser(null)`, `setSession(null)`, `setRoles([])`, `setDisplayName(null)`) BEFORE awaiting Supabase, so UI flips immediately;
-  - call `await supabase.auth.signOut({ scope: "local" })` and surface errors via thrown exception so callers can toast;
-  - return after a hard `window.location.assign("/auth")` fallback if the SPA navigation didn't fire within 300 ms (belt-and-suspenders for stuck sessions).
+Non-admin roles never see this tab (gate at the `<TabsTrigger>` level).
 
-### 2. RoleContext: do NOT default to worker while loading
+---
 
-`src/contexts/RoleContext.tsx`
-- Pull `rolesLoading` from `useAuth()`.
-- Add `rolesLoading` to `RoleContextValue`.
-- When `rolesLoading` is true OR `authRoles` is empty AND user exists, expose `role` as a special `"unknown"` sentinel (we'll add it to the `UserRoleType` union as a non-routable internal value) and `rolesLoading: true`.
-- Components that need to render based on role (Sidebar, BottomNav, route guard) will skip work while `rolesLoading`.
-- Only when roles really resolve to `[]` after the query finishes do we fall back — and we fall back to `"customer"` (least-privileged real role) instead of `"worker"`, since `worker` has stock-movement write permissions and silently granting those is unsafe. Surface a toast: "No role assigned, contact admin."
+## 5) Quick Order · simplify totals to one Total + Add charges
 
-### 3. App layout: gate guards on rolesLoading and stop racing logout
+`src/components/quick-order/StickyTotals.tsx`:
 
-`src/routes/app.tsx`
-- Read `rolesLoading` from auth.
-- The role-guard `useEffect` must early-return when `rolesLoading || !user`.
-- The auth-guard runs first; once `!user`, immediately `navigate({ to: "/auth", replace: true })` and `return` — do not run any other effects on this render.
-- Remove the `hasResolvedOnceRef` shortcut for the **logged-out** case: when `user` becomes null after having been logged in, we need to actually show the spinner briefly while we navigate, not keep showing the stale app behind it. Keep the ref only for the initial-mount flash prevention.
-- Wrap the layout in a small `if (!user) return <RedirectingSpinner />;` once auth has resolved at least once and user is null. This guarantees no stale page renders during logout.
+- Remove the inline rows for Items, Units, Subtotal, Tax, Ship, Other.
+- Keep on the bar: **Total** (large, on the right) and the action buttons (Draft, Submit).
+- Add a new **Add charge** button on the left. Clicking opens a small popover with:
+  - Label input (free text · examples: "Shipping", "Tax", "Packing")
+  - Amount input
+  - Add button
+- Each added charge shows as a removable chip (`Shipping · ₹250 ×`).
+- Total = sum(line subtotals) + sum(charges).
 
-### 4. Sidebar + BottomNav: visible logout, single source of truth
+Data model:
+- Replace the single `otherCharges: number` in `app.quick-order.tsx` state with `charges: { id: string; label: string; amount: number }[]`.
+- When submitting / saving draft, store charges as a JSON column (reuse the existing free-form notes/meta column on `dispatch_orders`, or add a new `extra_charges jsonb` column if none exists). Will check at implementation time and add a small migration only if needed.
+- Tax / shipping internal calculation logic in `lineMath` is no longer auto-derived in the bar — line-level tax rates still apply per line, but the bar shows only the grand total.
 
-`src/components/layout/Sidebar.tsx`
-- `handleSignOut` already navigates to `/auth`, but wrap in try/catch and toast errors; also `await navigate({ to: "/auth", replace: true })` (replace, so back button doesn't re-enter).
-- Show the sign-out button always, including for `customer` role.
+---
 
-`src/components/layout/BottomNav.tsx`
-- The "Menu" slot opens the Sidebar in a Sheet — already wired. Verify the sign-out button inside the sheet works. No extra slot needed (5 is already maxed).
+## 6) Permission matrix · view mode + Edit toggle
 
-`src/components/layout/Header.tsx` (verify)
-- If there's a profile/avatar dropdown, ensure it has a "Sign out" item that calls the same hook; if it doesn't have one yet, add it.
+In `src/components/settings/PermissionMatrix.tsx`:
 
-### 5. Defensive: clear React Query cache on sign-out
+- Add an **Edit** button in the toolbar (top-right of the Role defaults tab).
+- Default mode is **read-only**: each cell renders a small green dot when granted, faded "—" when denied. No click handlers, no saving.
+- Clicking **Edit** flips into edit mode: cells become switch toggles (on/off) wired to the existing `toggleRole()` mutation. Button label changes to **Done** and a subtle "Editing" badge appears.
+- Same view/edit pattern is applied to the **User overrides** sub-tab so admin sees clean status badges by default and only edits explicitly.
 
-In `signOut()`, also call `queryClient.clear()` (import the singleton) so cached master data and per-user data from the previous user is wiped before the next login. Otherwise the next user briefly sees the previous user's products/customers cached for 5 min.
+This prevents accidental permission changes while keeping the data dense.
 
-## Files
+---
 
-Edited:
-- `src/contexts/AuthContext.tsx` — add `rolesLoading`, robust `signOut`, query cache clear.
-- `src/contexts/RoleContext.tsx` — expose `rolesLoading`, never silently fall back to `worker`.
-- `src/routes/app.tsx` — gate guards, real redirect spinner on logout.
-- `src/components/layout/Sidebar.tsx` — error-handled `signOut`, replace-history navigate.
-- `src/components/layout/Header.tsx` — confirm/add sign-out menu item.
-- `src/lib/roles.ts` (only if needed) — optional: extend type for the loading sentinel; otherwise handle via the new `rolesLoading` flag without touching the union.
+## Technical notes (for the build phase)
 
-No DB changes. No new packages.
+- Country-code list lives in `src/lib/country-codes.ts` (small curated array, India first).
+- `resolve_identifier_email` normalization: strip `[^0-9]` from input, then try `mobile = digits`, `mobile = '+' || digits`, and `mobile LIKE '%' || last10digits`.
+- `handle_new_user()` rewrite: read `raw_user_meta_data->>'mobile'` and persist into `profiles.mobile` (column already exists per resolver).
+- Sidebar removal: leave route files (`app.command-center.tsx`, `app.ai-insights.tsx`, `app.stations.tsx`) in place; just unlink from nav and `role-nav.ts`. Cleanup deletion can be a follow-up.
+- Quick Order schema: prefer reusing existing `notes`/`meta` JSON; only add a column if neither exists.
+- All edited files stay under the 250-line project rule — split helpers into new files where needed (`bre-blueprint.tsx`, `country-codes.ts`, `quick-order-charges.ts`).
 
-## Expected result
+---
 
-- On every login/refresh: while roles load, the layout shows a brief skeleton instead of flipping to "worker" view. Admin stays admin, customer stays customer.
-- Clicking "Sign out" (desktop sidebar OR mobile menu sheet): app immediately shows the auth screen, no toast about permissions, no role-guard race, no being stuck inside `/app`.
-- If `signOut` fails (offline), a toast tells the user instead of silently doing nothing.
-- Cache from the previous user is cleared, preventing data leakage across accounts.
+## Out of scope (confirm if you want these too)
+
+- Deleting the `/app/command-center`, `/app/ai-insights`, `/app/stations` route files entirely (just hidden for now).
+- Removing the legacy `requestor` enum value from the database.
+- Building OTP-based login for mobile (this plan keeps password-based login; mobile is just an alternate identifier).
