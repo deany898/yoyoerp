@@ -15,6 +15,7 @@ import { SmartSelect } from "@/components/forms/SmartSelect";
 import { ExportButton } from "@/components/shared/ExportButton";
 import { useAppConfig } from "@/contexts/AppConfigContext";
 import { FLAGS } from "@/lib/feature-flags";
+import { postDispatchDeductions } from "@/lib/dispatch-stock";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
@@ -202,6 +203,17 @@ function DispatchOrdersPage() {
     if (!draft.customer_id) { toast.error("Pick a customer"); return; }
     if (draft.lines.length === 0) { toast.error("Add at least one line"); return; }
     if (draft.lines.some((l) => !l.variant_id || l.qty <= 0)) { toast.error("Each line needs a product and qty > 0"); return; }
+    // Capture the prior status (before update) so we can detect the
+    // transition into "dispatched" and auto-deduct stock once.
+    let priorStatus: DispatchStatus | null = null;
+    if (draft.id) {
+      const { data: prev } = await supabase
+        .from("dispatch_orders")
+        .select("status")
+        .eq("id", draft.id)
+        .maybeSingle();
+      priorStatus = (prev?.status as DispatchStatus) ?? null;
+    }
     setSaving(true);
     let doNumber = draft.do_number;
     if (!doNumber) {
@@ -241,6 +253,17 @@ function DispatchOrdersPage() {
     const { error: lErr } = await supabase.from("dispatch_order_lines").insert(lines);
     setSaving(false);
     if (lErr) { toast.error("Lines failed", { description: lErr.message }); return; }
+
+    // Auto-deduct inventory on transition into dispatched / delivered.
+    const becameDispatched =
+      (draft.status === "dispatched" || draft.status === "delivered") &&
+      priorStatus !== "dispatched" && priorStatus !== "delivered";
+    if (becameDispatched && id) {
+      const res = await postDispatchDeductions(id);
+      if (res.posted > 0) toast.success(`Stock deducted · ${res.posted} line${res.posted === 1 ? "" : "s"}`);
+      else if (res.warning) toast.warning(`No stock deducted · ${res.warning}`);
+    }
+
     toast.success(draft.id ? "DO updated" : "DO created");
     setOpen(false); setDraft(null); void refresh();
   }

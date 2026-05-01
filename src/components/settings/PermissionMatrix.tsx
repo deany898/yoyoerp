@@ -281,12 +281,19 @@ export function PermissionMatrix() {
                       <tr key={`uh-${mod}`} className="bg-muted/30">
                         <td colSpan={4} className="px-2 py-1 text-[11px] font-semibold uppercase text-muted-foreground">
                           {MODULE_LABEL[mod as keyof typeof MODULE_LABEL] ?? mod}
+                          {selectedUser && !hasModule(userRoleFor(selectedUser), mod) && (
+                            <span className="ml-2 text-[10px] font-normal lowercase text-muted-foreground/70">
+                              · module disabled for this role
+                            </span>
+                          )}
                         </td>
                       </tr>
                       {caps.map((cap) => {
                         const role = userRoleFor(selectedUser);
                         const def = isGranted(role, cap);
                         const ov = userOverride(cap);
+                        const moduleOn = hasModule(role, mod);
+                        if (!moduleOn) return null;
                         return (
                           <tr key={cap} className="border-t border-border">
                             <td className="p-2 font-mono text-xs">{cap}</td>
