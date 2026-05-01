@@ -323,7 +323,7 @@ function QuickOrderPage() {
       extra_charges: extraCharges,
     };
     const { data: ins, error: insErr } = await supabase
-      .from("dispatch_orders").insert(header).select("id").single();
+      .from("dispatch_orders").insert(header as never).select("id").single();
     if (insErr || !ins) { setSaving(false); toast.error("Save failed", { description: insErr?.message }); return; }
 
     const linePayload = filled.map((l) => {
