@@ -11,7 +11,6 @@ import { ForecastSummary } from "@/components/insights/ForecastSummary";
 import { DemandForecastChart } from "@/components/insights/DemandForecastChart";
 import { ReorderSuggestionCard } from "@/components/insights/ReorderSuggestionCard";
 import { AnomalyAlertCard } from "@/components/insights/AnomalyAlertCard";
-import { useDemo } from "@/hooks/useDemo";
 import { useUpdateItem } from "@/hooks/useInventoryMutations";
 import { analyzeAllItems, type ReorderAnalysis } from "@/lib/reorder-engine";
 import { analyzeMovements, type AnomalySeverity, type AnomalyType } from "@/lib/anomaly-engine";
@@ -32,7 +31,6 @@ type AnomalySeverityFilter = "all" | "warning" | "critical";
 type AnomalyTypeFilter = "all" | "quantity_spike" | "frequent_adjustments" | "unusual_timing";
 
 function AiInsightsPage() {
-  const { demoStore } = useDemo();
   const { can } = usePermissions();
   const updateItem = useUpdateItem();
 
@@ -44,9 +42,9 @@ function AiInsightsPage() {
   const [showDismissed, setShowDismissed] = useState(false);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
-  const items = demoStore?.getItems() ?? [];
-  const movements = demoStore?.getMovements() ?? [];
-  const suppliers = demoStore?.getSuppliers() ?? [];
+  const items: import("@/types/inventory").Item[] = [];
+  const movements: import("@/types/inventory").StockMovement[] = [];
+  const suppliers: import("@/types/inventory").Supplier[] = [];
 
   const allAnalyses = useMemo(
     () => analyzeAllItems(items, movements, suppliers),
