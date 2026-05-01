@@ -233,6 +233,25 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
             </div>
           </div>
 
+          <Separator />
+          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Purchase price
+          </div>
+          <div className="space-y-1.5">
+            <Label>Manual purchase cost (₹) · overrides supplier quote</Label>
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              placeholder="Leave blank to use latest supplier quote"
+              value={form.manual_purchase_cost}
+              onChange={(e) => setForm((f) => ({ ...f, manual_purchase_cost: e.target.value }))}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              When set, this value is used as the effective purchase cost instead of the latest supplier quote.
+            </p>
+          </div>
+
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>Cancel</Button>
             <Button onClick={submit} disabled={submitting}>{submitting ? "Saving…" : isEdit ? "Save changes" : "Create product"}</Button>
