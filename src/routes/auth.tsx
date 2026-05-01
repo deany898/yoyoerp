@@ -7,12 +7,11 @@ import { Logo } from "@/components/brand/Logo";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { notify, friendlyAuthError } from "@/lib/notify";
 import { AuthIconInput } from "@/components/auth/AuthIconInput";
 import { GoogleIcon } from "@/components/auth/GoogleIcon";
 import { ForgotPasswordDialog } from "@/components/auth/ForgotPasswordDialog";
-import { OtpLoginForm } from "@/components/auth/OtpLoginForm";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
