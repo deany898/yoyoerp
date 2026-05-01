@@ -279,7 +279,7 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
           </TabsContent>
           {showSupplierPrices && (
             <TabsContent value="prices" className="mt-5">
-              <SupplierPricesTab variantId={firstVariant?.id ?? ""} />
+              <SupplierPricesTab variantId={firstVariant?.id ?? ""} uom={form.uom} />
             </TabsContent>
           )}
         </Tabs>
