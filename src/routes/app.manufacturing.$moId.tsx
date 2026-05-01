@@ -12,6 +12,8 @@ import { OutputReceiveDialog } from "@/components/manufacturing/OutputReceiveDia
 import { MouldingRunDialog } from "@/components/manufacturing/MouldingRunDialog";
 import { PackingRunDialog } from "@/components/manufacturing/PackingRunDialog";
 import { useConfirm } from "@/components/forms/ConfirmDialog";
+import { useAppConfig } from "@/contexts/AppConfigContext";
+import { FLAGS } from "@/lib/feature-flags";
 
 export const Route = createFileRoute("/app/manufacturing/$moId")({
   head: () => ({ meta: [{ title: "Production log · YOYO ERP" }] }),
@@ -44,6 +46,10 @@ const STATUS_TONE: Record<MOStatus, string> = {
 function MoDetailPage() {
   const { moId } = Route.useParams();
   const navigate = useNavigate();
+  const { isEnabled } = useAppConfig();
+  const showMaterialIssues = isEnabled(FLAGS.manufacturing.materialIssues, true);
+  const showMoulds = isEnabled(FLAGS.manufacturing.moulds, true);
+  const showMachines = isEnabled(FLAGS.manufacturing.machines, true);
   const [mo, setMo] = useState<MOFull | null>(null);
   const [bom, setBom] = useState<BomLineRow[]>([]);
   const [issues, setIssues] = useState<MOIssueRow[]>([]);
