@@ -106,7 +106,6 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
         code: parsed.data.code || "",
         name: parsed.data.name,
         description: parsed.data.description || null,
-        product_type: parsed.data.product_type,
         category_id: parsed.data.category_id,
         uom: parsed.data.uom,
         hsn_code: parsed.data.hsn_code || null,
@@ -186,12 +185,12 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
             </div>
             <div className="space-y-1.5">
               <Label>Type</Label>
-              <Select value={form.product_type} onValueChange={(v) => setForm((f) => ({ ...f, product_type: v as typeof f.product_type }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {PRODUCT_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <div className="flex h-9 items-center gap-2 rounded-md border border-input bg-muted/40 px-3 text-sm">
+                <Badge variant="outline" className="font-normal">
+                  {TYPE_LABEL[product?.product_type ?? "raw_material"] ?? "Auto"}
+                </Badge>
+                <span className="text-xs text-muted-foreground">Auto from BOM</span>
+              </div>
             </div>
           </div>
 
