@@ -22,7 +22,6 @@ import { Route as AppUsersRouteImport } from './routes/app.users'
 import { Route as AppSuppliersRouteImport } from './routes/app.suppliers'
 import { Route as AppStationsRouteImport } from './routes/app.stations'
 import { Route as AppStagesRouteImport } from './routes/app.stages'
-import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppRequestsRouteImport } from './routes/app.requests'
 import { Route as AppQuickOrderRouteImport } from './routes/app.quick-order'
 import { Route as AppPurchaseOrdersRouteImport } from './routes/app.purchase-orders'
@@ -42,10 +41,14 @@ import { Route as AppCommandCenterRouteImport } from './routes/app.command-cente
 import { Route as AppCategoriesRouteImport } from './routes/app.categories'
 import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
 import { Route as AppAiInsightsRouteImport } from './routes/app.ai-insights'
+import { Route as AppAdminRouteImport } from './routes/app.admin'
 import { Route as AppWorkersIdRouteImport } from './routes/app.workers.$id'
-import { Route as AppSettingsAuditRouteImport } from './routes/app.settings.audit'
 import { Route as AppManufacturingMoIdRouteImport } from './routes/app.manufacturing.$moId'
 import { Route as AppMachinesIdRouteImport } from './routes/app.machines.$id'
+import { Route as AppAdminSystemRouteImport } from './routes/app.admin.system'
+import { Route as AppAdminPresetsRouteImport } from './routes/app.admin.presets'
+import { Route as AppAdminInventorySettingsRouteImport } from './routes/app.admin.inventory-settings'
+import { Route as AppAdminAuditRouteImport } from './routes/app.admin.audit'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -110,11 +113,6 @@ const AppStationsRoute = AppStationsRouteImport.update({
 const AppStagesRoute = AppStagesRouteImport.update({
   id: '/stages',
   path: '/stages',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppSettingsRoute = AppSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
 const AppRequestsRoute = AppRequestsRouteImport.update({
@@ -212,15 +210,15 @@ const AppAiInsightsRoute = AppAiInsightsRouteImport.update({
   path: '/ai-insights',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppWorkersIdRoute = AppWorkersIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AppWorkersRoute,
-} as any)
-const AppSettingsAuditRoute = AppSettingsAuditRouteImport.update({
-  id: '/audit',
-  path: '/audit',
-  getParentRoute: () => AppSettingsRoute,
 } as any)
 const AppManufacturingMoIdRoute = AppManufacturingMoIdRouteImport.update({
   id: '/$moId',
@@ -232,11 +230,33 @@ const AppMachinesIdRoute = AppMachinesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AppMachinesRoute,
 } as any)
+const AppAdminSystemRoute = AppAdminSystemRouteImport.update({
+  id: '/system',
+  path: '/system',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminPresetsRoute = AppAdminPresetsRouteImport.update({
+  id: '/presets',
+  path: '/presets',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminInventorySettingsRoute =
+  AppAdminInventorySettingsRouteImport.update({
+    id: '/inventory-settings',
+    path: '/inventory-settings',
+    getParentRoute: () => AppAdminRoute,
+  } as any)
+const AppAdminAuditRoute = AppAdminAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/app/admin': typeof AppAdminRouteWithChildren
   '/app/ai-insights': typeof AppAiInsightsRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/categories': typeof AppCategoriesRoute
@@ -256,7 +276,6 @@ export interface FileRoutesByFullPath {
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
   '/app/quick-order': typeof AppQuickOrderRoute
   '/app/requests': typeof AppRequestsRoute
-  '/app/settings': typeof AppSettingsRouteWithChildren
   '/app/stages': typeof AppStagesRoute
   '/app/stations': typeof AppStationsRoute
   '/app/suppliers': typeof AppSuppliersRoute
@@ -267,14 +286,18 @@ export interface FileRoutesByFullPath {
   '/app/work-logs': typeof AppWorkLogsRoute
   '/app/workers': typeof AppWorkersRouteWithChildren
   '/app/': typeof AppIndexRoute
+  '/app/admin/audit': typeof AppAdminAuditRoute
+  '/app/admin/inventory-settings': typeof AppAdminInventorySettingsRoute
+  '/app/admin/presets': typeof AppAdminPresetsRoute
+  '/app/admin/system': typeof AppAdminSystemRoute
   '/app/machines/$id': typeof AppMachinesIdRoute
   '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
-  '/app/settings/audit': typeof AppSettingsAuditRoute
   '/app/workers/$id': typeof AppWorkersIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/app/admin': typeof AppAdminRouteWithChildren
   '/app/ai-insights': typeof AppAiInsightsRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/categories': typeof AppCategoriesRoute
@@ -294,7 +317,6 @@ export interface FileRoutesByTo {
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
   '/app/quick-order': typeof AppQuickOrderRoute
   '/app/requests': typeof AppRequestsRoute
-  '/app/settings': typeof AppSettingsRouteWithChildren
   '/app/stages': typeof AppStagesRoute
   '/app/stations': typeof AppStationsRoute
   '/app/suppliers': typeof AppSuppliersRoute
@@ -305,9 +327,12 @@ export interface FileRoutesByTo {
   '/app/work-logs': typeof AppWorkLogsRoute
   '/app/workers': typeof AppWorkersRouteWithChildren
   '/app': typeof AppIndexRoute
+  '/app/admin/audit': typeof AppAdminAuditRoute
+  '/app/admin/inventory-settings': typeof AppAdminInventorySettingsRoute
+  '/app/admin/presets': typeof AppAdminPresetsRoute
+  '/app/admin/system': typeof AppAdminSystemRoute
   '/app/machines/$id': typeof AppMachinesIdRoute
   '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
-  '/app/settings/audit': typeof AppSettingsAuditRoute
   '/app/workers/$id': typeof AppWorkersIdRoute
 }
 export interface FileRoutesById {
@@ -315,6 +340,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/app/admin': typeof AppAdminRouteWithChildren
   '/app/ai-insights': typeof AppAiInsightsRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/categories': typeof AppCategoriesRoute
@@ -334,7 +360,6 @@ export interface FileRoutesById {
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
   '/app/quick-order': typeof AppQuickOrderRoute
   '/app/requests': typeof AppRequestsRoute
-  '/app/settings': typeof AppSettingsRouteWithChildren
   '/app/stages': typeof AppStagesRoute
   '/app/stations': typeof AppStationsRoute
   '/app/suppliers': typeof AppSuppliersRoute
@@ -345,9 +370,12 @@ export interface FileRoutesById {
   '/app/work-logs': typeof AppWorkLogsRoute
   '/app/workers': typeof AppWorkersRouteWithChildren
   '/app/': typeof AppIndexRoute
+  '/app/admin/audit': typeof AppAdminAuditRoute
+  '/app/admin/inventory-settings': typeof AppAdminInventorySettingsRoute
+  '/app/admin/presets': typeof AppAdminPresetsRoute
+  '/app/admin/system': typeof AppAdminSystemRoute
   '/app/machines/$id': typeof AppMachinesIdRoute
   '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
-  '/app/settings/audit': typeof AppSettingsAuditRoute
   '/app/workers/$id': typeof AppWorkersIdRoute
 }
 export interface FileRouteTypes {
@@ -356,6 +384,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/app/admin'
     | '/app/ai-insights'
     | '/app/analytics'
     | '/app/categories'
@@ -375,7 +404,6 @@ export interface FileRouteTypes {
     | '/app/purchase-orders'
     | '/app/quick-order'
     | '/app/requests'
-    | '/app/settings'
     | '/app/stages'
     | '/app/stations'
     | '/app/suppliers'
@@ -386,14 +414,18 @@ export interface FileRouteTypes {
     | '/app/work-logs'
     | '/app/workers'
     | '/app/'
+    | '/app/admin/audit'
+    | '/app/admin/inventory-settings'
+    | '/app/admin/presets'
+    | '/app/admin/system'
     | '/app/machines/$id'
     | '/app/manufacturing/$moId'
-    | '/app/settings/audit'
     | '/app/workers/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/app/admin'
     | '/app/ai-insights'
     | '/app/analytics'
     | '/app/categories'
@@ -413,7 +445,6 @@ export interface FileRouteTypes {
     | '/app/purchase-orders'
     | '/app/quick-order'
     | '/app/requests'
-    | '/app/settings'
     | '/app/stages'
     | '/app/stations'
     | '/app/suppliers'
@@ -424,15 +455,19 @@ export interface FileRouteTypes {
     | '/app/work-logs'
     | '/app/workers'
     | '/app'
+    | '/app/admin/audit'
+    | '/app/admin/inventory-settings'
+    | '/app/admin/presets'
+    | '/app/admin/system'
     | '/app/machines/$id'
     | '/app/manufacturing/$moId'
-    | '/app/settings/audit'
     | '/app/workers/$id'
   id:
     | '__root__'
     | '/'
     | '/app'
     | '/auth'
+    | '/app/admin'
     | '/app/ai-insights'
     | '/app/analytics'
     | '/app/categories'
@@ -452,7 +487,6 @@ export interface FileRouteTypes {
     | '/app/purchase-orders'
     | '/app/quick-order'
     | '/app/requests'
-    | '/app/settings'
     | '/app/stages'
     | '/app/stations'
     | '/app/suppliers'
@@ -463,9 +497,12 @@ export interface FileRouteTypes {
     | '/app/work-logs'
     | '/app/workers'
     | '/app/'
+    | '/app/admin/audit'
+    | '/app/admin/inventory-settings'
+    | '/app/admin/presets'
+    | '/app/admin/system'
     | '/app/machines/$id'
     | '/app/manufacturing/$moId'
-    | '/app/settings/audit'
     | '/app/workers/$id'
   fileRoutesById: FileRoutesById
 }
@@ -566,13 +603,6 @@ declare module '@tanstack/react-router' {
       path: '/stages'
       fullPath: '/app/stages'
       preLoaderRoute: typeof AppStagesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/settings': {
-      id: '/app/settings'
-      path: '/settings'
-      fullPath: '/app/settings'
-      preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/requests': {
@@ -708,19 +738,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAiInsightsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/admin': {
+      id: '/app/admin'
+      path: '/admin'
+      fullPath: '/app/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/workers/$id': {
       id: '/app/workers/$id'
       path: '/$id'
       fullPath: '/app/workers/$id'
       preLoaderRoute: typeof AppWorkersIdRouteImport
       parentRoute: typeof AppWorkersRoute
-    }
-    '/app/settings/audit': {
-      id: '/app/settings/audit'
-      path: '/audit'
-      fullPath: '/app/settings/audit'
-      preLoaderRoute: typeof AppSettingsAuditRouteImport
-      parentRoute: typeof AppSettingsRoute
     }
     '/app/manufacturing/$moId': {
       id: '/app/manufacturing/$moId'
@@ -736,8 +766,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMachinesIdRouteImport
       parentRoute: typeof AppMachinesRoute
     }
+    '/app/admin/system': {
+      id: '/app/admin/system'
+      path: '/system'
+      fullPath: '/app/admin/system'
+      preLoaderRoute: typeof AppAdminSystemRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/presets': {
+      id: '/app/admin/presets'
+      path: '/presets'
+      fullPath: '/app/admin/presets'
+      preLoaderRoute: typeof AppAdminPresetsRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/inventory-settings': {
+      id: '/app/admin/inventory-settings'
+      path: '/inventory-settings'
+      fullPath: '/app/admin/inventory-settings'
+      preLoaderRoute: typeof AppAdminInventorySettingsRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/audit': {
+      id: '/app/admin/audit'
+      path: '/audit'
+      fullPath: '/app/admin/audit'
+      preLoaderRoute: typeof AppAdminAuditRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
   }
 }
+
+interface AppAdminRouteChildren {
+  AppAdminAuditRoute: typeof AppAdminAuditRoute
+  AppAdminInventorySettingsRoute: typeof AppAdminInventorySettingsRoute
+  AppAdminPresetsRoute: typeof AppAdminPresetsRoute
+  AppAdminSystemRoute: typeof AppAdminSystemRoute
+}
+
+const AppAdminRouteChildren: AppAdminRouteChildren = {
+  AppAdminAuditRoute: AppAdminAuditRoute,
+  AppAdminInventorySettingsRoute: AppAdminInventorySettingsRoute,
+  AppAdminPresetsRoute: AppAdminPresetsRoute,
+  AppAdminSystemRoute: AppAdminSystemRoute,
+}
+
+const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
+  AppAdminRouteChildren,
+)
 
 interface AppMachinesRouteChildren {
   AppMachinesIdRoute: typeof AppMachinesIdRoute
@@ -762,18 +838,6 @@ const AppManufacturingRouteChildren: AppManufacturingRouteChildren = {
 const AppManufacturingRouteWithChildren =
   AppManufacturingRoute._addFileChildren(AppManufacturingRouteChildren)
 
-interface AppSettingsRouteChildren {
-  AppSettingsAuditRoute: typeof AppSettingsAuditRoute
-}
-
-const AppSettingsRouteChildren: AppSettingsRouteChildren = {
-  AppSettingsAuditRoute: AppSettingsAuditRoute,
-}
-
-const AppSettingsRouteWithChildren = AppSettingsRoute._addFileChildren(
-  AppSettingsRouteChildren,
-)
-
 interface AppWorkersRouteChildren {
   AppWorkersIdRoute: typeof AppWorkersIdRoute
 }
@@ -787,6 +851,7 @@ const AppWorkersRouteWithChildren = AppWorkersRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
+  AppAdminRoute: typeof AppAdminRouteWithChildren
   AppAiInsightsRoute: typeof AppAiInsightsRoute
   AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppCategoriesRoute: typeof AppCategoriesRoute
@@ -806,7 +871,6 @@ interface AppRouteChildren {
   AppPurchaseOrdersRoute: typeof AppPurchaseOrdersRoute
   AppQuickOrderRoute: typeof AppQuickOrderRoute
   AppRequestsRoute: typeof AppRequestsRoute
-  AppSettingsRoute: typeof AppSettingsRouteWithChildren
   AppStagesRoute: typeof AppStagesRoute
   AppStationsRoute: typeof AppStationsRoute
   AppSuppliersRoute: typeof AppSuppliersRoute
@@ -820,6 +884,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAdminRoute: AppAdminRouteWithChildren,
   AppAiInsightsRoute: AppAiInsightsRoute,
   AppAnalyticsRoute: AppAnalyticsRoute,
   AppCategoriesRoute: AppCategoriesRoute,
@@ -839,7 +904,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppPurchaseOrdersRoute: AppPurchaseOrdersRoute,
   AppQuickOrderRoute: AppQuickOrderRoute,
   AppRequestsRoute: AppRequestsRoute,
-  AppSettingsRoute: AppSettingsRouteWithChildren,
   AppStagesRoute: AppStagesRoute,
   AppStationsRoute: AppStationsRoute,
   AppSuppliersRoute: AppSuppliersRoute,

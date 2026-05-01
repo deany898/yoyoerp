@@ -47,7 +47,11 @@ export const ROUTE_META: Record<string, RouteMeta> = {
   "/app/analytics": { label: "Analytics", icon: BarChart3, group: "Intelligence" },
   "/app/ai-insights": { label: "AI insights", icon: Sparkles, group: "Intelligence" },
   "/app/command-center": { label: "Command center", icon: Sparkles, group: "Intelligence" },
-  "/app/settings": { label: "Settings", icon: Settings, group: "Admin" },
+  "/app/admin": { label: "Admin", icon: Settings, group: "Admin" },
+  "/app/admin/system": { label: "System config", icon: Settings, group: "Admin" },
+  "/app/admin/presets": { label: "Presets", icon: Settings, group: "Admin" },
+  "/app/admin/inventory-settings": { label: "Inventory settings", icon: Settings, group: "Admin" },
+  "/app/admin/audit": { label: "Audit log", icon: Settings, group: "Admin" },
   "/app/help": { label: "Help", icon: HelpCircle, group: "Support" },
 };
 

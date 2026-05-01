@@ -29,6 +29,10 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     "/app/workers",
     "/app/users",
     "/app/admin",
+    "/app/admin/system",
+    "/app/admin/presets",
+    "/app/admin/inventory-settings",
+    "/app/admin/audit",
     "/app/help",
   ],
   manager: [
@@ -53,6 +57,10 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     "/app/moulds",
     "/app/workers",
     "/app/admin",
+    "/app/admin/system",
+    "/app/admin/presets",
+    "/app/admin/inventory-settings",
+    "/app/admin/audit",
     "/app/help",
   ],
   supervisor: [

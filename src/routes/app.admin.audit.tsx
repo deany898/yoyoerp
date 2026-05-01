@@ -7,9 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { notify } from "@/lib/notify";
 
-export const Route = createFileRoute("/app/settings/audit")({
-  component: AuditPage,
-  head: () => ({ meta: [{ title: "Audit log · YOYO ERP" }, { name: "robots", content: "noindex" }] }),
+export const Route = createFileRoute("/app/admin/audit")({
+  component: AdminAuditPage,
+  head: () => ({ meta: [{ title: "Audit log · Admin · YOYO ERP" }, { name: "robots", content: "noindex" }] }),
 });
 
 interface AuditRow {
@@ -22,7 +22,7 @@ interface AuditRow {
   created_at: string;
 }
 
-function AuditPage() {
+function AdminAuditPage() {
   const { cap } = usePermissions();
   const navigate = useNavigate();
   const [rows, setRows] = useState<AuditRow[]>([]);
@@ -74,11 +74,11 @@ function AuditPage() {
   };
 
   return (
-    <div className="mx-auto max-w-[1200px] space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold"><Shield className="h-5 w-5 text-primary" /> Audit log</h1>
-          <p className="text-sm text-muted-foreground">Last 200 sensitive system events · admin-only</p>
+          <h2 className="flex items-center gap-2 text-lg font-semibold"><Shield className="h-5 w-5 text-primary" /> Audit log</h2>
+          <p className="text-sm text-muted-foreground">Last 200 sensitive system events.</p>
         </div>
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
