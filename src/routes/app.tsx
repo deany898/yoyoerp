@@ -4,6 +4,7 @@ import { AnimatePresence } from "framer-motion";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { RoleSimulatorBar } from "@/components/layout/RoleSimulatorBar";
 import { ShortcutsHelpDialog } from "@/components/command/ShortcutsHelpDialog";
 import { PageTransition } from "@/components/shared/PageTransition";
 import { useRole } from "@/hooks/useRole";
@@ -71,6 +72,7 @@ function AppLayout() {
       </div>
       <BottomNav />
       <ShortcutsHelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
+      <RoleSimulatorBar />
     </div>
   );
 }

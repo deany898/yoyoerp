@@ -1,6 +1,7 @@
 import { Outlet, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { RoleProvider } from "@/contexts/RoleContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { RoleSimulatorProvider } from "@/contexts/RoleSimulatorContext";
 import { Toaster } from "@/components/ui/sonner";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { ConfirmProvider } from "@/components/forms/ConfirmDialog";
@@ -66,7 +67,8 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <AuthProvider>
-      <RoleProvider>
+      <RoleSimulatorProvider>
+        <RoleProvider>
         <ConfirmProvider>
           <ErrorBoundary>
             <Outlet />
@@ -79,7 +81,8 @@ function RootComponent() {
           expand
           toastOptions={{ duration: 4000 }}
         />
-      </RoleProvider>
+        </RoleProvider>
+      </RoleSimulatorProvider>
     </AuthProvider>
   );
 }

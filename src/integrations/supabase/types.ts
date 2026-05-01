@@ -2198,6 +2198,33 @@ export type Database = {
           },
         ]
       }
+      role_permissions: {
+        Row: {
+          capability: string
+          created_at: string
+          granted: boolean
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+        }
+        Insert: {
+          capability: string
+          created_at?: string
+          granted?: boolean
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Update: {
+          capability?: string
+          created_at?: string
+          granted?: boolean
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       semi_finished_inventory: {
         Row: {
           created_at: string
@@ -2836,6 +2863,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_permission_overrides: {
+        Row: {
+          capability: string
+          created_at: string
+          expires_at: string | null
+          granted: boolean
+          granted_by: string | null
+          id: string
+          reason: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          capability: string
+          created_at?: string
+          expires_at?: string | null
+          granted: boolean
+          granted_by?: string | null
+          id?: string
+          reason?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          capability?: string
+          created_at?: string
+          expires_at?: string | null
+          granted?: boolean
+          granted_by?: string | null
+          id?: string
+          reason?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -2853,6 +2916,33 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_search_history: {
+        Row: {
+          created_at: string
+          id: string
+          query: string
+          result_count: number
+          scope: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          query: string
+          result_count?: number
+          scope?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          query?: string
+          result_count?: number
+          scope?: string | null
           user_id?: string
         }
         Relationships: []
@@ -3558,6 +3648,10 @@ export type Database = {
           _roles: Database["public"]["Enums"]["app_role"][]
           _user_id: string
         }
+        Returns: boolean
+      }
+      has_capability: {
+        Args: { _capability: string; _user_id: string }
         Returns: boolean
       }
       has_role: {
