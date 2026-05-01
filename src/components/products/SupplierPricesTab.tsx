@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { SmartSelect } from "@/components/forms/SmartSelect";
-import { useSuppliers } from "@/hooks/useErpData";
+import { useSuppliers, useUoms } from "@/hooks/useErpData";
+import { pricePerBase, formatBasePrice } from "@/lib/uom";
 import { PriceHistoryPopover } from "./PriceHistoryPopover";
 
 interface QuoteRow {
@@ -29,10 +30,12 @@ interface QuoteRow {
 
 interface Props {
   variantId: string;
+  uom?: string;
 }
 
-export function SupplierPricesTab({ variantId }: Props) {
+export function SupplierPricesTab({ variantId, uom }: Props) {
   const { suppliers } = useSuppliers();
+  const { uoms } = useUoms();
   const [rows, setRows] = useState<QuoteRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -281,6 +284,14 @@ export function SupplierPricesTab({ variantId }: Props) {
                       <p className="text-[11px] text-muted-foreground">
                         base ₹{Number(q.unit_price).toFixed(2)} + frt ₹{Number(q.freight_cost).toFixed(2)}
                       </p>
+                      {(() => {
+                        const b = pricePerBase(Number(q.unit_price), uom, uoms);
+                        return b ? (
+                          <p className="text-[11px] text-emerald-700">
+                            ≈ ₹{formatBasePrice(b.price)}/{b.base}
+                          </p>
+                        ) : null;
+                      })()}
                     </>
                   )}
                 </div>
