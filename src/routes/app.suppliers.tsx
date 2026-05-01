@@ -45,17 +45,29 @@ function SuppliersPage() {
   const [viewing, setViewing] = useState<SupplierRow | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<VendorCategory | "all">("all");
 
-  function openCreate() { setEditing({ ...EMPTY }); setOpen(true); }
+  function nextSupplierCode(): string {
+    let max = 0;
+    for (const s of suppliers) {
+      const m = /^SUP-(\d+)$/i.exec(s.code ?? "");
+      if (m) {
+        const n = parseInt(m[1], 10);
+        if (n > max) max = n;
+      }
+    }
+    return `SUP-${String(max + 1).padStart(3, "0")}`;
+  }
+  function openCreate() { setEditing({ ...EMPTY, code: nextSupplierCode() }); setOpen(true); }
   function openEdit(s: SupplierRow) { setEditing(s); setOpen(true); }
 
   async function handleSave() {
-    if (!editing?.name || !editing?.code) {
-      toast.error("Code and Name are required");
+    if (!editing?.name) {
+      toast.error("Name is required");
       return;
     }
+    const code = (editing.code && editing.code.trim()) || nextSupplierCode();
     setSaving(true);
     const payload = {
-      code: editing.code, name: editing.name,
+      code, name: editing.name,
       contact_name: editing.contact_name || null,
       email: editing.email || null, phone: editing.phone || null,
       address: editing.address || null, city: editing.city || null,
