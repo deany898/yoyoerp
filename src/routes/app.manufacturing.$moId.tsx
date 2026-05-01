@@ -264,6 +264,7 @@ function MoDetailPage() {
       </section>
 
       <div className="grid gap-4 lg:grid-cols-2">
+        {showMaterialIssues && (
         <section className="rounded-xl border border-border bg-card p-5">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Material issues</h2>
           {issues.length === 0 ? (
@@ -279,6 +280,7 @@ function MoDetailPage() {
             </ul>
           )}
         </section>
+        )}
 
         <section className="rounded-xl border border-border bg-card p-5">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Outputs received</h2>
@@ -297,7 +299,7 @@ function MoDetailPage() {
         </section>
       </div>
 
-      {issueComponent && (
+      {issueComponent && showMaterialIssues && (
         <MaterialIssueDialog
           open={issueOpen}
           onOpenChange={setIssueOpen}
