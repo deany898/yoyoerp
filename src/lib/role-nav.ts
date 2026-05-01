@@ -100,7 +100,7 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     "/app/analytics",
     "/app/help",
   ],
-  customer: ["/app/dashboard", "/app/help"],
+  customer: ["/app/quick-order", "/app/products", "/app/help"],
   requestor: ["/app/dashboard", "/app/requests", "/app/help"],
 };
 
@@ -119,7 +119,7 @@ const ROLE_BOTTOM_NAV: Record<UserRoleType, string[]> = {
   worker: ["/app/dashboard", "/app/work-logs", "/app/manufacturing"],
   dispatch: ["/app/dashboard", "/app/dispatch-orders", "/app/movements", "/app/inventory"],
   sales: ["/app/dashboard", "/app/dispatch-orders", "/app/customers", "/app/products"],
-  customer: ["/app/dashboard", "/app/help"],
+  customer: ["/app/quick-order", "/app/products", "/app/help"],
   requestor: ["/app/dashboard", "/app/requests", "/app/help"],
 };
 

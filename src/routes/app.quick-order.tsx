@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useProducts, useWarehouses } from "@/hooks/useErpData";
+import { useProducts } from "@/hooks/useErpData";
 import { useRole } from "@/hooks/useRole";
 import { Button } from "@/components/ui/button";
 import { QuickOrderHeader, type CustomerLite } from "@/components/quick-order/QuickOrderHeader";
@@ -38,14 +38,13 @@ function newLine(): DraftLine {
 function QuickOrderPage() {
   const navigate = useNavigate();
   const { products } = useProducts();
-  const { warehouses } = useWarehouses();
   const { role } = useRole();
+  const isCustomer = role === "customer";
   const canEdit = ["admin", "manager", "sales", "supervisor", "dispatch"].includes(role);
   const showCost = ["admin", "manager"].includes(role);
 
   const [customers, setCustomers] = useState<CustomerLite[]>([]);
   const [customerId, setCustomerId] = useState("");
-  const [warehouseId, setWarehouseId] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
   const [transporter, setTransporter] = useState("");
@@ -54,6 +53,7 @@ function QuickOrderPage() {
   const [orderNumber, setOrderNumber] = useState("");
   const [shippingAddress, setShippingAddress] = useState("");
   const [paymentTerms, setPaymentTerms] = useState("");
+  const [otherCharges, setOtherCharges] = useState(0);
   const [lines, setLines] = useState<DraftLine[]>([newLine()]);
   const [tierMap, setTierMap] = useState<TierPriceMap>({});
   const [stockMap, setStockMap] = useState<Record<string, number>>({});
@@ -96,7 +96,6 @@ function QuickOrderPage() {
         const fresh = Date.now() - draft.saved_at < 24 * 60 * 60 * 1000;
         if (fresh) {
           setCustomerId(draft.customer_id);
-          setWarehouseId(draft.warehouse_id);
           setShippingAddress(draft.shipping_address);
           setPaymentTerms(draft.payment_terms);
           setLines(draft.lines.length ? [...draft.lines, newLine()] : [newLine()]);
@@ -169,14 +168,14 @@ function QuickOrderPage() {
       const filled = lines.filter((l) => l.variant_id);
       if (customerId || filled.length > 0) {
         saveDraft({
-          customer_id: customerId, warehouse_id: warehouseId,
+          customer_id: customerId, warehouse_id: "",
           shipping_address: shippingAddress, payment_terms: paymentTerms,
           lines: filled, saved_at: Date.now(),
         });
       }
     }, 1500);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
-  }, [customerId, warehouseId, shippingAddress, paymentTerms, lines]);
+  }, [customerId, shippingAddress, paymentTerms, lines]);
 
   function patchLine(uid: string, p: Partial<DraftLine>) {
     setLines((prev) => {
@@ -243,8 +242,8 @@ function QuickOrderPage() {
     }
     const net = subtotal - discount;
     const shipping = net > 5000 ? 0 : net > 0 ? 90 : 0;
-    return { subtotal, discount, tax, shipping, units, total: net + tax + shipping };
-  }, [filled]);
+    return { subtotal, discount, tax, shipping, units, total: net + tax + shipping + (otherCharges || 0) };
+  }, [filled, otherCharges]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -303,13 +302,13 @@ function QuickOrderPage() {
     }
     const header = {
       do_number: doNumber, customer_id: effectiveCustomerId,
-      warehouse_id: warehouseId || null,
+      warehouse_id: null,
       status: asDraft ? "draft" as const : "pending_approval" as const,
       delivery_address: shippingAddress || null,
       pricing_tier: tier,
       subtotal: totals.subtotal, discount_total: totals.discount,
       tax_total: totals.tax, freight_cost: totals.shipping,
-      grand_total: totals.total, packing_cost: 0, other_charges: 0,
+      grand_total: totals.total, packing_cost: 0, other_charges: otherCharges || 0,
     };
     const { data: ins, error: insErr } = await supabase
       .from("dispatch_orders").insert(header).select("id").single();
@@ -356,16 +355,17 @@ function QuickOrderPage() {
       <div className="hidden md:block">
       <QuickOrderHeader
         customers={customers}
-        warehouses={warehouses.map((w) => ({ id: w.id, name: w.name }))}
-        customerId={customerId} warehouseId={warehouseId}
+        customerId={customerId}
         shippingAddress={shippingAddress} paymentTerms={paymentTerms}
         orderNumber={orderNumber}
-        onCustomer={setCustomerId} onWarehouse={setWarehouseId}
+        hideCustomer={isCustomer}
+        onCustomer={setCustomerId}
         onShipping={setShippingAddress} onPaymentTerms={setPaymentTerms}
       />
       </div>
 
-      {/* Mobile: customer card with free-text + autocomplete */}
+      {/* Mobile: customer card with free-text + autocomplete (hidden for self-service customers) */}
+      {!isCustomer && (
       <div className="md:hidden">
         <QuickOrderCustomerCard
           customers={customers}
@@ -394,6 +394,7 @@ function QuickOrderPage() {
           onShipping={setShippingAddress}
         />
       </div>
+      )}
 
       <QuickActionsBar
         recent={recentVariants} frequent={frequentVariants}
@@ -480,6 +481,7 @@ function QuickOrderPage() {
         itemCount={filled.length} unitsTotal={totals.units}
         subtotal={totals.subtotal} discount={totals.discount}
         tax={totals.tax} shipping={totals.shipping} total={totals.total}
+        otherCharges={otherCharges} onOtherChargesChange={setOtherCharges}
         saving={saving} canEdit={canEdit}
         onSubmit={() => submit(false)} onSaveDraft={() => submit(true)}
       />

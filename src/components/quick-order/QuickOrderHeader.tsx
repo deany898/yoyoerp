@@ -1,13 +1,10 @@
 import { useMemo, useState } from "react";
-import { User as UserIcon, MapPin, Warehouse, Hash, CreditCard } from "lucide-react";
+import { User as UserIcon, MapPin, Hash, CreditCard } from "lucide-react";
 import { SmartSelect } from "@/components/forms/SmartSelect";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 
 export interface CustomerLite {
   id: string;
@@ -24,14 +21,12 @@ export interface CustomerLite {
 
 interface Props {
   customers: CustomerLite[];
-  warehouses: Array<{ id: string; name: string }>;
   customerId: string;
-  warehouseId: string;
   shippingAddress: string;
   paymentTerms: string;
   orderNumber: string;
+  hideCustomer?: boolean;
   onCustomer: (id: string) => void;
-  onWarehouse: (id: string) => void;
   onShipping: (s: string) => void;
   onPaymentTerms: (s: string) => void;
 }
@@ -47,7 +42,8 @@ export function QuickOrderHeader(props: Props) {
     <header className="rounded-xl border border-border bg-card shadow-sm">
       <div className="grid grid-cols-1 gap-2 p-3 md:grid-cols-12 md:items-center">
         {/* Customer */}
-        <Field icon={<UserIcon className="h-3.5 w-3.5" />} label="Customer" cols="md:col-span-4">
+        {!props.hideCustomer && (
+        <Field icon={<UserIcon className="h-3.5 w-3.5" />} label="Customer" cols="md:col-span-5">
           <SmartSelect
             options={props.customers.map((c) => ({ value: c.id, label: c.name, hint: c.code }))}
             value={props.customerId || null}
@@ -67,21 +63,10 @@ export function QuickOrderHeader(props: Props) {
             </div>
           )}
         </Field>
-
-        {/* Warehouse */}
-        <Field icon={<Warehouse className="h-3.5 w-3.5" />} label="Warehouse" cols="md:col-span-2">
-          <Select value={props.warehouseId} onValueChange={props.onWarehouse}>
-            <SelectTrigger className="h-9"><SelectValue placeholder="Pick" /></SelectTrigger>
-            <SelectContent>
-              {props.warehouses.map((w) => (
-                <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
+        )}
 
         {/* Shipping address (popover) */}
-        <Field icon={<MapPin className="h-3.5 w-3.5" />} label="Ship to" cols="md:col-span-3">
+        <Field icon={<MapPin className="h-3.5 w-3.5" />} label="Ship to" cols={props.hideCustomer ? "md:col-span-8" : "md:col-span-4"}>
           <Popover open={addrOpen} onOpenChange={setAddrOpen}>
             <PopoverTrigger asChild>
               <button
