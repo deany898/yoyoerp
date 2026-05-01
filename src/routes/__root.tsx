@@ -1,4 +1,5 @@
 import { Outlet, createRootRoute, HeadContent, Scripts, Link } from "@tanstack/react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RoleProvider } from "@/contexts/RoleContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { RoleSimulatorProvider } from "@/contexts/RoleSimulatorContext";
@@ -8,6 +9,14 @@ import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { ConfirmProvider } from "@/components/forms/ConfirmDialog";
 
 import appCss from "../styles.css?url";
+
+// Module-level fallback client used when the router context isn't available
+// during early SSR shell render. Real client lives in router.tsx.
+const fallbackQueryClient = new QueryClient({
+  defaultOptions: {
+    queries: { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false, retry: 1 },
+  },
+});
 
 export const Route = createRootRoute({
   head: () => ({
@@ -68,6 +77,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   return (
+    <QueryClientProvider client={fallbackQueryClient}>
     <AuthProvider>
       <RoleSimulatorProvider>
         <RoleProvider>
@@ -88,6 +98,7 @@ function RootComponent() {
         </RoleProvider>
       </RoleSimulatorProvider>
     </AuthProvider>
+    </QueryClientProvider>
   );
 }
 
