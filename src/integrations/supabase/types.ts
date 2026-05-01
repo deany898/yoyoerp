@@ -1536,6 +1536,9 @@ export type Database = {
           id: string
           is_active: boolean
           last_cost: number
+          manual_cost_updated_at: string | null
+          manual_cost_updated_by: string | null
+          manual_purchase_cost: number | null
           manufacture_cost: number
           pack_labour_cost: number
           pack_material_cost: number
@@ -1564,6 +1567,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_cost?: number
+          manual_cost_updated_at?: string | null
+          manual_cost_updated_by?: string | null
+          manual_purchase_cost?: number | null
           manufacture_cost?: number
           pack_labour_cost?: number
           pack_material_cost?: number
@@ -1592,6 +1598,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_cost?: number
+          manual_cost_updated_at?: string | null
+          manual_cost_updated_by?: string | null
+          manual_purchase_cost?: number | null
           manufacture_cost?: number
           pack_labour_cost?: number
           pack_material_cost?: number
@@ -1783,28 +1792,40 @@ export type Database = {
       }
       profiles: {
         Row: {
+          admin_locked: boolean
           avatar_url: string | null
           created_at: string
+          created_by_admin: boolean
           display_name: string | null
           id: string
+          mobile: string | null
           updated_at: string
           user_id: string
+          username: string | null
         }
         Insert: {
+          admin_locked?: boolean
           avatar_url?: string | null
           created_at?: string
+          created_by_admin?: boolean
           display_name?: string | null
           id?: string
+          mobile?: string | null
           updated_at?: string
           user_id: string
+          username?: string | null
         }
         Update: {
+          admin_locked?: boolean
           avatar_url?: string | null
           created_at?: string
+          created_by_admin?: boolean
           display_name?: string | null
           id?: string
+          mobile?: string | null
           updated_at?: string
           user_id?: string
+          username?: string | null
         }
         Relationships: []
       }
