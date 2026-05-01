@@ -107,6 +107,7 @@ function AuthPage() {
       displayName: signupName,
       email: signupEmail,
       password: signupPassword,
+      mobile: signupMobile,
     });
     if (!parsed.success) {
       notify.warning(parsed.error.issues[0]?.message ?? "Invalid input");
