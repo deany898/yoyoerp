@@ -443,10 +443,9 @@ function QuickOrderPage() {
             <col className="w-8" />
             <col />
             <col className="w-[110px]" />
+            <col className="w-[120px]" />
             <col className="w-[110px]" />
-            <col className="w-[110px]" />
-            <col className="w-[80px]" />
-            <col className="w-[80px]" />
+            <col className="w-[130px]" />
             <col className="w-[120px]" />
             <col className="w-[60px]" />
           </colgroup>
