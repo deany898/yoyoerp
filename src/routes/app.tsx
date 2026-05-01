@@ -45,7 +45,7 @@ function AppLayout() {
   useEffect(() => {
     if (!canAccessRoute(location.pathname, role)) {
       toast.error("You don't have permission to access that page.");
-      navigate({ to: "/app/dashboard" });
+      navigate({ to: role === "customer" ? "/app/quick-order" : "/app/dashboard" });
     }
   }, [location.pathname, role, navigate]);
 
