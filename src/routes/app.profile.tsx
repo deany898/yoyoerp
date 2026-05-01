@@ -5,11 +5,13 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
+import { useDevMode } from "@/hooks/useDevMode";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { notify, friendlyAuthError } from "@/lib/notify";
 
 export const Route = createFileRoute("/app/profile")({
@@ -31,7 +33,8 @@ const profileSchema = z.object({
 
 function ProfilePage() {
   const { user } = useAuth();
-  const { role } = useRole();
+  const { role, realRole } = useRole();
+  const { devMode, setDevMode } = useDevMode();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [adminLocked, setAdminLocked] = useState(false);
@@ -253,6 +256,22 @@ function ProfilePage() {
           />
         </div>
       </section>
+
+      {realRole === "admin" && (
+        <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+          <h2 className="text-sm font-semibold">Developer</h2>
+          <Separator className="my-4" />
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <div className="text-sm font-medium">Developer mode</div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Show role simulator in the sidebar so you can preview the app as other roles.
+              </p>
+            </div>
+            <Switch checked={devMode} onCheckedChange={setDevMode} aria-label="Developer mode" />
+          </div>
+        </section>
+      )}
 
       <div className="text-center text-xs text-muted-foreground">
         Need to switch accounts? <Link to="/auth" className="font-semibold text-primary">Sign in to another account</Link>
