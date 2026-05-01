@@ -2984,6 +2984,36 @@ export type Database = {
         }
         Relationships: []
       }
+      uoms: {
+        Row: {
+          base_uom: string
+          code: string
+          created_at: string
+          factor: number
+          is_active: boolean
+          label: string
+          updated_at: string
+        }
+        Insert: {
+          base_uom: string
+          code: string
+          created_at?: string
+          factor?: number
+          is_active?: boolean
+          label: string
+          updated_at?: string
+        }
+        Update: {
+          base_uom?: string
+          code?: string
+          created_at?: string
+          factor?: number
+          is_active?: boolean
+          label?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_permission_overrides: {
         Row: {
           capability: string
