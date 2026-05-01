@@ -118,22 +118,24 @@ export function useSuppliers() {
 // ===================== UOMs =====================
 import type { UomDef } from "@/lib/uom";
 
-export function useUoms() {
+export function useUoms(opts: { activeOnly?: boolean } = { activeOnly: true }) {
   const [data, setData] = useState<UomDef[]>([]);
   const [loading, setLoading] = useState(true);
+  const activeOnly = opts.activeOnly !== false;
   const refresh = useCallback(async () => {
     setLoading(true);
     // `uoms` table is freshly created · types may not be regenerated yet.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: rows, error } = await (supabase as any)
+    let q = (supabase as any)
       .from("uoms")
       .select("code,label,factor,base_uom,is_active")
-      .eq("is_active", true)
       .order("code");
+    if (activeOnly) q = q.eq("is_active", true);
+    const { data: rows, error } = await q;
     if (error) toast.error("Failed to load UOMs", { description: error.message });
     setData((rows as UomDef[]) ?? []);
     setLoading(false);
-  }, []);
+  }, [activeOnly]);
   useEffect(() => { refresh(); }, [refresh]);
   return { uoms: data, loading, refresh };
 }
