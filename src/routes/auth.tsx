@@ -25,11 +25,13 @@ export const Route = createFileRoute("/auth")({
 });
 
 const credentialsSchema = z.object({
-  email: z.string().trim().email("Enter a valid email").max(255),
+  email: z.string().trim().min(3, "Enter your email, username, or mobile").max(255),
   password: z.string().min(8, "Password must be at least 8 characters").max(72),
 });
 
-const signupSchema = credentialsSchema.extend({
+const signupSchema = z.object({
+  email: z.string().trim().email("Enter a valid email").max(255),
+  password: z.string().min(8, "Password must be at least 8 characters").max(72),
   displayName: z.string().trim().min(2, "Name must be at least 2 characters").max(80),
 });
 
@@ -60,8 +62,27 @@ function AuthPage() {
       return;
     }
     setSubmitting(true);
+    let identifier = parsed.data.email.trim();
+    // Resolve username / mobile to the email used for auth
+    if (!identifier.includes("@")) {
+      const isMobile = /^[+0-9 ()-]+$/.test(identifier);
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .or(isMobile ? `mobile.eq.${identifier}` : `username.ilike.${identifier}`)
+        .maybeSingle();
+      if (!profile) {
+        setSubmitting(false);
+        notify.error("No account found for that username or mobile");
+        return;
+      }
+      // Profiles table doesn't expose email directly · ask the user to use their email
+      setSubmitting(false);
+      notify.warning("Please sign in with your email for now · username/mobile sign-in coming soon");
+      return;
+    }
     const { error } = await supabase.auth.signInWithPassword({
-      email: parsed.data.email,
+      email: identifier,
       password: parsed.data.password,
     });
     setSubmitting(false);
