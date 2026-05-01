@@ -1,4 +1,4 @@
-import { Outlet, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { Outlet, createRootRoute, HeadContent, Scripts, Link } from "@tanstack/react-router";
 import { RoleProvider } from "@/contexts/RoleContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { RoleSimulatorProvider } from "@/contexts/RoleSimulatorContext";
@@ -48,6 +48,7 @@ export const Route = createRootRoute({
   }),
   shellComponent: RootShell,
   component: RootComponent,
+  notFoundComponent: NotFoundComponent,
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {
@@ -84,5 +85,25 @@ function RootComponent() {
         </RoleProvider>
       </RoleSimulatorProvider>
     </AuthProvider>
+  );
+}
+
+function NotFoundComponent() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-6">
+      <div className="max-w-md text-center">
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">404</p>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight">Page not found</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          The page you were looking for doesn't exist or was moved.
+        </p>
+        <Link
+          to="/app"
+          className="mt-6 inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+        >
+          Go to dashboard
+        </Link>
+      </div>
+    </div>
   );
 }
