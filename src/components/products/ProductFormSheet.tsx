@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SupplierPricesTab } from "./SupplierPricesTab";
@@ -16,18 +17,17 @@ import type { CategoryRow, ProductWithVariants } from "@/hooks/useErpData";
 import { useAppConfig } from "@/contexts/AppConfigContext";
 import { FLAGS } from "@/lib/feature-flags";
 
-const PRODUCT_TYPES = [
-  { value: "raw_material", label: "Raw material" },
-  { value: "packaging", label: "Packaging" },
-  { value: "wip", label: "Work in progress" },
-  { value: "finished_good", label: "Finished good" },
-] as const;
+const TYPE_LABEL: Record<string, string> = {
+  raw_material: "Raw",
+  packaging: "Packaging",
+  wip: "Semi-finished",
+  finished_good: "Finished good",
+};
 
 const schema = z.object({
   code: z.string().trim().max(64).optional().or(z.literal("")),
   name: z.string().trim().min(2).max(200),
   description: z.string().max(2000).optional(),
-  product_type: z.enum(["raw_material", "packaging", "wip", "finished_good"]),
   category_id: z.string().nullable(),
   uom: z.string().trim().min(1).max(16),
   hsn_code: z.string().max(20).optional(),
@@ -59,7 +59,6 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
     code: "",
     name: "",
     description: "",
-    product_type: "finished_good" as (typeof PRODUCT_TYPES)[number]["value"],
     category_id: null as string | null,
     uom: "pcs",
     hsn_code: "",
@@ -77,7 +76,6 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
         code: product?.code ?? "",
         name: product?.name ?? "",
         description: product?.description ?? "",
-        product_type: (product?.product_type ?? "finished_good") as typeof form.product_type,
         category_id: product?.category_id ?? null,
         uom: product?.uom ?? "pcs",
         hsn_code: product?.hsn_code ?? "",
