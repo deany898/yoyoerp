@@ -5,8 +5,6 @@ import {
   Truck,
   ClipboardList,
   Inbox,
-  BarChart3,
-  Sparkles,
   ChevronRight,
   HelpCircle,
   Boxes,
@@ -20,7 +18,7 @@ import {
   LogOut,
   Settings,
 } from "lucide-react";
-import { Factory, Cpu, Hammer, HardHat, Wrench, Zap, Activity } from "lucide-react";
+import { Cpu, Hammer, HardHat, Zap } from "lucide-react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/hooks/useRole";
@@ -85,21 +83,11 @@ const navGroups: NavGroup[] = [
   {
     label: "Manufacturing",
     items: [
-      { label: "Production logs", href: "/app/manufacturing", icon: Factory },
       { label: "Work logs", href: "/app/work-logs", icon: ClipboardCheck },
-      { label: "Stations", href: "/app/stations", icon: Wrench },
       { label: "Stages", href: "/app/stages", icon: Layers },
       { label: "Machines", href: "/app/machines", icon: Cpu },
       { label: "Moulds", href: "/app/moulds", icon: Hammer },
       { label: "Workers", href: "/app/workers", icon: HardHat },
-    ],
-  },
-  {
-    label: "Intelligence",
-    items: [
-      { label: "Command center", href: "/app/command-center", icon: Activity },
-      { label: "Analytics", href: "/app/analytics", icon: BarChart3 },
-      { label: "AI insights", href: "/app/ai-insights", icon: Sparkles },
     ],
   },
   {
