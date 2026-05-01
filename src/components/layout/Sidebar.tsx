@@ -33,6 +33,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAppConfig } from "@/contexts/AppConfigContext";
 import { ROUTE_FLAGS } from "@/lib/feature-flags";
 import { toast } from "sonner";
+import { SidebarRoleSimulator } from "@/components/layout/SidebarRoleSimulator";
 
 
 const ROLE_LABELS: Record<string, string> = {
@@ -264,6 +265,8 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           );
         })}
       </div>
+
+      <SidebarRoleSimulator />
 
     </nav>
   );
