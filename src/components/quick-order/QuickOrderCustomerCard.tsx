@@ -102,7 +102,7 @@ export function QuickOrderCustomerCard(p: Props) {
         )}
       </div>
 
-      <div className="mt-2 grid grid-cols-2 gap-2">
+      <div className="mt-2 grid grid-cols-2 gap-2 md:grid-cols-4">
         <Field icon={<Phone className="h-3 w-3" />} label="Mobile">
           <Input
             value={p.phone}
@@ -120,9 +120,6 @@ export function QuickOrderCustomerCard(p: Props) {
             className="h-10"
           />
         </Field>
-      </div>
-
-      <div className="mt-2">
         <Field icon={<Truck className="h-3 w-3" />} label="Transport">
           <Input
             value={p.transporter}
@@ -131,9 +128,6 @@ export function QuickOrderCustomerCard(p: Props) {
             className="h-10"
           />
         </Field>
-      </div>
-
-      <div className="mt-2">
         <Field icon={<StickyNote className="h-3 w-3" />} label="Note">
           <Input
             value={p.note}
