@@ -7,6 +7,7 @@ import { SmartSelect } from "@/components/forms/SmartSelect";
 import { supabase } from "@/integrations/supabase/client";
 import { notify } from "@/lib/notify";
 import { postMaterialIssue } from "@/lib/mfg-posting";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ZoneOpt { id: string; name: string; code: string; kind: string; warehouse_id: string }
 
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export function MaterialIssueDialog({ open, onOpenChange, moId, defaultVariantId, defaultQty, variantLabel, onPosted }: Props) {
+  const { t } = useLanguage();
   const [zones, setZones] = useState<ZoneOpt[]>([]);
   const [fromZone, setFromZone] = useState<string | null>(null);
   const [wipZone, setWipZone] = useState<string | null>(null);
@@ -73,41 +75,41 @@ export function MaterialIssueDialog({ open, onOpenChange, moId, defaultVariantId
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Issue material</DialogTitle>
-          <DialogDescription>{variantLabel ?? "Component"} → WIP</DialogDescription>
+          <DialogTitle>{t("mfg_issue_material")}</DialogTitle>
+          <DialogDescription>{variantLabel ?? t("mfg_component")} → WIP</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Quantity *</Label>
-            <Input type="number" step="0.001" value={qty} onChange={(e) => setQty(e.target.value)} />
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_quantity")} *</Label>
+            <Input type="number" inputMode="decimal" step="0.001" value={qty} onChange={(e) => setQty(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">From zone *</Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_from_zone")} *</Label>
             <SmartSelect
               options={zones.filter((z) => z.kind !== "wip").map((z) => ({ value: z.id, label: `${z.name}`, hint: `${z.code} · ${z.kind}` }))}
               value={fromZone}
               onChange={(v) => setFromZone(v)}
-              placeholder="Select source zone"
+              placeholder={t("mfg_select_source_zone")}
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">WIP zone</Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_wip_zone")}</Label>
             <SmartSelect
               options={zones.filter((z) => z.kind === "wip").map((z) => ({ value: z.id, label: z.name, hint: z.code }))}
               value={wipZone}
               onChange={(v) => setWipZone(v)}
-              placeholder="Pick WIP zone (optional)"
-              emptyText="No WIP zones configured"
+              placeholder={t("mfg_pick_wip_zone")}
+              emptyText={t("mfg_no_wip_zones")}
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Notes</Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_notes")}</Label>
             <Input value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
-          <Button onClick={submit} disabled={saving}>{saving ? "Posting…" : "Issue to WIP"}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t("btn_cancel")}</Button>
+          <Button onClick={submit} disabled={saving}>{saving ? t("mfg_posting") : t("mfg_issue_to_wip")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

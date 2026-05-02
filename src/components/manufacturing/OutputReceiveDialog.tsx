@@ -7,6 +7,7 @@ import { SmartSelect } from "@/components/forms/SmartSelect";
 import { supabase } from "@/integrations/supabase/client";
 import { notify } from "@/lib/notify";
 import { postMoOutput } from "@/lib/mfg-posting";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ZoneOpt { id: string; name: string; code: string; kind: string; warehouse_id: string }
 
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export function OutputReceiveDialog({ open, onOpenChange, moId, variantId, variantLabel, warehouseId, onPosted }: Props) {
+  const { t } = useLanguage();
   const [zones, setZones] = useState<ZoneOpt[]>([]);
   const [toZone, setToZone] = useState<string | null>(null);
   const [qty, setQty] = useState("");
@@ -66,31 +68,31 @@ export function OutputReceiveDialog({ open, onOpenChange, moId, variantId, varia
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Receive output</DialogTitle>
-          <DialogDescription>{variantLabel ?? "Finished good"} → finished stock</DialogDescription>
+          <DialogTitle>{t("mfg_receive_output")}</DialogTitle>
+          <DialogDescription>{variantLabel ?? t("mfg_finished_good")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Quantity *</Label>
-            <Input type="number" step="0.001" value={qty} onChange={(e) => setQty(e.target.value)} />
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_quantity")} *</Label>
+            <Input type="number" inputMode="decimal" step="0.001" value={qty} onChange={(e) => setQty(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Destination zone *</Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_destination_zone")} *</Label>
             <SmartSelect
               options={zones.map((z) => ({ value: z.id, label: z.name, hint: `${z.code} · ${z.kind}` }))}
               value={toZone}
               onChange={(v) => setToZone(v)}
-              placeholder="Select zone"
+              placeholder={t("mfg_select_zone")}
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Notes</Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_notes")}</Label>
             <Input value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
-          <Button onClick={submit} disabled={saving}>{saving ? "Posting…" : "Receive"}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t("btn_cancel")}</Button>
+          <Button onClick={submit} disabled={saving}>{saving ? t("mfg_posting") : t("mfg_receive")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
