@@ -16,6 +16,8 @@ type PayMode = "salary" | "per_unit";
 
 type Product = { id: string; code: string; name: string };
 type Variant = { id: string; product_id: string; sku: string; variant_name: string };
+type MachineOpt = { id: string; name: string; code: string; warehouse_id: string | null };
+type MouldOpt = { id: string; name: string; code: string; cavity_count: number | null };
 
 interface Props {
   open: boolean;
@@ -40,6 +42,12 @@ const STAGE_KINDS: { value: StageKind; label: string }[] = [
 export function AddStageSheet({ open, onClose, mode, groupId, defaultProductId, onSaved }: Props) {
   const [products, setProducts] = useState<Product[]>([]);
   const [variants, setVariants] = useState<Variant[]>([]);
+  const [machines, setMachines] = useState<MachineOpt[]>([]);
+  const [moulds, setMoulds] = useState<MouldOpt[]>([]);
+  const [machineId, setMachineId] = useState<string | null>(null);
+  const [mouldId, setMouldId] = useState<string | null>(null);
+  const [hoursPerUnit, setHoursPerUnit] = useState<string>("");
+  const [machineRate, setMachineRate] = useState<number | null>(null);
   const [productId, setProductId] = useState<string | null>(defaultProductId ?? null);
   const [variantIds, setVariantIds] = useState<string[]>([]);
   const [stageName, setStageName] = useState("");
@@ -56,12 +64,16 @@ export function AddStageSheet({ open, onClose, mode, groupId, defaultProductId, 
   useEffect(() => {
     if (!open) return;
     (async () => {
-      const [{ data: p }, { data: v }] = await Promise.all([
+      const [{ data: p }, { data: v }, { data: m }, { data: md }] = await Promise.all([
         supabase.from("products").select("id, code, name").eq("is_active", true).order("name"),
         supabase.from("product_variants").select("id, product_id, sku, variant_name").eq("is_active", true).order("variant_name"),
+        supabase.from("machines").select("id, name, code, warehouse_id").eq("is_active", true).order("name"),
+        supabase.from("moulds").select("id, name, code, cavity_count").eq("is_active", true).order("name"),
       ]);
       setProducts((p ?? []) as Product[]);
       setVariants((v ?? []) as Variant[]);
+      setMachines((m ?? []) as MachineOpt[]);
+      setMoulds((md ?? []) as MouldOpt[]);
     })();
   }, [open]);
 
@@ -78,7 +90,32 @@ export function AddStageSheet({ open, onClose, mode, groupId, defaultProductId, 
     setMachineCost("");
     setOverheadCost("");
     setRejectionPct("");
+    setMachineId(null);
+    setMouldId(null);
+    setHoursPerUnit("");
+    setMachineRate(null);
   }, [open, defaultProductId]);
+
+  // Fetch live machine hourly rate when a machine is picked
+  useEffect(() => {
+    if (!machineId) { setMachineRate(null); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.rpc("machine_hourly_rate", { _machine_id: machineId });
+      if (!cancelled) setMachineRate(Number(data ?? 0));
+    })();
+    return () => { cancelled = true; };
+  }, [machineId]);
+
+  const selectedMould = moulds.find((m) => m.id === mouldId) ?? null;
+  const autoMachineCost =
+    machineId && machineRate !== null && hoursPerUnit
+      ? machineRate * Number(hoursPerUnit || 0)
+      : null;
+  const autoMouldCost =
+    autoMachineCost !== null && selectedMould?.cavity_count
+      ? autoMachineCost / selectedMould.cavity_count
+      : null;
 
   const productOptions = useMemo(
     () => products.map((p) => ({ value: p.id, label: p.name, hint: p.code })),
@@ -108,7 +145,11 @@ export function AddStageSheet({ open, onClose, mode, groupId, defaultProductId, 
         pay_mode: payMode,
         unit_cost: payMode === "per_unit" ? Number(unitCost || 0) : 0,
         labour_cost: payMode === "salary" ? Number(labourCost || 0) : Number(unitCost || 0),
-        machine_cost: Number(machineCost || 0),
+        machine_cost: machineId ? 0 : Number(machineCost || 0),
+        mould_cost: mouldId ? 0 : 0,
+        machine_id: machineId,
+        mould_id: mouldId,
+        machine_hours_per_unit: Number(hoursPerUnit || 0),
         overhead_cost: Number(overheadCost || 0),
         rejection_pct: Number(rejectionPct || 0),
       };
