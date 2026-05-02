@@ -14,7 +14,7 @@ export const Route = createFileRoute("/app/workers/attendance")({
 });
 
 interface WorkerRow { id: string; name: string; department: string | null; sub_role: string | null }
-type Status = "present" | "half_day" | "absent";
+type Status = "present" | "half" | "absent";
 interface Entry { status: Status; check_in: string; check_out: string }
 
 function AttendancePage() {
@@ -89,7 +89,7 @@ function AttendancePage() {
               </div>
               <div className="mt-3 grid grid-cols-3 gap-2">
                 <StatusBtn label={t("attendance_present")} active={e.status === "present"} tone="emerald" onClick={() => setEntry(w.id, { status: "present" })} />
-                <StatusBtn label={t("attendance_half")} active={e.status === "half_day"} tone="amber" onClick={() => setEntry(w.id, { status: "half_day" })} />
+                <StatusBtn label={t("attendance_half")} active={e.status === "half"} tone="amber" onClick={() => setEntry(w.id, { status: "half" })} />
                 <StatusBtn label={t("attendance_absent")} active={e.status === "absent"} tone="red" onClick={() => setEntry(w.id, { status: "absent" })} />
               </div>
               {e.status !== "absent" && (
