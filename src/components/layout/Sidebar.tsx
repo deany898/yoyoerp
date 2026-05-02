@@ -51,17 +51,12 @@ export function Sidebar({ onNavigate }: SidebarProps) {
     >
       {/* Logo / app name */}
       <div className="flex items-center gap-3 border-b border-sidebar-border/60 px-5 py-5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15">
-          <Logo size={26} showWordmark={false} />
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white">
+          <Logo size={32} showWordmark={false} />
         </div>
-        <div className="flex flex-col leading-tight">
-          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-sidebar-foreground/60">
-            YOYO
-          </span>
-          <span className="text-[15px] font-semibold text-sidebar-foreground">
-            ERP Platform
-          </span>
-        </div>
+        <span className="text-[18px] font-semibold tracking-tight text-sidebar-foreground">
+          Yoyo
+        </span>
       </div>
 
       {/* Nav links */}
@@ -78,8 +73,8 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                   className={cn(
                     "relative flex items-center gap-3 rounded-lg pl-4 pr-3 py-2.5 text-[13.5px] font-medium transition-colors",
                     active
-                      ? "bg-white/10 text-white"
-                      : "text-sidebar-foreground/80 hover:bg-white/5 hover:text-white",
+                      ? "bg-[#1E3A6E] text-white"
+                      : "text-[#94A3B8] hover:bg-white/5 hover:text-white",
                   )}
                 >
                   {/* Active left border */}
