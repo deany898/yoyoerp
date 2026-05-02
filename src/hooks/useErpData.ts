@@ -264,29 +264,27 @@ export function useInventoryRequests() {
 export type NotificationRow = Database["public"]["Tables"]["notifications"]["Row"];
 
 export function useCloudNotifications() {
-  const [data, setData] = useState<NotificationRow[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const refresh = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setData([]); setLoading(false); return; }
-    const { data: rows } = await supabase
-      .from("notifications").select("*").eq("user_id", user.id)
-      .order("created_at", { ascending: false }).limit(100);
-    setData(rows ?? []);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    refresh();
-    const channel = supabase
-      .channel(`notifications-stream-${Math.random().toString(36).slice(2)}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => refresh())
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [refresh]);
-
-  return { notifications: data, loading, refresh };
+  const qc = useQueryClient();
+  const q = useQuery<NotificationRow[]>({
+    queryKey: ["erp", "notifications"],
+    staleTime: 30 * 1000,
+    gcTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      const { data: rows } = await supabase
+        .from("notifications").select("*").eq("user_id", user.id)
+        .order("created_at", { ascending: false }).limit(100);
+      return rows ?? [];
+    },
+  });
+  const refresh = useCallback(
+    () => { void qc.invalidateQueries({ queryKey: ["erp", "notifications"] }); },
+    [qc],
+  );
+  // Realtime subscription is wired once globally via useRealtimeInvalidator;
+  // do not open a per-component channel here.
+  return { notifications: q.data ?? [], loading: q.isLoading, refresh };
 }
 
 export interface InventoryLine {
