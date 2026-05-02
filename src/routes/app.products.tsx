@@ -31,20 +31,6 @@ export const Route = createFileRoute("/app/products")({
   component: ProductsPage,
 });
 
-const TYPE_LABEL: Record<string, string> = {
-  raw_material: "Raw",
-  packaging: "Packaging",
-  wip: "Semi-finished",
-  finished_good: "Finished good",
-};
-
-const TYPE_TONE: Record<string, string> = {
-  raw_material: "bg-amber-100 text-amber-900 ring-amber-200",
-  packaging: "bg-cyan-100 text-cyan-900 ring-cyan-200",
-  wip: "bg-violet-100 text-violet-900 ring-violet-200",
-  finished_good: "bg-emerald-100 text-emerald-900 ring-emerald-200",
-};
-
 function ProductsPage() {
   const { products, loading, refresh } = useProducts();
   const { categories } = useCategories();
