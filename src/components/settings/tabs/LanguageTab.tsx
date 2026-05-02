@@ -1,45 +1,55 @@
 import { useLanguage, type Lang } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 
+interface LangOption {
+  value: Lang;
+  flag: string;
+  label: string;
+  desc: string;
+}
+
+const OPTS: LangOption[] = [
+  { value: "en", flag: "🇬🇧", label: "English", desc: "The full app in English" },
+  { value: "hi", flag: "🇮🇳", label: "हिंदी", desc: "पूरा ऐप हिंदी में" },
+];
+
 export function LanguageTab() {
-  const { lang, setLang } = useLanguage();
-  const opts: Array<{ value: Lang; label: string; sub: string }> = [
-    { value: "en", label: "English", sub: "Default" },
-    { value: "hi", label: "हिंदी", sub: "Hindi" },
-  ];
+  const { lang, setLang, t } = useLanguage();
 
   return (
     <div className="rounded-xl border border-border bg-card p-5">
-      <h2 className="text-base font-semibold">Display language</h2>
+      <h2 className="text-base font-semibold">{t("settings_language")}</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Applies to navigation labels and core actions.
+        Saves instantly. Applies across the entire app.
       </p>
-      <div className="mt-4 space-y-2">
-        {opts.map((o) => {
+      <div className="mt-4 space-y-3">
+        {OPTS.map((o) => {
           const active = lang === o.value;
           return (
-            <label
+            <button
               key={o.value}
+              type="button"
+              onClick={() => setLang(o.value)}
+              aria-pressed={active}
               className={cn(
-                "flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 transition-colors",
+                "flex w-full items-center gap-4 rounded-xl border px-4 py-4 text-left transition-colors",
+                "min-h-[60px]",
                 active
-                  ? "border-[#3B82F6] bg-[#EFF6FF]"
+                  ? "border-l-[3px] border-l-[#2454A4] border-y border-r border-y-border border-r-border bg-[#EFF6FF]"
                   : "border-border bg-background hover:bg-muted/40",
               )}
             >
-              <input
-                type="radio"
-                name="yoyo-lang"
-                value={o.value}
-                checked={active}
-                onChange={() => setLang(o.value)}
-                className="h-4 w-4 accent-[#3B82F6]"
-              />
+              <span aria-hidden className="text-2xl leading-none">{o.flag}</span>
               <div className="flex-1">
-                <div className="text-sm font-semibold">{o.label}</div>
-                <div className="text-xs text-muted-foreground">{o.sub}</div>
+                <div className="text-base font-bold">{o.label}</div>
+                <div className="mt-0.5 text-sm text-muted-foreground">{o.desc}</div>
               </div>
-            </label>
+              {active && (
+                <span className="rounded-full bg-[#2454A4] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+                  ✓
+                </span>
+              )}
+            </button>
           );
         })}
       </div>
