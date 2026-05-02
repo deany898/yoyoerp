@@ -11,6 +11,7 @@ import { GlobalSearchPalette } from "@/components/command/GlobalSearchPalette";
 import { PageTransition } from "@/components/shared/PageTransition";
 import { RouteProgressBar } from "@/components/shared/RouteProgressBar";
 import { RouteSkeleton } from "@/components/shared/RouteSkeleton";
+import { BackButton } from "@/components/shared/BackButton";
 import { useRole } from "@/hooks/useRole";
 import { useAuth } from "@/hooks/useAuth";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
@@ -154,6 +155,7 @@ function AppLayout() {
           <RouteProgressBar />
           <PageTransition routeKey={location.pathname}>
             <Suspense fallback={<RouteSkeleton />}>
+              <BackButton />
               <Outlet />
             </Suspense>
           </PageTransition>
