@@ -104,7 +104,10 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                       : "text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white border-l-[3px] border-transparent",
                   )}
                 >
-                  <item.icon className="h-[18px] w-[18px] shrink-0" />
+                  <item.icon
+                    className="h-[18px] w-[18px] shrink-0"
+                    style={{ color: active ? "#FFFFFF" : "#CBD5E1", opacity: 1 }}
+                  />
                   <span className="truncate">
                     {t(NAV_LABEL_KEY[item.label] ?? "", item.label)}
                   </span>
