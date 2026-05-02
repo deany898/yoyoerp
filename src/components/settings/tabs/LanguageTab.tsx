@@ -20,7 +20,7 @@ export function LanguageTab() {
     <div className="rounded-xl border border-border bg-card p-5">
       <h2 className="text-base font-semibold">{t("settings_language")}</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Saves instantly. Applies across the entire app.
+        {t("settings_lang_saves_instantly")}
       </p>
       <div className="mt-4 space-y-3">
         {OPTS.map((o) => {
