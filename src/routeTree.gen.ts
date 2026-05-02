@@ -17,12 +17,14 @@ import { Route as AppWorkersRouteImport } from './routes/app.workers'
 import { Route as AppWorkLogsRouteImport } from './routes/app.work-logs'
 import { Route as AppWipRouteImport } from './routes/app.wip'
 import { Route as AppWarehousesRouteImport } from './routes/app.warehouses'
+import { Route as AppVehiclesRouteImport } from './routes/app.vehicles'
 import { Route as AppUtilitiesRouteImport } from './routes/app.utilities'
 import { Route as AppUsersRouteImport } from './routes/app.users'
 import { Route as AppSuppliersRouteImport } from './routes/app.suppliers'
 import { Route as AppStationsRouteImport } from './routes/app.stations'
 import { Route as AppStagesRouteImport } from './routes/app.stages'
 import { Route as AppRequestsRouteImport } from './routes/app.requests'
+import { Route as AppRateCardRouteImport } from './routes/app.rate-card'
 import { Route as AppQuickOrderRouteImport } from './routes/app.quick-order'
 import { Route as AppPurchaseOrdersRouteImport } from './routes/app.purchase-orders'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
@@ -43,6 +45,7 @@ import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
 import { Route as AppAiInsightsRouteImport } from './routes/app.ai-insights'
 import { Route as AppAdminRouteImport } from './routes/app.admin'
 import { Route as AppAboutRouteImport } from './routes/app.about'
+import { Route as AppWorkersAttendanceRouteImport } from './routes/app.workers.attendance'
 import { Route as AppWorkersIdRouteImport } from './routes/app.workers.$id'
 import { Route as AppStaffingDailyRouteImport } from './routes/app.staffing.daily'
 import { Route as AppSettingsUsersRouteImport } from './routes/app.settings.users'
@@ -94,6 +97,11 @@ const AppWarehousesRoute = AppWarehousesRouteImport.update({
   path: '/warehouses',
   getParentRoute: () => AppRoute,
 } as any)
+const AppVehiclesRoute = AppVehiclesRouteImport.update({
+  id: '/vehicles',
+  path: '/vehicles',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppUtilitiesRoute = AppUtilitiesRouteImport.update({
   id: '/utilities',
   path: '/utilities',
@@ -122,6 +130,11 @@ const AppStagesRoute = AppStagesRouteImport.update({
 const AppRequestsRoute = AppRequestsRouteImport.update({
   id: '/requests',
   path: '/requests',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRateCardRoute = AppRateCardRouteImport.update({
+  id: '/rate-card',
+  path: '/rate-card',
   getParentRoute: () => AppRoute,
 } as any)
 const AppQuickOrderRoute = AppQuickOrderRouteImport.update({
@@ -224,6 +237,11 @@ const AppAboutRoute = AppAboutRouteImport.update({
   path: '/about',
   getParentRoute: () => AppRoute,
 } as any)
+const AppWorkersAttendanceRoute = AppWorkersAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => AppWorkersRoute,
+} as any)
 const AppWorkersIdRoute = AppWorkersIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -300,12 +318,14 @@ export interface FileRoutesByFullPath {
   '/app/profile': typeof AppProfileRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
   '/app/quick-order': typeof AppQuickOrderRoute
+  '/app/rate-card': typeof AppRateCardRoute
   '/app/requests': typeof AppRequestsRoute
   '/app/stages': typeof AppStagesRoute
   '/app/stations': typeof AppStationsRoute
   '/app/suppliers': typeof AppSuppliersRoute
   '/app/users': typeof AppUsersRoute
   '/app/utilities': typeof AppUtilitiesRoute
+  '/app/vehicles': typeof AppVehiclesRoute
   '/app/warehouses': typeof AppWarehousesRoute
   '/app/wip': typeof AppWipRoute
   '/app/work-logs': typeof AppWorkLogsRoute
@@ -321,6 +341,7 @@ export interface FileRoutesByFullPath {
   '/app/settings/users': typeof AppSettingsUsersRoute
   '/app/staffing/daily': typeof AppStaffingDailyRoute
   '/app/workers/$id': typeof AppWorkersIdRoute
+  '/app/workers/attendance': typeof AppWorkersAttendanceRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -345,12 +366,14 @@ export interface FileRoutesByTo {
   '/app/profile': typeof AppProfileRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
   '/app/quick-order': typeof AppQuickOrderRoute
+  '/app/rate-card': typeof AppRateCardRoute
   '/app/requests': typeof AppRequestsRoute
   '/app/stages': typeof AppStagesRoute
   '/app/stations': typeof AppStationsRoute
   '/app/suppliers': typeof AppSuppliersRoute
   '/app/users': typeof AppUsersRoute
   '/app/utilities': typeof AppUtilitiesRoute
+  '/app/vehicles': typeof AppVehiclesRoute
   '/app/warehouses': typeof AppWarehousesRoute
   '/app/wip': typeof AppWipRoute
   '/app/work-logs': typeof AppWorkLogsRoute
@@ -366,6 +389,7 @@ export interface FileRoutesByTo {
   '/app/settings/users': typeof AppSettingsUsersRoute
   '/app/staffing/daily': typeof AppStaffingDailyRoute
   '/app/workers/$id': typeof AppWorkersIdRoute
+  '/app/workers/attendance': typeof AppWorkersAttendanceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -392,12 +416,14 @@ export interface FileRoutesById {
   '/app/profile': typeof AppProfileRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
   '/app/quick-order': typeof AppQuickOrderRoute
+  '/app/rate-card': typeof AppRateCardRoute
   '/app/requests': typeof AppRequestsRoute
   '/app/stages': typeof AppStagesRoute
   '/app/stations': typeof AppStationsRoute
   '/app/suppliers': typeof AppSuppliersRoute
   '/app/users': typeof AppUsersRoute
   '/app/utilities': typeof AppUtilitiesRoute
+  '/app/vehicles': typeof AppVehiclesRoute
   '/app/warehouses': typeof AppWarehousesRoute
   '/app/wip': typeof AppWipRoute
   '/app/work-logs': typeof AppWorkLogsRoute
@@ -413,6 +439,7 @@ export interface FileRoutesById {
   '/app/settings/users': typeof AppSettingsUsersRoute
   '/app/staffing/daily': typeof AppStaffingDailyRoute
   '/app/workers/$id': typeof AppWorkersIdRoute
+  '/app/workers/attendance': typeof AppWorkersAttendanceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -440,12 +467,14 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/purchase-orders'
     | '/app/quick-order'
+    | '/app/rate-card'
     | '/app/requests'
     | '/app/stages'
     | '/app/stations'
     | '/app/suppliers'
     | '/app/users'
     | '/app/utilities'
+    | '/app/vehicles'
     | '/app/warehouses'
     | '/app/wip'
     | '/app/work-logs'
@@ -461,6 +490,7 @@ export interface FileRouteTypes {
     | '/app/settings/users'
     | '/app/staffing/daily'
     | '/app/workers/$id'
+    | '/app/workers/attendance'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -485,12 +515,14 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/purchase-orders'
     | '/app/quick-order'
+    | '/app/rate-card'
     | '/app/requests'
     | '/app/stages'
     | '/app/stations'
     | '/app/suppliers'
     | '/app/users'
     | '/app/utilities'
+    | '/app/vehicles'
     | '/app/warehouses'
     | '/app/wip'
     | '/app/work-logs'
@@ -506,6 +538,7 @@ export interface FileRouteTypes {
     | '/app/settings/users'
     | '/app/staffing/daily'
     | '/app/workers/$id'
+    | '/app/workers/attendance'
   id:
     | '__root__'
     | '/'
@@ -531,12 +564,14 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/purchase-orders'
     | '/app/quick-order'
+    | '/app/rate-card'
     | '/app/requests'
     | '/app/stages'
     | '/app/stations'
     | '/app/suppliers'
     | '/app/users'
     | '/app/utilities'
+    | '/app/vehicles'
     | '/app/warehouses'
     | '/app/wip'
     | '/app/work-logs'
@@ -552,6 +587,7 @@ export interface FileRouteTypes {
     | '/app/settings/users'
     | '/app/staffing/daily'
     | '/app/workers/$id'
+    | '/app/workers/attendance'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -618,6 +654,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWarehousesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/vehicles': {
+      id: '/app/vehicles'
+      path: '/vehicles'
+      fullPath: '/app/vehicles'
+      preLoaderRoute: typeof AppVehiclesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/utilities': {
       id: '/app/utilities'
       path: '/utilities'
@@ -658,6 +701,13 @@ declare module '@tanstack/react-router' {
       path: '/requests'
       fullPath: '/app/requests'
       preLoaderRoute: typeof AppRequestsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/rate-card': {
+      id: '/app/rate-card'
+      path: '/rate-card'
+      fullPath: '/app/rate-card'
+      preLoaderRoute: typeof AppRateCardRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/quick-order': {
@@ -800,6 +850,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAboutRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/workers/attendance': {
+      id: '/app/workers/attendance'
+      path: '/attendance'
+      fullPath: '/app/workers/attendance'
+      preLoaderRoute: typeof AppWorkersAttendanceRouteImport
+      parentRoute: typeof AppWorkersRoute
+    }
     '/app/workers/$id': {
       id: '/app/workers/$id'
       path: '/$id'
@@ -918,10 +975,12 @@ const AppManufacturingRouteWithChildren =
 
 interface AppWorkersRouteChildren {
   AppWorkersIdRoute: typeof AppWorkersIdRoute
+  AppWorkersAttendanceRoute: typeof AppWorkersAttendanceRoute
 }
 
 const AppWorkersRouteChildren: AppWorkersRouteChildren = {
   AppWorkersIdRoute: AppWorkersIdRoute,
+  AppWorkersAttendanceRoute: AppWorkersAttendanceRoute,
 }
 
 const AppWorkersRouteWithChildren = AppWorkersRoute._addFileChildren(
@@ -949,12 +1008,14 @@ interface AppRouteChildren {
   AppProfileRoute: typeof AppProfileRoute
   AppPurchaseOrdersRoute: typeof AppPurchaseOrdersRoute
   AppQuickOrderRoute: typeof AppQuickOrderRoute
+  AppRateCardRoute: typeof AppRateCardRoute
   AppRequestsRoute: typeof AppRequestsRoute
   AppStagesRoute: typeof AppStagesRoute
   AppStationsRoute: typeof AppStationsRoute
   AppSuppliersRoute: typeof AppSuppliersRoute
   AppUsersRoute: typeof AppUsersRoute
   AppUtilitiesRoute: typeof AppUtilitiesRoute
+  AppVehiclesRoute: typeof AppVehiclesRoute
   AppWarehousesRoute: typeof AppWarehousesRoute
   AppWipRoute: typeof AppWipRoute
   AppWorkLogsRoute: typeof AppWorkLogsRoute
@@ -985,12 +1046,14 @@ const AppRouteChildren: AppRouteChildren = {
   AppProfileRoute: AppProfileRoute,
   AppPurchaseOrdersRoute: AppPurchaseOrdersRoute,
   AppQuickOrderRoute: AppQuickOrderRoute,
+  AppRateCardRoute: AppRateCardRoute,
   AppRequestsRoute: AppRequestsRoute,
   AppStagesRoute: AppStagesRoute,
   AppStationsRoute: AppStationsRoute,
   AppSuppliersRoute: AppSuppliersRoute,
   AppUsersRoute: AppUsersRoute,
   AppUtilitiesRoute: AppUtilitiesRoute,
+  AppVehiclesRoute: AppVehiclesRoute,
   AppWarehousesRoute: AppWarehousesRoute,
   AppWipRoute: AppWipRoute,
   AppWorkLogsRoute: AppWorkLogsRoute,

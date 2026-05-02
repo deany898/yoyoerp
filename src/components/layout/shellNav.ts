@@ -13,6 +13,7 @@ import {
   Truck,
   CheckCircle2,
   MoreHorizontal,
+  FileText,
   type LucideIcon,
 } from "lucide-react";
 import type { UserRoleType } from "@/lib/roles";
@@ -30,6 +31,8 @@ export const ROLE_NAV: Record<UserRoleType, ShellNavItem[]> = {
     { label: "Manufacturing", href: "/app/manufacturing", icon: Factory },
     { label: "Daily staffing", href: "/app/staffing/daily", icon: Users },
     { label: "Staffing rules", href: "/app/admin/staffing", icon: ShieldCheck },
+    { label: "Rate card", href: "/app/rate-card", icon: FileText },
+    { label: "Vehicles", href: "/app/vehicles", icon: Truck },
     { label: "Orders", href: "/app/quick-order", icon: ClipboardList },
     { label: "Dispatch", href: "/app/dispatch-orders", icon: Send },
     { label: "Users", href: "/app/settings/users", icon: ShieldCheck },
@@ -39,6 +42,7 @@ export const ROLE_NAV: Record<UserRoleType, ShellNavItem[]> = {
     { label: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard },
     { label: "Manufacturing", href: "/app/manufacturing", icon: Factory },
     { label: "Daily staffing", href: "/app/staffing/daily", icon: Users },
+    { label: "Vehicles", href: "/app/vehicles", icon: Truck },
     { label: "Dispatch", href: "/app/dispatch-orders", icon: Send },
   ],
   supervisor: [
