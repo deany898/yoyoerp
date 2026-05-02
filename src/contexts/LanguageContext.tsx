@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { translations as I18N, type TranslationKey } from "@/lib/i18n";
 
 export type Lang = "en" | "hi";
 
@@ -58,7 +59,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   // Hydrate from localStorage on mount (avoids SSR mismatch).
   useEffect(() => {
-    setLangState(readInitial());
+    const initial = readInitial();
+    setLangState(initial);
+    if (typeof document !== "undefined") {
+      document.documentElement.setAttribute("lang", initial);
+      document.documentElement.classList.toggle("lang-hi", initial === "hi");
+    }
   }, []);
 
   const setLang = (next: Lang) => {
@@ -66,6 +72,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     if (typeof window !== "undefined") {
       window.localStorage.setItem(STORAGE_KEY, next);
       document.documentElement.setAttribute("lang", next);
+      document.documentElement.classList.toggle("lang-hi", next === "hi");
     }
   };
 
@@ -73,7 +80,15 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     () => ({
       lang,
       setLang,
-      t: (key, fallback) => STRINGS[key]?.[lang] ?? fallback ?? key,
+      t: (key, fallback) => {
+        // Legacy "namespace.key" entries
+        const legacy = STRINGS[key]?.[lang];
+        if (legacy) return legacy;
+        // New flat snake_case keys from src/lib/i18n.ts
+        const flat = (I18N as Record<string, { en: string; hi: string }>)[key];
+        if (flat) return flat[lang] ?? flat.en;
+        return fallback ?? key;
+      },
     }),
     [lang],
   );
