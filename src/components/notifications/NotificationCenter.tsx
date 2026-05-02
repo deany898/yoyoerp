@@ -99,21 +99,73 @@ export function NotificationCenter({ open, onOpenChange, onOpenPrefs }: Notifica
               <p className="text-sm">No notifications</p>
             </div>
           ) : (
-            <div className="divide-y divide-border">
-              {filtered.map((n) => (
-                <NotificationItem
-                  key={n.id}
-                  notification={n}
-                  onClick={() => handleClick(n)}
-                  onDismiss={() => dismiss(n.id)}
-                />
-              ))}
-            </div>
+            <GroupedList
+              items={filtered}
+              onClick={handleClick}
+              onDismiss={(id) => dismiss(id)}
+            />
           )}
         </ScrollArea>
       </SheetContent>
     </Sheet>
     </>
+  );
+}
+
+function bucketOf(n: Notification): "today" | "yesterday" | "earlier" {
+  const created = new Date(n.createdAt);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (created >= today) return "today";
+  if (created >= yesterday) return "yesterday";
+  return "earlier";
+}
+
+const GROUP_LABEL: Record<"today" | "yesterday" | "earlier", string> = {
+  today: "Today · आज",
+  yesterday: "Yesterday · कल",
+  earlier: "Earlier · पहले",
+};
+
+function GroupedList({
+  items,
+  onClick,
+  onDismiss,
+}: {
+  items: Notification[];
+  onClick: (n: Notification) => void;
+  onDismiss: (id: string) => void;
+}) {
+  const groups: Record<"today" | "yesterday" | "earlier", Notification[]> = {
+    today: [],
+    yesterday: [],
+    earlier: [],
+  };
+  for (const n of items) groups[bucketOf(n)].push(n);
+  return (
+    <div>
+      {(["today", "yesterday", "earlier"] as const).map((key) =>
+        groups[key].length === 0 ? null : (
+          <div key={key}>
+            <div className="sticky top-0 z-10 bg-background/95 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground backdrop-blur">
+              {GROUP_LABEL[key]}
+            </div>
+            <div className="divide-y divide-border">
+              {groups[key].map((n) => (
+                <NotificationItem
+                  key={n.id}
+                  notification={n}
+                  onClick={() => onClick(n)}
+                  onDismiss={() => onDismiss(n.id)}
+                />
+              ))}
+            </div>
+          </div>
+        )
+      )}
+    </div>
   );
 }
 
