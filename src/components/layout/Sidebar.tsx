@@ -69,7 +69,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   return (
     <nav
       data-tour="sidebar"
-      className="flex h-full w-full flex-col bg-sidebar text-sidebar-foreground"
+      className="flex h-full w-full flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground"
     >
       {/* Logo / app name */}
       <div className="flex items-center gap-3 border-b border-sidebar-border/60 px-5 py-5">
@@ -78,10 +78,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           alt="Yoyo"
           style={{ width: 36, height: 36, borderRadius: 8, objectFit: "contain" }}
         />
-        <span
-          className="text-white"
-          style={{ fontWeight: 700, fontSize: 18, letterSpacing: "-0.01em" }}
-        >
+        <span className="text-sidebar-foreground font-bold text-lg tracking-tight">
           Yoyo
         </span>
       </div>
@@ -98,17 +95,19 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                   preload="intent"
                   onClick={onNavigate}
                   className={cn(
-                    "relative flex items-center gap-3 rounded-lg pl-4 pr-3 py-2.5 text-[13.5px] font-medium transition-colors",
+                    "relative flex items-center gap-3 rounded-lg pl-3 pr-3 py-2.5 text-[14px] font-medium transition-all duration-200",
                     active
-                      ? "bg-[#1E3A6E] text-white border-l-[3px] border-[#3B82F6]"
-                      : "text-[#F1F5F9] hover:bg-[#1E293B] hover:text-white border-l-[3px] border-transparent",
+                       ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                       : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                   )}
                 >
                   <item.icon
-                    className="h-[18px] w-[18px] shrink-0"
-                    style={{ color: active ? "#FFFFFF" : "#F1F5F9", opacity: 1 }}
+                    className={cn(
+                      "h-[18px] w-[18px] shrink-0 transition-colors",
+                      active ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
+                    )}
                   />
-                  <span className="truncate">
+                  <span className="lucide lucide-factory h-[18px] w-[18px] shrink-0 text-slate-800">
                     {t(NAV_LABEL_KEY[item.label] ?? "", item.label)}
                   </span>
                 </Link>
@@ -123,9 +122,9 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         <Link
           to="/app/help"
           onClick={onNavigate}
-          className="mb-2 flex items-center gap-3 rounded-lg pl-4 pr-3 py-2 text-[13px] font-medium text-[#F1F5F9] transition-colors hover:bg-[#1E293B] hover:text-white"
+          className="mb-2 flex items-center gap-3 rounded-lg pl-3 pr-3 py-2 text-[13.5px] font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         >
-          <HelpCircle className="h-[18px] w-[18px] shrink-0" style={{ color: "#F1F5F9" }} />
+          <HelpCircle className="h-[18px] w-[18px] shrink-0" />
           <span>Help · सहायता</span>
         </Link>
         <div className="flex items-center gap-2 rounded-xl bg-white/5 px-2 py-2">
