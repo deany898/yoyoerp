@@ -94,6 +94,12 @@ At top of MO detail and Inventory pages, show "3 teammates viewing" using Supaba
 
 **Expected:** worker posts a movement → supervisor's stock card updates within ~300 ms without refresh.
 
+### B · Status (this turn)
+- ✅ B1 migration applied: 14 tables added to `supabase_realtime` publication with `REPLICA IDENTITY FULL`.
+- ✅ B2 `useRealtimeInvalidator` hook live, mounted once at `/app` layout — invalidates only currently-active queries.
+- ✅ B3 `<OptimisticRow>` primitive ready (red border + Retry/Dismiss + toast).
+- ⏳ Wiring `usePostStockMovement` / `useCloseWorkLog` / `useSubmitHandoff` to optimistic + `<OptimisticRow>` is the next sub-step (will land alongside Tier C in the next turn so each call site can be tested separately).
+
 ---
 
 ## Tier C · Service worker (offline shell + background sync)
