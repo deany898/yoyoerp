@@ -1,7 +1,6 @@
 import {
   LayoutDashboard,
   Factory,
-  ShoppingCart,
   Send,
   ShieldCheck,
   Settings,
