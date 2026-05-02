@@ -10,6 +10,7 @@ import {
   useProducts,
   useCategories,
   useProductTiers,
+  useProductTierRows,
   useProductImages,
   type ProductWithVariants,
 } from "@/hooks/useErpData";
@@ -18,8 +19,8 @@ import { ExportButton } from "@/components/shared/ExportButton";
 import { ImportButton } from "@/components/shared/ImportButton";
 import { ProductFormSheet } from "@/components/products/ProductFormSheet";
 import { ProductCard } from "@/components/products/ProductCard";
+import { CategoryTileStrip } from "@/components/products/CategoryTileStrip";
 import { usePermissions, PermissionGate } from "@/hooks/usePermissions";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/products")({
   head: () => ({
@@ -35,6 +36,7 @@ function ProductsPage() {
   const { products, loading, refresh } = useProducts();
   const { categories } = useCategories();
   const { tierMap } = useProductTiers();
+  const { tierRows } = useProductTierRows();
   const { imageMap } = useProductImages();
   const { can } = usePermissions();
   const { role } = useRole();
@@ -51,7 +53,7 @@ function ProductsPage() {
       if (typeFilter !== "all" && p.product_type !== typeFilter) return false;
       if (categoryFilter !== "all" && p.category_id !== categoryFilter) return false;
       if (!q) return true;
-      const hay = `${p.code} ${p.name} ${p.description ?? ""} ${p.variants.map((v) => v.sku).join(" ")}`.toLowerCase();
+      const hay = `${p.name} ${p.description ?? ""} ${p.variants.map((v) => v.variant_name).join(" ")}`.toLowerCase();
       return hay.includes(q);
     });
   }, [products, query, typeFilter, categoryFilter]);
@@ -119,7 +121,7 @@ function ProductsPage() {
       <div className="flex flex-col gap-2 md:flex-row">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by code, name, or SKU" className="pl-9" />
+          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search products" className="pl-9" />
         </div>
         <div className="md:w-56">
           <SmartSelect
@@ -137,22 +139,12 @@ function ProductsPage() {
         </div>
       </div>
 
-      {/* Horizontally scrollable category chip filter */}
-      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <CategoryChip
-          label="All categories"
-          active={categoryFilter === "all"}
-          onClick={() => setCategoryFilter("all")}
-        />
-        {categories.map((c) => (
-          <CategoryChip
-            key={c.id}
-            label={c.name}
-            active={categoryFilter === c.id}
-            onClick={() => setCategoryFilter(c.id)}
-          />
-        ))}
-      </div>
+      {/* Swipeable image-tile category strip · 4 (mobile) / 6 (tablet) / 8 (desktop) */}
+      <CategoryTileStrip
+        categories={categories}
+        active={categoryFilter}
+        onChange={setCategoryFilter}
+      />
 
       <p className="text-xs text-muted-foreground">
         Type is set automatically: <span className="font-medium">Raw</span> · no BOM produces it. <span className="font-medium">Semi-finished</span> · produced by a BOM and used inside another BOM. <span className="font-medium">Finished good</span> · produced by a BOM and not consumed elsewhere.
@@ -180,6 +172,7 @@ function ProductsPage() {
               product={p}
               showCost={isAdmin}
               tierMap={tierMap}
+              tierRows={tierRows}
               imageUrl={imageMap[p.id]}
               onClick={() => can("edit_item") && openEdit(p)}
             />
@@ -195,22 +188,5 @@ function ProductsPage() {
         onSaved={refresh}
       />
     </div>
-  );
-}
-
-function CategoryChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition",
-        active
-          ? "border-primary bg-primary text-primary-foreground shadow-sm"
-          : "border-border bg-card text-foreground hover:bg-muted/60",
-      )}
-    >
-      {label}
-    </button>
   );
 }

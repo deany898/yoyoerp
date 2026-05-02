@@ -1,87 +1,134 @@
-## Goal
 
-Match the uploaded mockup on the Products page:
-- Wide horizontal card with image · variant selector · Price/DP on the left, and a "BULK BUY" tier price table on the right.
-- Layout: **1 column on mobile**, **2 columns on desktop** (replacing the current desktop table entirely).
-- Add a **horizontally scrollable category chip filter** under the search bar.
+## What we're building
 
-## Changes
+A clean wholesale product experience built on the **schema you already have** — no new tables needed.
 
-### 1. `src/components/products/ProductCard.tsx` — rewrite as the new wide card
+- **Parent product** = `products`
+- **Variant** (Regular / Premium / Heavy / Small / Box / Carton…) = `product_variants` (one row per variant, linked by `product_id`)
+- **Bulk-buy slabs** per variant = `product_pricing_tiers` (`variant_id`, `tier_name`, `min_qty`, `price`)
+- **Standard price** and **Dealer price (DP)** = two reserved tier rows per variant: `tier_name='standard'` and `tier_name='dealer'` (both with `min_qty=1`)
+- **Bulk slabs** = any other tier rows (`tier_name='10 box'`, `min_qty=10`, etc.)
 
-New layout (single component used at every breakpoint):
+Per your rules we will **not** show or edit SKU / barcode / product code anywhere on the customer-facing card. Codes remain auto-generated in the background for internal use.
+
+---
+
+## 1 · Category strip (image tiles, swipeable)
+
+Replace the current text "chip" row under the search bar with an **image tile strip**.
+
+- Each tile = square image (1:1) + name underneath, rounded, subtle border, ring on active.
+- Layout: horizontal scroll on every breakpoint, snap-to-tile, hides scrollbar.
+- Tile widths sized so the visible row shows roughly:
+  - **mobile (<640px)**: 4 tiles (`basis-1/4`)
+  - **tablet (640–1024px)**: 6 tiles (`sm:basis-1/6`)
+  - **desktop (≥1024px)**: 8 tiles (`lg:basis-1/8`)
+- "All" tile uses a Layers icon. Categories without `cover_image_url` fall back to a Package icon on a soft tinted square.
+- Source: `categories.cover_image_url` (already in DB).
+
+Files: `src/routes/app.products.tsx` (replaces `CategoryChip`), new `src/components/products/CategoryTileStrip.tsx`.
+
+---
+
+## 2 · Product card · matches your mockup
+
+New layout for `src/components/products/ProductCard.tsx`, faithful to the uploaded mockup:
 
 ```text
-┌──────────────────────────────────────────────────────────┐
-│ [image]   Product Title          ┌─── BULK BUY ────────┐ │
-│ 96x96     Variant [Regular  v]   │ 10 Box (100 unit) ₹ │ │
-│           Price: ₹25.00          │ 20 Box (200 unit) ₹ │ │
-│           DP:    ₹22.00          │ 60 Box (600 unit) ₹ │ │
-└──────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────┐
+│ ┌──────┐  Product Title                  ┌──────── BULK BUY ─────┐ │
+│ │ IMG  │  Variant                        │ 10 Box (100 unit)  ₹21│ │
+│ │ 1:1  │  [ Regular        ▾ ]          │ 20 Box (200 unit)  ₹20│ │
+│ └──────┘  Price: ₹25.00                  │ 60 Box (600 unit)  ₹19│ │
+│           DP: ₹22.00                     └────────────────────────┘ │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Image**: 96×96 rounded square. Use `product_images` primary if present (fetched via hook update, see step 4); fallback to a `Package` lucide icon on muted background.
-- **Title**: product name in primary blue (`text-primary`), bold.
-- **Variant selector**: native `Select` of `product.variants` (label = `variant_label || sku || "Default"`). Selecting a variant updates the prices/tiers shown. Hidden if only one variant.
-- **Price**: from selected variant's `last_cost` (sale) — same field already used; if 0 fall back to effective_cost.
-- **DP** (Dealer Price): from `product_pricing_tiers` row where `tier_name = 'dealer'` and `min_qty = 1`, else 90% of price (existing fallback).
-- **BULK BUY table**: small bordered table on the right (hidden on very narrow screens · shown ≥sm). Renders up to 3 tier rows from `product_pricing_tiers` for the selected variant where `min_qty > 1`, sorted ascending. Each row: `{min_qty} {uom_pack_name} ({min_qty × units_per_pack} unit)` and price. If no bulk tiers exist, show a muted "No bulk pricing" placeholder.
-- Card chrome: `rounded-xl border bg-card p-4` with subtle hover shadow; whole card clickable to open edit sheet (existing behavior). Variant `<select>` stops propagation.
-- Keep type Badge (non-raw) as a small pill in the top-right of the title block.
-- Keep margin pill + active/inactive pill in a tiny footer row.
+Rules baked into the card:
 
-Component remains under 250 lines; props extended with `tierMap: TierPriceMap` and `images: Record<productId, url>`.
+- **No SKU. No product code.** Just title + category name (small, muted, single line).
+- **Image** square with rounded corners, larger than today (`h-28 w-28` mobile, `sm:h-32 sm:w-32`).
+- **Variant selector** is a styled `<select>` (chips on tablet+ if ≤3 variants; dropdown otherwise). Stops click bubbling so picking a variant does not open the editor.
+- **Price** = active variant's `standard` tier · **DP** = active variant's `dealer` tier. If a tier is missing we fall back to `last_cost`/cost (already in code) so existing data still renders.
+- **Bulk buy table** on the right (≥640px) or stacked below (<640px). Renders up to 4 slabs sorted by `min_qty`. Each row shows `min_qty` + tier label (e.g. "10 Box (100 unit)") and the price. The pack-unit hint comes from the slab's `tier_name` exactly as the admin entered it.
+- Switching variant updates Price, DP, and the entire bulk table instantly (already keyed on `variant_id`).
+- Layout grid stays 1 col mobile / 2 col desktop (unchanged).
 
-### 2. `src/routes/app.products.tsx` — switch to 2-col grid + chip filter
+---
 
-- **Remove the desktop `<Table>` block entirely.** Use a single grid for all breakpoints:
-  ```tsx
-  <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-    {filtered.map(p => <ProductCard ... />)}
-  </div>
-  ```
-  (We use `lg:` so on the user's 1687px viewport you get 2 columns; on tablets stay 1-col for readability of the wide card. Could be `md:grid-cols-2` if user prefers — defaulting to `lg`.)
-- **Search bar**: keep as-is.
-- **Category filter chips**: new horizontally-scrollable row under the search input:
-  ```tsx
-  <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1
-                  [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-    <Chip active={cat==="all"}>All</Chip>
-    {categories.map(c => <Chip active={cat===c.id}>{c.name}</Chip>)}
-  </div>
-  ```
-  Each chip: pill button, `rounded-full border px-3 py-1.5 text-xs`, active state uses `bg-primary text-primary-foreground border-primary`. Snap scrolling, no visible scrollbar, swipeable on mobile.
-- Add `categoryFilter` state and include in the `filtered` memo (filters by `p.category_id`).
-- Drop the existing **type filter dropdown** (kept simple) OR keep it — recommendation: keep type filter to the right of the search; chips stay dedicated to categories.
+## 3 · Admin · one product, all variants, all bulk slabs
 
-### 3. New helper hook for tier prices (one fetch, shared)
+Rewrite `src/components/products/ProductFormSheet.tsx` so the admin manages everything from one screen — no more "first variant only".
 
-Add `useProductTiers()` in `src/hooks/useErpData.ts`:
-- Calls `loadTierPrices()` from `src/lib/quick-order-pricing.ts` (already exists).
-- React-query keyed `["erp","tiers"]`, master-data freshness.
-- Returns `{ tierMap, loading }`.
+Sheet structure (Tabs unchanged: Overview · Supplier prices · Cost engine):
 
-Products page passes `tierMap` to each `ProductCard`. Card resolves Price (`tier:standard:1`), DP (`tier:dealer:1`), and bulk rows (`tier:bulk_*` or any tier with `min_qty > 1`).
+**Overview tab — three sections**
 
-### 4. New helper hook for product cover images
+1. **Product**
+   - Title, Description, Category (scrollable dropdown — already fixed), UoM, HSN, Cover image upload (uses the existing `product-images` storage bucket).
+   - No SKU / Code field shown.
 
-Add `useProductImages()` in `src/hooks/useErpData.ts`:
-- Selects `product_id, url, is_primary, sort_order` from `product_images`.
-- Returns map `{ [product_id]: url }` choosing primary (or lowest sort_order).
-- Master-data cache.
+2. **Variants** (the new part)
+   - List of variant rows, each is a collapsible card:
+     - Variant name (e.g. "Regular", "Premium", "Heavy", "Box", "Carton") · `variant_name`
+     - Standard price (₹) · upserts `product_pricing_tiers` row `tier_name='standard'`, `min_qty=1`
+     - Dealer price (₹) · upserts row `tier_name='dealer'`, `min_qty=1`
+     - Active toggle · `is_active`
+     - Optional note · stored in `attributes.note` (jsonb already exists)
+     - **Bulk pricing slabs** sub-table inside the same card:
+       - Columns: Label (e.g. "10 Box"), Min qty, Price (₹), Delete
+       - "Add slab" button at the bottom
+   - "Add variant" button at the bottom of the section. New variants get an auto SKU (`<product_code>-<n>`) generated on save so the existing NOT-NULL `sku` column stays valid; this is **never shown to the user**.
+   - Delete variant: confirmation; blocked if the variant has stock or is referenced by a BOM (existing FKs will surface the error and we toast it).
 
-Cards render `<img>` if URL present, else the placeholder icon.
+3. **Inventory defaults** (only when editing) — Reorder point, Safety stock, Reorder qty per variant (kept inside each variant card so it stays per-variant).
 
-### 5. Files touched
+**Save behaviour**
 
-- `src/components/products/ProductCard.tsx` — rewritten (new layout, ≤200 lines).
-- `src/routes/app.products.tsx` — remove table, add chip row, use grid, wire new hooks.
-- `src/hooks/useErpData.ts` — add `useProductTiers` + `useProductImages` (~40 lines added).
+- Single "Save" button. Diff-based:
+  - upsert product
+  - upsert each variant by `id` (or insert when new)
+  - for each variant, upsert the two reserved tiers (standard, dealer) and replace bulk slabs (`delete where variant_id = X and tier_name not in ('standard','dealer')` then bulk insert).
+- Toast `"Product saved · N variants · M slabs"`.
+- After save we invalidate `["erp","products"]` and `["erp","tiers"]` so the card grid refreshes immediately.
 
-No DB migrations. No changes to costing or backend functions. Existing edit sheet, permission gating, import/export, and type filter all preserved.
+Mobile-friendly: the sheet stacks columns at <640px, slab table becomes a vertical list on narrow screens.
 
-## Notes & open choices
+---
 
-- "DP" label in the mockup = Dealer Price. We map it to `tier_name = 'dealer'`. If you use a different tier name, tell me and I'll switch.
-- Bulk rows use `units_per_pack` from the product's primary `product_packaging` row when computing the "(X unit)" subtitle. If no packaging is configured, we just show the `min_qty` without the parenthetical.
-- Desktop breakpoint for 2 columns: defaulting to `lg` (≥1024px). Say "use md" if you want 2-up starting at 768px.
+## 4 · Customer-side flow
+
+Same `ProductCard` is reused by the customer Quick Order page (already does this). Behaviour:
+
+- Open product → see image, title, variant picker, Price + DP for the default variant, full bulk-buy ladder for that variant.
+- Switch variant → all four values (Price, DP, slabs, optional margin chip for admins) refresh.
+- Add to order respects the slab price for the entered quantity (the existing `lineMath` + `resolvePrice` helpers already pick the highest-`min_qty` slab ≤ qty; we'll keep them).
+
+No barcode, no SKU shown anywhere on the customer card.
+
+---
+
+## 5 · Files changed
+
+- `src/routes/app.products.tsx` — swap chip strip for `CategoryTileStrip`; remove "SKU" mention from search placeholder.
+- `src/components/products/CategoryTileStrip.tsx` — **new**, image tiles 4/6/8 per row, horizontal swipe.
+- `src/components/products/ProductCard.tsx` — refactor to match mockup, hide SKU/code, larger image, polished bulk table, mobile stack.
+- `src/components/products/ProductFormSheet.tsx` — split into:
+  - `ProductFormSheet.tsx` (orchestrator + Product section + Save)
+  - `VariantsEditor.tsx` (**new**) — list of `VariantCard`s
+  - `VariantCard.tsx` (**new**) — single variant + standard/dealer + bulk slabs editor
+  - keeps Supplier prices & Cost engine tabs as-is (per active variant via a small picker at the top of those tabs)
+- `src/hooks/useErpData.ts` — extend `useProductTiers` to also return raw rows (`{variant_id, tier_name, min_qty, price}[]`) so the bulk table can render labels + qty without re-querying.
+- `src/lib/quick-order-pricing.ts` — already returns the right shape; add an exported `loadTierRows()` for the form editor.
+
+No DB migration. No edge function. No new RLS.
+
+---
+
+## 6 · Quick mental model (for the comments / your team)
+
+- **Parent product** = the product itself ("Cooler Blade").
+- **Variant** = one buyable version of that product ("Regular", "Premium", "Box", "Carton"). Each variant has its **own** Price and DP.
+- **Bulk slab** = a quantity break on a specific variant ("buy 20 boxes → ₹20.40 each"). Switching variant switches the whole ladder.
+
+That's the entire model — three levels, one form, one card.

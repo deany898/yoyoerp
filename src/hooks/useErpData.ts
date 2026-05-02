@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
-import { loadTierPrices, type TierPriceMap } from "@/lib/quick-order-pricing";
+import { loadTierPrices, loadTierRows, type TierPriceMap, type TierRow } from "@/lib/quick-order-pricing";
 
 // Tiered cache freshness (overrides the global 5-min default).
 // Master-data tables rarely change — keep them in cache until explicitly refreshed.
@@ -85,6 +85,22 @@ export function useProductTiers() {
     [qc],
   );
   return { tierMap: q.data ?? {}, loading: q.isLoading, refresh };
+}
+
+/** Raw pricing tier rows (variant_id + tier_name + min_qty + price). */
+export function useProductTierRows() {
+  const qc = useQueryClient();
+  const q = useQuery<TierRow[]>({
+    queryKey: ["erp", "tier-rows"],
+    staleTime: MASTER_DATA_STALE,
+    gcTime: MASTER_DATA_GC,
+    queryFn: () => loadTierRows(),
+  });
+  const refresh = useCallback(
+    () => qc.invalidateQueries({ queryKey: ["erp", "tier-rows"] }),
+    [qc],
+  );
+  return { tierRows: q.data ?? [], loading: q.isLoading, refresh };
 }
 
 /** Primary cover image per product. */
