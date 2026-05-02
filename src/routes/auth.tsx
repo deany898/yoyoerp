@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { notify } from "@/lib/notify";
+import { resolveLoginEmail } from "@/server/auth-resolve.functions";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -19,7 +20,6 @@ export const Route = createFileRoute("/auth")({
   }),
 });
 
-const STAFF_DOMAIN = "@staff.yoyo.internal";
 const ACCESS_DENIED = "Access denied. Contact your administrator.";
 
 type Role =
@@ -54,7 +54,7 @@ function destinationForRole(role: Role | null): string {
 }
 
 function AuthPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, roles } = useAuth();
   const navigate = useNavigate();
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
@@ -63,9 +63,10 @@ function AuthPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      navigate({ to: "/app/dashboard" });
+      const role = roles?.[0] ?? null;
+      navigate({ to: destinationForRole(role) });
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, roles, navigate]);
 
   const fail = async (signOut = false) => {
     if (signOut) {
@@ -86,10 +87,23 @@ function AuthPage() {
     }
 
     setSubmitting(true);
-    const email = `${cleaned}${STAFF_DOMAIN}`;
 
+    // Step 1-3: resolve real auth email from mobile via service-role server fn.
+    let realEmail: string | null = null;
+    try {
+      const res = await resolveLoginEmail({ data: { mobile: cleaned } });
+      realEmail = res?.email ?? null;
+    } catch {
+      realEmail = null;
+    }
+    if (!realEmail) {
+      await fail(false);
+      return;
+    }
+
+    // Step 4: actually sign in.
     const { data: authData, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: realEmail,
       password,
     });
 
@@ -100,11 +114,11 @@ function AuthPage() {
 
     const userId = authData.user.id;
 
-    // Check active status (admin_locked === true means inactive)
+    // Step 5: check active status. profiles row keyed by user_id.
     const { data: profile, error: profileErr } = await supabase
       .from("profiles")
       .select("admin_locked")
-      .eq("id", userId)
+      .eq("user_id", userId)
       .maybeSingle();
 
     if (profileErr || !profile || profile.admin_locked === true) {
@@ -112,13 +126,13 @@ function AuthPage() {
       return;
     }
 
-    // Resolve role
-    const { data: roles } = await supabase
+    // Step 6: resolve role with priority order.
+    const { data: roleRows } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", userId);
 
-    const roleList = (roles ?? []).map((r) => r.role as Role);
+    const roleList = (roleRows ?? []).map((r) => r.role as Role);
     const priority: Role[] = [
       "admin",
       "manager",

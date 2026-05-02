@@ -100,14 +100,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      const initialUser = data.session?.user ?? null;
-      setUser((prev) => (prev?.id === initialUser?.id ? prev : initialUser));
+    // Race getSession against a 10s timeout so a hung Supabase call
+    // never traps the app on a forever-spinning loader.
+    let timedOut = false;
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      console.warn("[AuthContext] getSession timed out after 10s; clearing loading state.");
       setLoading(false);
-    });
+    }, 10000);
 
-    return () => sub.subscription.unsubscribe();
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (timedOut) return;
+        clearTimeout(timeout);
+        setSession(data.session);
+        const initialUser = data.session?.user ?? null;
+        setUser((prev) => (prev?.id === initialUser?.id ? prev : initialUser));
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (timedOut) return;
+        clearTimeout(timeout);
+        console.error("[AuthContext] getSession failed:", err);
+        setLoading(false);
+      });
+
+    return () => {
+      clearTimeout(timeout);
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
