@@ -42,7 +42,7 @@ export function SupervisorDashboard() {
               <Plus className="h-4 w-4" /> Log output
             </Link>
             <Link
-              to="/app/handoffs"
+              to="/app/wip"
               className="flex items-center justify-center gap-2 rounded-xl bg-[#F97316] py-3 text-[14px] font-semibold text-white hover:opacity-90"
             >
               <ArrowLeftRight className="h-4 w-4" /> Handoff
@@ -53,7 +53,7 @@ export function SupervisorDashboard() {
         <section>
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-[13px] font-semibold">Handoffs waiting</h2>
-            <Link to="/app/handoffs" className="text-[11px] font-medium text-[#38BDF8] hover:underline">View all</Link>
+            <Link to="/app/wip" className="text-[11px] font-medium text-[#38BDF8] hover:underline">View all</Link>
           </div>
           <div className="rounded-2xl bg-white/5 p-5 text-center text-[13px] text-white/60">
             No handoffs in queue · कुछ नहीं
@@ -64,7 +64,7 @@ export function SupervisorDashboard() {
           <Link to="/app/manufacturing" className="rounded-xl bg-white/5 p-3 text-center text-[12px] font-medium text-white hover:bg-white/10">
             <Factory className="mx-auto mb-1 h-4 w-4" /> My MOs
           </Link>
-          <Link to="/app/floor" className="rounded-xl bg-white/5 p-3 text-center text-[12px] font-medium text-white hover:bg-white/10">
+          <Link to="/app/manufacturing" className="rounded-xl bg-white/5 p-3 text-center text-[12px] font-medium text-white hover:bg-white/10">
             <ListChecks className="mx-auto mb-1 h-4 w-4" /> Floor
           </Link>
         </div>

@@ -34,7 +34,7 @@ export function DispatchDashboard() {
         <h2 className="mb-2 px-1 text-[13px] font-semibold">Today's route</h2>
         <div className="space-y-3">
           <div className="rounded-2xl bg-card p-5 text-center text-sm text-muted-foreground shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-            <Link to="/app/driver" className="text-primary hover:underline">Open today's route →</Link>
+            <Link to="/app/dispatch-orders" className="text-primary hover:underline">Open today's route →</Link>
           </div>
         </div>
       </section>
