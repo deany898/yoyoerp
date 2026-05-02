@@ -27,6 +27,8 @@ const NAV_LABEL_KEY: Record<string, string> = {
   Delivered: "nav_delivered",
   Inventory: "nav_inventory",
   Requests: "nav_dispatch_orders",
+  "Daily staffing": "nav_daily_staffing",
+  "Staffing rules": "nav_staffing_rules",
 };
 
 interface SidebarProps {
