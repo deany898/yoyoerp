@@ -52,6 +52,8 @@ export const ROUTE_META: Record<string, RouteMeta> = {
   "/app/admin/presets": { label: "Presets", titleKey: "page_admin_presets", icon: Settings, group: "Admin" },
   "/app/admin/inventory-settings": { label: "Inventory settings", titleKey: "page_admin_inventory_settings", icon: Settings, group: "Admin" },
   "/app/admin/audit": { label: "Audit log", titleKey: "page_admin_audit", icon: Settings, group: "Admin" },
+  "/app/admin/staffing": { label: "Staffing rules", titleKey: "page_admin_staffing", icon: Users, group: "Admin" },
+  "/app/staffing/daily": { label: "Daily staffing", titleKey: "page_daily_staffing", icon: Users, group: "Operations" },
   "/app/help": { label: "Help", titleKey: "nav_help", icon: HelpCircle, group: "Support" },
 };
 

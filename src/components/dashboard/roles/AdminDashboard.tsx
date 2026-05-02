@@ -3,6 +3,7 @@ import { IndianRupee, Factory, Boxes, ClockAlert } from "lucide-react";
 import { GradientMetricCard } from "@/components/dashboard/GradientMetricCard";
 import { LiveAlertsList } from "@/components/dashboard/LiveAlertsList";
 import { OperationsOverviewChart } from "@/components/dashboard/OperationsOverviewChart";
+import { StaffingWidget } from "@/components/dashboard/StaffingWidget";
 import { useStockSummary } from "@/hooks/useInventoryData";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/hooks/useAuth";
@@ -65,6 +66,8 @@ export function AdminDashboard() {
       </div>
 
       <LiveAlertsList limit={3} />
+
+      <StaffingWidget />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr]">
         <OperationsOverviewChart movements={[]} />
