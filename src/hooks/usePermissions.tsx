@@ -1,4 +1,5 @@
-import { type ReactNode, useEffect, useState, useCallback, useMemo } from "react";
+import { type ReactNode, useCallback, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRole } from "@/hooks/useRole";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,29 +29,22 @@ const ACTION_ROLES: Record<PermissionAction, UserRoleType[]> = {
 
 /**
  * In-memory cache of the current user's effective capabilities.
- * Loaded from `role_permissions` (intersected with their role) and
- * `user_permission_overrides`. Refreshed when role/user changes.
+ * Loaded once via React Query and shared across every consumer
+ * (PermissionGate, sidebar, table actions). Without this dedup the
+ * same two endpoints get hit 5-7× per page render.
  */
 function useEffectiveCapabilities(): { caps: Set<string>; loading: boolean; refresh: () => void } {
   const { user } = useAuth();
   const { role, realRole, isSimulating } = useRole();
-  const [caps, setCaps] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
-  const [tick, setTick] = useState(0);
+  const qc = useQueryClient();
+  const targetRole = isSimulating ? role : realRole;
 
-  useEffect(() => {
-    if (!user) {
-      setCaps(new Set());
-      setLoading(false);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      // For simulation we use ONLY the simulated role's defaults (no overrides),
-      // so admins see exactly what a vanilla member of that role would see.
-      const targetRole = isSimulating ? role : realRole;
-
+  const q = useQuery<Set<string>>({
+    queryKey: ["permissions", user?.id ?? null, targetRole, isSimulating],
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // 5 min — capabilities rarely change mid-session
+    gcTime: 30 * 60 * 1000,
+    queryFn: async () => {
       const [defaultsRes, overridesRes] = await Promise.all([
         supabase
           .from("role_permissions")
@@ -61,10 +55,8 @@ function useEffectiveCapabilities(): { caps: Set<string>; loading: boolean; refr
           : supabase
               .from("user_permission_overrides")
               .select("capability,granted,expires_at")
-              .eq("user_id", user.id),
+              .eq("user_id", user!.id),
       ]);
-
-      if (cancelled) return;
       const set = new Set<string>();
       (defaultsRes.data ?? []).forEach((row) => {
         if (row.granted) set.add(row.capability);
@@ -76,14 +68,15 @@ function useEffectiveCapabilities(): { caps: Set<string>; loading: boolean; refr
         if (row.granted) set.add(row.capability);
         else set.delete(row.capability);
       });
-      setCaps(set);
-      setLoading(false);
-    })();
-    return () => { cancelled = true; };
-  }, [user, role, realRole, isSimulating, tick]);
+      return set;
+    },
+  });
 
-  const refresh = useCallback(() => setTick((t) => t + 1), []);
-  return { caps, loading, refresh };
+  const refresh = useCallback(
+    () => { void qc.invalidateQueries({ queryKey: ["permissions"] }); },
+    [qc],
+  );
+  return { caps: q.data ?? new Set<string>(), loading: q.isLoading, refresh };
 }
 
 export function usePermissions() {

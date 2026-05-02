@@ -33,6 +33,9 @@ const TABLE_TO_KEYS: Record<string, string[][]> = {
 
   // Catalog cost ripples
   product_variants: [["products"], ["product-detail"]],
+
+  // User-facing
+  notifications: [["erp", "notifications"]],
 };
 
 /**
