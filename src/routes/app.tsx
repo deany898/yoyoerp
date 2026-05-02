@@ -5,6 +5,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { MobileTopBar } from "@/components/layout/MobileTopBar";
+import { DevRolePill } from "@/components/layout/DevRolePill";
 import { ShortcutsHelpDialog } from "@/components/command/ShortcutsHelpDialog";
 import { GlobalSearchPalette } from "@/components/command/GlobalSearchPalette";
 import { PageTransition } from "@/components/shared/PageTransition";
@@ -157,6 +158,7 @@ function AppLayout() {
       </div>
 
       <BottomNav />
+      <DevRolePill />
       <ShortcutsHelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
       <GlobalSearchPalette open={globalSearchOpen} onOpenChange={setGlobalSearchOpen} />
     </div>
