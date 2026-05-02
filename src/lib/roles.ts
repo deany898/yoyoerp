@@ -5,9 +5,7 @@ export type UserRoleType =
   | "sales"
   | "dispatch"
   | "worker"
-  | "customer"
-  // Legacy — kept until all screens migrate to the new role set.
-  | "requestor";
+  | "customer";
 
 export interface RolePermissions {
   canManageItems: boolean;
@@ -82,16 +80,6 @@ const ROLE_PERMISSIONS: Record<UserRoleType, RolePermissions> = {
     canManageUsers: false,
   },
   customer: {
-    canManageItems: false,
-    canLogMovements: false,
-    canManagePOs: false,
-    canManageSuppliers: false,
-    canApproveRequests: false,
-    canViewAnalytics: false,
-    canAccessSettings: false,
-    canManageUsers: false,
-  },
-  requestor: {
     canManageItems: false,
     canLogMovements: false,
     canManagePOs: false,
