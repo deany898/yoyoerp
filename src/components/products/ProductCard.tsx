@@ -53,9 +53,11 @@ export function ProductCard({ product, showCost, onClick }: Props) {
             {product.category?.name && <span>· {product.category.name}</span>}
           </div>
         </div>
-        <Badge className={cn("shrink-0 text-[10px]", TYPE_TONE[product.product_type] ?? "")}>
-          {TYPE_LABEL[product.product_type] ?? product.product_type}
-        </Badge>
+        {product.product_type !== "raw_material" && (
+          <Badge className={cn("shrink-0 text-[10px]", TYPE_TONE[product.product_type] ?? "")}>
+            {TYPE_LABEL[product.product_type] ?? product.product_type}
+          </Badge>
+        )}
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
