@@ -203,7 +203,7 @@ function AuthPage() {
           <form onSubmit={handleSignIn} className="space-y-4" noValidate>
             <div className="space-y-1.5">
               <Label htmlFor="mobile-number" className="text-sm font-medium">
-                Mobile number
+                Mobile number or email
               </Label>
               <Input
                 id="mobile-number"
