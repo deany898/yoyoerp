@@ -30,6 +30,7 @@ export const ROLE_NAV: Record<UserRoleType, ShellNavItem[]> = {
   admin: [
     { label: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard },
     { label: "Manufacturing", href: "/app/manufacturing", icon: Factory },
+    { label: "Orders", href: "/app/quick-order", icon: ClipboardList },
     { label: "Dispatch", href: "/app/dispatch-orders", icon: Send },
     { label: "Users", href: "/app/settings/users", icon: ShieldCheck },
     { label: "Settings", href: "/app/admin/system", icon: Settings },

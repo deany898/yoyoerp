@@ -78,7 +78,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                     "relative flex items-center gap-3 rounded-lg pl-4 pr-3 py-2.5 text-[13.5px] font-medium transition-colors",
                     active
                       ? "bg-[#1E3A6E] text-white border-l-[3px] border-[#3B82F6]"
-                      : "text-[#94A3B8] hover:bg-[#1E293B] hover:text-white border-l-[3px] border-transparent",
+                      : "text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white border-l-[3px] border-transparent",
                   )}
                 >
                   <item.icon className="h-[18px] w-[18px] shrink-0" />
