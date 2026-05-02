@@ -3,16 +3,18 @@ import { Factory, ClipboardList, AlertTriangle, TrendingUp, Check, Pause } from 
 import { GradientMetricCard } from "@/components/dashboard/GradientMetricCard";
 import { useStockSummary } from "@/hooks/useInventoryData";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useMoStats } from "@/hooks/useMoStats";
 
 export function ManagerDashboard() {
   const { data: summary } = useStockSummary();
   const { data: notifications } = useNotifications();
+  const moStats = useMoStats();
   const approvals = notifications.filter((n) => n.type === "request_update" || n.type === "po_reminder");
 
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <GradientMetricCard variant="blue" label="Active MOs" value={0} icon={Factory} />
+        <GradientMetricCard variant="blue" label="Active MOs" value={moStats.activeMOs} icon={Factory} />
         <GradientMetricCard variant="orange" label="Pending approvals" value={approvals.length} icon={ClipboardList} />
         <GradientMetricCard variant="teal" label="In stock" value={summary.inStock} icon={TrendingUp} />
         <GradientMetricCard variant="amber" label="Low stock" value={summary.lowStock} icon={AlertTriangle} />
