@@ -1,4 +1,4 @@
-import { createContext, useMemo, type ReactNode } from "react";
+import { createContext, useEffect, useMemo, type ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { getPermissionsForRole, type RolePermissions, type UserRoleType } from "@/lib/roles";
 import { useRoleSimulator } from "@/contexts/RoleSimulatorContext";
@@ -36,9 +36,11 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     "requestor",
   ];
   const matchedRole = ROLE_PRIORITY.find((r) => authRoles.includes(r));
-  if (!rolesLoading && user && authRoles.length === 0) {
-    notify.error("Could not load your permissions. Please refresh or contact admin.");
-  }
+  useEffect(() => {
+    if (!rolesLoading && user && authRoles.length === 0) {
+      notify.error("Could not load your permissions. Please refresh or contact admin.");
+    }
+  }, [rolesLoading, user, authRoles.length]);
   // While roles are loading OR no user is signed in, fall back to the LEAST-
   // privileged real role ("customer") so we never silently grant write access.
   // Components gate role-dependent UI with `rolesLoading` instead of relying
