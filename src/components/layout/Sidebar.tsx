@@ -1,4 +1,4 @@
-import { LogOut } from "lucide-react";
+import { LogOut, HelpCircle } from "lucide-react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/hooks/useRole";
@@ -120,6 +120,14 @@ export function Sidebar({ onNavigate }: SidebarProps) {
 
       {/* User block at bottom */}
       <div className="border-t border-sidebar-border/60 px-3 py-3">
+        <Link
+          to="/app/help"
+          onClick={onNavigate}
+          className="mb-2 flex items-center gap-3 rounded-lg pl-4 pr-3 py-2 text-[13px] font-medium text-[#CBD5E1] transition-colors hover:bg-[#1E293B] hover:text-white"
+        >
+          <HelpCircle className="h-[18px] w-[18px] shrink-0" style={{ color: "#CBD5E1" }} />
+          <span>Help · सहायता</span>
+        </Link>
         <div className="flex items-center gap-2 rounded-xl bg-white/5 px-2 py-2">
           <Link
             to="/app/profile"

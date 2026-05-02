@@ -27,7 +27,6 @@ import { Route as AppQuickOrderRouteImport } from './routes/app.quick-order'
 import { Route as AppPurchaseOrdersRouteImport } from './routes/app.purchase-orders'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppProductsRouteImport } from './routes/app.products'
-import { Route as AppPreferencesRouteImport } from './routes/app.preferences'
 import { Route as AppMovementsRouteImport } from './routes/app.movements'
 import { Route as AppMouldsRouteImport } from './routes/app.moulds'
 import { Route as AppManufacturingRouteImport } from './routes/app.manufacturing'
@@ -43,6 +42,7 @@ import { Route as AppCategoriesRouteImport } from './routes/app.categories'
 import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
 import { Route as AppAiInsightsRouteImport } from './routes/app.ai-insights'
 import { Route as AppAdminRouteImport } from './routes/app.admin'
+import { Route as AppAboutRouteImport } from './routes/app.about'
 import { Route as AppWorkersIdRouteImport } from './routes/app.workers.$id'
 import { Route as AppSettingsUsersRouteImport } from './routes/app.settings.users'
 import { Route as AppManufacturingMoIdRouteImport } from './routes/app.manufacturing.$moId'
@@ -142,11 +142,6 @@ const AppProductsRoute = AppProductsRouteImport.update({
   path: '/products',
   getParentRoute: () => AppRoute,
 } as any)
-const AppPreferencesRoute = AppPreferencesRouteImport.update({
-  id: '/preferences',
-  path: '/preferences',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppMovementsRoute = AppMovementsRouteImport.update({
   id: '/movements',
   path: '/movements',
@@ -222,6 +217,11 @@ const AppAdminRoute = AppAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAboutRoute = AppAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppWorkersIdRoute = AppWorkersIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -268,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/app/about': typeof AppAboutRoute
   '/app/admin': typeof AppAdminRouteWithChildren
   '/app/ai-insights': typeof AppAiInsightsRoute
   '/app/analytics': typeof AppAnalyticsRoute
@@ -283,7 +284,6 @@ export interface FileRoutesByFullPath {
   '/app/manufacturing': typeof AppManufacturingRouteWithChildren
   '/app/moulds': typeof AppMouldsRoute
   '/app/movements': typeof AppMovementsRoute
-  '/app/preferences': typeof AppPreferencesRoute
   '/app/products': typeof AppProductsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
@@ -311,6 +311,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/app/about': typeof AppAboutRoute
   '/app/admin': typeof AppAdminRouteWithChildren
   '/app/ai-insights': typeof AppAiInsightsRoute
   '/app/analytics': typeof AppAnalyticsRoute
@@ -326,7 +327,6 @@ export interface FileRoutesByTo {
   '/app/manufacturing': typeof AppManufacturingRouteWithChildren
   '/app/moulds': typeof AppMouldsRoute
   '/app/movements': typeof AppMovementsRoute
-  '/app/preferences': typeof AppPreferencesRoute
   '/app/products': typeof AppProductsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
@@ -356,6 +356,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/app/about': typeof AppAboutRoute
   '/app/admin': typeof AppAdminRouteWithChildren
   '/app/ai-insights': typeof AppAiInsightsRoute
   '/app/analytics': typeof AppAnalyticsRoute
@@ -371,7 +372,6 @@ export interface FileRoutesById {
   '/app/manufacturing': typeof AppManufacturingRouteWithChildren
   '/app/moulds': typeof AppMouldsRoute
   '/app/movements': typeof AppMovementsRoute
-  '/app/preferences': typeof AppPreferencesRoute
   '/app/products': typeof AppProductsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
@@ -402,6 +402,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/app/about'
     | '/app/admin'
     | '/app/ai-insights'
     | '/app/analytics'
@@ -417,7 +418,6 @@ export interface FileRouteTypes {
     | '/app/manufacturing'
     | '/app/moulds'
     | '/app/movements'
-    | '/app/preferences'
     | '/app/products'
     | '/app/profile'
     | '/app/purchase-orders'
@@ -445,6 +445,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/app/about'
     | '/app/admin'
     | '/app/ai-insights'
     | '/app/analytics'
@@ -460,7 +461,6 @@ export interface FileRouteTypes {
     | '/app/manufacturing'
     | '/app/moulds'
     | '/app/movements'
-    | '/app/preferences'
     | '/app/products'
     | '/app/profile'
     | '/app/purchase-orders'
@@ -489,6 +489,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/app/about'
     | '/app/admin'
     | '/app/ai-insights'
     | '/app/analytics'
@@ -504,7 +505,6 @@ export interface FileRouteTypes {
     | '/app/manufacturing'
     | '/app/moulds'
     | '/app/movements'
-    | '/app/preferences'
     | '/app/products'
     | '/app/profile'
     | '/app/purchase-orders'
@@ -664,13 +664,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProductsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/preferences': {
-      id: '/app/preferences'
-      path: '/preferences'
-      fullPath: '/app/preferences'
-      preLoaderRoute: typeof AppPreferencesRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/movements': {
       id: '/app/movements'
       path: '/movements'
@@ -774,6 +767,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/app/admin'
       preLoaderRoute: typeof AppAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/about': {
+      id: '/app/about'
+      path: '/about'
+      fullPath: '/app/about'
+      preLoaderRoute: typeof AppAboutRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/workers/$id': {
@@ -889,6 +889,7 @@ const AppWorkersRouteWithChildren = AppWorkersRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
+  AppAboutRoute: typeof AppAboutRoute
   AppAdminRoute: typeof AppAdminRouteWithChildren
   AppAiInsightsRoute: typeof AppAiInsightsRoute
   AppAnalyticsRoute: typeof AppAnalyticsRoute
@@ -904,7 +905,6 @@ interface AppRouteChildren {
   AppManufacturingRoute: typeof AppManufacturingRouteWithChildren
   AppMouldsRoute: typeof AppMouldsRoute
   AppMovementsRoute: typeof AppMovementsRoute
-  AppPreferencesRoute: typeof AppPreferencesRoute
   AppProductsRoute: typeof AppProductsRoute
   AppProfileRoute: typeof AppProfileRoute
   AppPurchaseOrdersRoute: typeof AppPurchaseOrdersRoute
@@ -924,6 +924,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAboutRoute: AppAboutRoute,
   AppAdminRoute: AppAdminRouteWithChildren,
   AppAiInsightsRoute: AppAiInsightsRoute,
   AppAnalyticsRoute: AppAnalyticsRoute,
@@ -939,7 +940,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppManufacturingRoute: AppManufacturingRouteWithChildren,
   AppMouldsRoute: AppMouldsRoute,
   AppMovementsRoute: AppMovementsRoute,
-  AppPreferencesRoute: AppPreferencesRoute,
   AppProductsRoute: AppProductsRoute,
   AppProfileRoute: AppProfileRoute,
   AppPurchaseOrdersRoute: AppPurchaseOrdersRoute,
