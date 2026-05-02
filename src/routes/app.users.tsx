@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useRole } from "@/hooks/useRole";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,7 @@ function UserManagementPage() {
   const { role } = useRole();
   const { user: currentUser } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [rows, setRows] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -63,10 +65,10 @@ function UserManagementPage() {
 
   useEffect(() => {
     if (role !== "admin") {
-      toast.error("Admins only");
+      toast.error(t("err_access_denied"));
       navigate({ to: "/app/dashboard" });
     }
-  }, [role, navigate]);
+  }, [role, navigate, t]);
 
   useEffect(() => {
     if (role === "admin") void load();
@@ -80,7 +82,7 @@ function UserManagementPage() {
       list.sort((a, b) => (a.display_name ?? "").localeCompare(b.display_name ?? ""));
       setRows(list);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to load users");
+      toast.error(err instanceof Error ? err.message : t("err_load_failed"));
       setRows([]);
     } finally {
       setLoading(false);
@@ -113,9 +115,9 @@ function UserManagementPage() {
       setRows((prev) =>
         prev.map((r) => (r.user_id === target.user_id ? { ...r, active: !r.active } : r)),
       );
-      toast.success(target.active ? "User deactivated" : "User activated");
+      toast.success(target.active ? t("um_deactivate") : t("um_activate"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Update failed");
+      toast.error(err instanceof Error ? err.message : t("err_load_failed"));
     } finally {
       setSavingId(null);
       setPendingToggle(null);
@@ -141,25 +143,25 @@ function UserManagementPage() {
           <div>
             <h1 className="font-display text-2xl font-semibold text-foreground flex items-center gap-2">
               <ShieldCheck className="h-6 w-6 text-primary" />
-              User management
+              {t("um_title")}
             </h1>
             <p className="text-sm text-muted-foreground">
-              Manage team roles and permissions across the platform.
+              {t("um_subtitle")}
             </p>
           </div>
           <Button size="sm" onClick={openAdd} className="gap-1.5">
-            <Plus className="h-4 w-4" /> Add user
+            <Plus className="h-4 w-4" /> {t("um_add_user")}
           </Button>
         </div>
 
         {/* Users table */}
         <section className="rounded-xl border border-border bg-card shadow-sm">
           <div className="flex items-center justify-between gap-3 border-b border-border p-4">
-            <h2 className="font-display text-base font-semibold text-foreground">Team members</h2>
+            <h2 className="font-display text-base font-semibold text-foreground">{t("um_team_members")}</h2>
             <div className="relative w-full max-w-xs">
               <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search name or mobile…"
+                placeholder={t("um_search_ph")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9 h-9 text-sm"
@@ -169,20 +171,20 @@ function UserManagementPage() {
 
           {loading ? (
             <div className="flex items-center justify-center py-12 text-muted-foreground">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading users…
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t("um_loading")}
             </div>
           ) : filtered.length === 0 ? (
-            <EmptyState icon={UsersIcon} title="No users found" description="Invite your team to get started." />
+            <EmptyState icon={UsersIcon} title={t("um_empty_title")} description={t("um_empty_desc")} />
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Mobile</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date added</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t("um_col_name")}</TableHead>
+                  <TableHead>{t("um_col_mobile")}</TableHead>
+                  <TableHead>{t("um_col_role")}</TableHead>
+                  <TableHead>{t("um_col_status")}</TableHead>
+                  <TableHead>{t("um_col_date_added")}</TableHead>
+                  <TableHead className="text-right">{t("um_col_actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -193,7 +195,7 @@ function UserManagementPage() {
                       <TableCell className="font-medium">
                         {u.display_name ?? "—"}
                         {isSelf && (
-                          <Badge variant="outline" className="ml-2 text-[10px]">You</Badge>
+                          <Badge variant="outline" className="ml-2 text-[10px]">{t("um_you")}</Badge>
                         )}
                       </TableCell>
                       <TableCell className="font-mono text-xs">{u.mobile ?? "—"}</TableCell>
@@ -202,9 +204,9 @@ function UserManagementPage() {
                       </TableCell>
                       <TableCell>
                         {u.active ? (
-                          <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 ring-1 ring-emerald-200">Active</Badge>
+                          <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 ring-1 ring-emerald-200">{t("um_active")}</Badge>
                         ) : (
-                          <Badge className="bg-rose-100 text-rose-800 hover:bg-rose-100 ring-1 ring-rose-200">Inactive</Badge>
+                          <Badge className="bg-rose-100 text-rose-800 hover:bg-rose-100 ring-1 ring-rose-200">{t("um_inactive")}</Badge>
                         )}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
@@ -213,10 +215,10 @@ function UserManagementPage() {
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1.5">
                           <Button size="sm" variant="ghost" onClick={() => openEdit(u)} className="gap-1">
-                            <Pencil className="h-3.5 w-3.5" /> Edit
+                            <Pencil className="h-3.5 w-3.5" /> {t("um_edit")}
                           </Button>
                           <Button size="sm" variant="ghost" onClick={() => setResetTarget(u)} className="gap-1">
-                            <KeyRound className="h-3.5 w-3.5" /> Reset password
+                            <KeyRound className="h-3.5 w-3.5" /> {t("um_reset_password")}
                           </Button>
                           <Button
                             size="sm"
@@ -226,9 +228,9 @@ function UserManagementPage() {
                             className="gap-1"
                           >
                             {u.active ? (
-                              <><UserX className="h-3.5 w-3.5" /> Deactivate</>
+                              <><UserX className="h-3.5 w-3.5" /> {t("um_deactivate")}</>
                             ) : (
-                              <><UserCheck className="h-3.5 w-3.5" /> Activate</>
+                              <><UserCheck className="h-3.5 w-3.5" /> {t("um_activate")}</>
                             )}
                           </Button>
                         </div>
@@ -249,16 +251,16 @@ function UserManagementPage() {
         {/* Permissions matrix */}
         <section className="rounded-xl border border-border bg-card shadow-sm">
           <div className="border-b border-border p-4">
-            <h2 className="font-display text-base font-semibold text-foreground">Role · permission matrix</h2>
+            <h2 className="font-display text-base font-semibold text-foreground">{t("um_perm_matrix")}</h2>
             <p className="text-xs text-muted-foreground">
-              Reference of what each role can access. Enforced server-side via RLS.
+              {t("um_perm_matrix_desc")}
             </p>
           </div>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[200px]">Capability</TableHead>
+                  <TableHead className="min-w-[200px]">{t("um_capability")}</TableHead>
                   {ROLE_ORDER.map((r) => (
                     <TableHead key={r} className="text-center">{ROLE_LABEL[r]}</TableHead>
                   ))}
@@ -298,18 +300,18 @@ function UserManagementPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {pendingToggle?.active ? "Deactivate user?" : "Activate user?"}
+              {pendingToggle?.active ? t("um_deactivate_q") : t("um_activate_q")}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {pendingToggle?.active
-                ? `${pendingToggle?.display_name ?? "This user"} will no longer be able to sign in.`
-                : `${pendingToggle?.display_name ?? "This user"} will regain access to the app.`}
+              {`${pendingToggle?.display_name ?? t("um_this_user")} ${
+                pendingToggle?.active ? t("um_deactivate_desc") : t("um_activate_desc")
+              }`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("btn_cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmToggleActive}>
-              {pendingToggle?.active ? "Deactivate" : "Activate"}
+              {pendingToggle?.active ? t("um_deactivate") : t("um_activate")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
