@@ -353,6 +353,68 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_staffing: {
+        Row: {
+          calculated_pay: number | null
+          created_at: string | null
+          date: string
+          hourly_rate: number | null
+          hours_worked: number | null
+          id: string
+          logged_by: string | null
+          payment_type: string | null
+          ref_id: string | null
+          ref_name: string | null
+          shift_end: string | null
+          shift_start: string | null
+          stage_type: string
+          status: string | null
+          worker_id: string | null
+        }
+        Insert: {
+          calculated_pay?: number | null
+          created_at?: string | null
+          date?: string
+          hourly_rate?: number | null
+          hours_worked?: number | null
+          id?: string
+          logged_by?: string | null
+          payment_type?: string | null
+          ref_id?: string | null
+          ref_name?: string | null
+          shift_end?: string | null
+          shift_start?: string | null
+          stage_type: string
+          status?: string | null
+          worker_id?: string | null
+        }
+        Update: {
+          calculated_pay?: number | null
+          created_at?: string | null
+          date?: string
+          hourly_rate?: number | null
+          hours_worked?: number | null
+          id?: string
+          logged_by?: string | null
+          payment_type?: string | null
+          ref_id?: string | null
+          ref_name?: string | null
+          shift_end?: string | null
+          shift_start?: string | null
+          stage_type?: string
+          status?: string | null
+          worker_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_staffing_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dispatch_order_lines: {
         Row: {
           created_at: string
@@ -2443,6 +2505,51 @@ export type Database = {
           },
         ]
       }
+      staffing_rules: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          default_workers: number
+          id: string
+          is_active: boolean | null
+          max_workers: number
+          notes: string | null
+          ref_id: string | null
+          ref_name: string | null
+          stage_type: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          default_workers?: number
+          id?: string
+          is_active?: boolean | null
+          max_workers?: number
+          notes?: string | null
+          ref_id?: string | null
+          ref_name?: string | null
+          stage_type: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          default_workers?: number
+          id?: string
+          is_active?: boolean | null
+          max_workers?: number
+          notes?: string | null
+          ref_id?: string | null
+          ref_name?: string | null
+          stage_type?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       stage_group_lines: {
         Row: {
           created_at: string
@@ -3233,6 +3340,70 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicles: {
+        Row: {
+          capacity_kg: number | null
+          created_at: string | null
+          delivery_helper_id: string | null
+          driver_id: string | null
+          id: string
+          is_active: boolean | null
+          notes: string | null
+          registration: string
+          updated_at: string | null
+          vehicle_type: string | null
+          warehouse_id: string | null
+        }
+        Insert: {
+          capacity_kg?: number | null
+          created_at?: string | null
+          delivery_helper_id?: string | null
+          driver_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          registration: string
+          updated_at?: string | null
+          vehicle_type?: string | null
+          warehouse_id?: string | null
+        }
+        Update: {
+          capacity_kg?: number | null
+          created_at?: string | null
+          delivery_helper_id?: string | null
+          driver_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          registration?: string
+          updated_at?: string | null
+          vehicle_type?: string | null
+          warehouse_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_delivery_helper_id_fkey"
+            columns: ["delivery_helper_id"]
+            isOneToOne: false
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicles_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicles_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendor_payments: {
         Row: {
           amount: number
@@ -3912,41 +4083,100 @@ export type Database = {
           },
         ]
       }
+      worker_salary_log: {
+        Row: {
+          amount: number
+          created_at: string | null
+          created_by: string | null
+          date: string
+          id: string
+          notes: string | null
+          payment_type: string
+          qty: number | null
+          rate: number | null
+          worker_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string | null
+          created_by?: string | null
+          date?: string
+          id?: string
+          notes?: string | null
+          payment_type: string
+          qty?: number | null
+          rate?: number | null
+          worker_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          created_by?: string | null
+          date?: string
+          id?: string
+          notes?: string | null
+          payment_type?: string
+          qty?: number | null
+          rate?: number | null
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worker_salary_log_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workers: {
         Row: {
           code: string
           created_at: string
+          department: string | null
           hourly_rate: number
           id: string
           is_active: boolean
           job_role: string | null
           name: string
+          payment_type: string | null
           phone: string | null
+          piece_rate: number | null
           station_id: string | null
+          sub_role: string | null
           updated_at: string
         }
         Insert: {
           code: string
           created_at?: string
+          department?: string | null
           hourly_rate?: number
           id?: string
           is_active?: boolean
           job_role?: string | null
           name: string
+          payment_type?: string | null
           phone?: string | null
+          piece_rate?: number | null
           station_id?: string | null
+          sub_role?: string | null
           updated_at?: string
         }
         Update: {
           code?: string
           created_at?: string
+          department?: string | null
           hourly_rate?: number
           id?: string
           is_active?: boolean
           job_role?: string | null
           name?: string
+          payment_type?: string | null
           phone?: string | null
+          piece_rate?: number | null
           station_id?: string | null
+          sub_role?: string | null
           updated_at?: string
         }
         Relationships: [

@@ -44,10 +44,12 @@ import { Route as AppAiInsightsRouteImport } from './routes/app.ai-insights'
 import { Route as AppAdminRouteImport } from './routes/app.admin'
 import { Route as AppAboutRouteImport } from './routes/app.about'
 import { Route as AppWorkersIdRouteImport } from './routes/app.workers.$id'
+import { Route as AppStaffingDailyRouteImport } from './routes/app.staffing.daily'
 import { Route as AppSettingsUsersRouteImport } from './routes/app.settings.users'
 import { Route as AppManufacturingMoIdRouteImport } from './routes/app.manufacturing.$moId'
 import { Route as AppMachinesIdRouteImport } from './routes/app.machines.$id'
 import { Route as AppAdminSystemRouteImport } from './routes/app.admin.system'
+import { Route as AppAdminStaffingRouteImport } from './routes/app.admin.staffing'
 import { Route as AppAdminPresetsRouteImport } from './routes/app.admin.presets'
 import { Route as AppAdminInventorySettingsRouteImport } from './routes/app.admin.inventory-settings'
 import { Route as AppAdminAuditRouteImport } from './routes/app.admin.audit'
@@ -227,6 +229,11 @@ const AppWorkersIdRoute = AppWorkersIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AppWorkersRoute,
 } as any)
+const AppStaffingDailyRoute = AppStaffingDailyRouteImport.update({
+  id: '/staffing/daily',
+  path: '/staffing/daily',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSettingsUsersRoute = AppSettingsUsersRouteImport.update({
   id: '/settings/users',
   path: '/settings/users',
@@ -245,6 +252,11 @@ const AppMachinesIdRoute = AppMachinesIdRouteImport.update({
 const AppAdminSystemRoute = AppAdminSystemRouteImport.update({
   id: '/system',
   path: '/system',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminStaffingRoute = AppAdminStaffingRouteImport.update({
+  id: '/staffing',
+  path: '/staffing',
   getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAdminPresetsRoute = AppAdminPresetsRouteImport.update({
@@ -302,10 +314,12 @@ export interface FileRoutesByFullPath {
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/inventory-settings': typeof AppAdminInventorySettingsRoute
   '/app/admin/presets': typeof AppAdminPresetsRoute
+  '/app/admin/staffing': typeof AppAdminStaffingRoute
   '/app/admin/system': typeof AppAdminSystemRoute
   '/app/machines/$id': typeof AppMachinesIdRoute
   '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
   '/app/settings/users': typeof AppSettingsUsersRoute
+  '/app/staffing/daily': typeof AppStaffingDailyRoute
   '/app/workers/$id': typeof AppWorkersIdRoute
 }
 export interface FileRoutesByTo {
@@ -345,10 +359,12 @@ export interface FileRoutesByTo {
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/inventory-settings': typeof AppAdminInventorySettingsRoute
   '/app/admin/presets': typeof AppAdminPresetsRoute
+  '/app/admin/staffing': typeof AppAdminStaffingRoute
   '/app/admin/system': typeof AppAdminSystemRoute
   '/app/machines/$id': typeof AppMachinesIdRoute
   '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
   '/app/settings/users': typeof AppSettingsUsersRoute
+  '/app/staffing/daily': typeof AppStaffingDailyRoute
   '/app/workers/$id': typeof AppWorkersIdRoute
 }
 export interface FileRoutesById {
@@ -390,10 +406,12 @@ export interface FileRoutesById {
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/inventory-settings': typeof AppAdminInventorySettingsRoute
   '/app/admin/presets': typeof AppAdminPresetsRoute
+  '/app/admin/staffing': typeof AppAdminStaffingRoute
   '/app/admin/system': typeof AppAdminSystemRoute
   '/app/machines/$id': typeof AppMachinesIdRoute
   '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
   '/app/settings/users': typeof AppSettingsUsersRoute
+  '/app/staffing/daily': typeof AppStaffingDailyRoute
   '/app/workers/$id': typeof AppWorkersIdRoute
 }
 export interface FileRouteTypes {
@@ -436,10 +454,12 @@ export interface FileRouteTypes {
     | '/app/admin/audit'
     | '/app/admin/inventory-settings'
     | '/app/admin/presets'
+    | '/app/admin/staffing'
     | '/app/admin/system'
     | '/app/machines/$id'
     | '/app/manufacturing/$moId'
     | '/app/settings/users'
+    | '/app/staffing/daily'
     | '/app/workers/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -479,10 +499,12 @@ export interface FileRouteTypes {
     | '/app/admin/audit'
     | '/app/admin/inventory-settings'
     | '/app/admin/presets'
+    | '/app/admin/staffing'
     | '/app/admin/system'
     | '/app/machines/$id'
     | '/app/manufacturing/$moId'
     | '/app/settings/users'
+    | '/app/staffing/daily'
     | '/app/workers/$id'
   id:
     | '__root__'
@@ -523,10 +545,12 @@ export interface FileRouteTypes {
     | '/app/admin/audit'
     | '/app/admin/inventory-settings'
     | '/app/admin/presets'
+    | '/app/admin/staffing'
     | '/app/admin/system'
     | '/app/machines/$id'
     | '/app/manufacturing/$moId'
     | '/app/settings/users'
+    | '/app/staffing/daily'
     | '/app/workers/$id'
   fileRoutesById: FileRoutesById
 }
@@ -783,6 +807,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWorkersIdRouteImport
       parentRoute: typeof AppWorkersRoute
     }
+    '/app/staffing/daily': {
+      id: '/app/staffing/daily'
+      path: '/staffing/daily'
+      fullPath: '/app/staffing/daily'
+      preLoaderRoute: typeof AppStaffingDailyRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/settings/users': {
       id: '/app/settings/users'
       path: '/settings/users'
@@ -809,6 +840,13 @@ declare module '@tanstack/react-router' {
       path: '/system'
       fullPath: '/app/admin/system'
       preLoaderRoute: typeof AppAdminSystemRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/staffing': {
+      id: '/app/admin/staffing'
+      path: '/staffing'
+      fullPath: '/app/admin/staffing'
+      preLoaderRoute: typeof AppAdminStaffingRouteImport
       parentRoute: typeof AppAdminRoute
     }
     '/app/admin/presets': {
@@ -839,6 +877,7 @@ interface AppAdminRouteChildren {
   AppAdminAuditRoute: typeof AppAdminAuditRoute
   AppAdminInventorySettingsRoute: typeof AppAdminInventorySettingsRoute
   AppAdminPresetsRoute: typeof AppAdminPresetsRoute
+  AppAdminStaffingRoute: typeof AppAdminStaffingRoute
   AppAdminSystemRoute: typeof AppAdminSystemRoute
 }
 
@@ -846,6 +885,7 @@ const AppAdminRouteChildren: AppAdminRouteChildren = {
   AppAdminAuditRoute: AppAdminAuditRoute,
   AppAdminInventorySettingsRoute: AppAdminInventorySettingsRoute,
   AppAdminPresetsRoute: AppAdminPresetsRoute,
+  AppAdminStaffingRoute: AppAdminStaffingRoute,
   AppAdminSystemRoute: AppAdminSystemRoute,
 }
 
@@ -921,6 +961,7 @@ interface AppRouteChildren {
   AppWorkersRoute: typeof AppWorkersRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
   AppSettingsUsersRoute: typeof AppSettingsUsersRoute
+  AppStaffingDailyRoute: typeof AppStaffingDailyRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -956,6 +997,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppWorkersRoute: AppWorkersRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
   AppSettingsUsersRoute: AppSettingsUsersRoute,
+  AppStaffingDailyRoute: AppStaffingDailyRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

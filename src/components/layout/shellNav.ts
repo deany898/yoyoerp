@@ -28,6 +28,8 @@ export const ROLE_NAV: Record<UserRoleType, ShellNavItem[]> = {
   admin: [
     { label: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard },
     { label: "Manufacturing", href: "/app/manufacturing", icon: Factory },
+    { label: "Daily staffing", href: "/app/staffing/daily", icon: Users },
+    { label: "Staffing rules", href: "/app/admin/staffing", icon: ShieldCheck },
     { label: "Orders", href: "/app/quick-order", icon: ClipboardList },
     { label: "Dispatch", href: "/app/dispatch-orders", icon: Send },
     { label: "Users", href: "/app/settings/users", icon: ShieldCheck },
@@ -36,12 +38,14 @@ export const ROLE_NAV: Record<UserRoleType, ShellNavItem[]> = {
   manager: [
     { label: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard },
     { label: "Manufacturing", href: "/app/manufacturing", icon: Factory },
+    { label: "Daily staffing", href: "/app/staffing/daily", icon: Users },
     { label: "Dispatch", href: "/app/dispatch-orders", icon: Send },
   ],
   supervisor: [
     { label: "My floor", href: "/app/manufacturing", icon: Layers },
     { label: "My MOs", href: "/app/manufacturing", icon: Factory },
     { label: "Handoffs", href: "/app/wip", icon: ArrowLeftRight },
+    { label: "Daily staffing", href: "/app/staffing/daily", icon: Users },
   ],
   sales: [
     { label: "New order", href: "/app/quick-order", icon: Zap },
