@@ -611,9 +611,6 @@ export const translations = {
   staff_understaffed: { en: "Understaffed", hi: "कम स्टाफ" },
   staff_save_all: { en: "Save all assignments", hi: "सभी असाइनमेंट सेव करें" },
   staff_saved_toast: { en: "workers assigned", hi: "कर्मचारी असाइन हुए" },
-  staff_moulding_note: { en: "Each machine needs 1 operator minimum", hi: "प्रत्येक मशीन को न्यूनतम 1 ऑपरेटर चाहिए" },
-  staff_printing_note: { en: "Printing team is shared across all MOs", hi: "प्रिंटिंग टीम सभी MO के लिए साझा है" },
-  staff_delivery_note: { en: "Delivery is fixed at 1 driver + 1 helper per vehicle", hi: "डिलीवरी में प्रति वाहन 1 ड्राइवर + 1 सहायक तय है" },
 
   // Attendance
   attendance_title: { en: "Mark attendance", hi: "हाजिरी दर्ज करें" },
