@@ -209,7 +209,7 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
               <Label>Category</Label>
               <Select value={form.category_id ?? "__none"} onValueChange={(v) => setForm((f) => ({ ...f, category_id: v === "__none" ? null : v }))}>
                 <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-72">
                   <SelectItem value="__none">None</SelectItem>
                   {categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
@@ -225,21 +225,21 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
             </div>
           </div>
 
-          <Separator />
-          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">First variant (SKU)</div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>SKU</Label>
-              <Input value={form.sku} onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value }))} placeholder="YOY-1001-DEFAULT" />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Variant name</Label>
-              <Input value={form.variant_name} onChange={(e) => setForm((f) => ({ ...f, variant_name: e.target.value }))} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
+          {isEdit && firstVariant && (
+            <>
+              <Separator />
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Default variant</div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>SKU</Label>
+                  <Input value={form.sku} onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value }))} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Variant name</Label>
+                  <Input value={form.variant_name} onChange={(e) => setForm((f) => ({ ...f, variant_name: e.target.value }))} />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Reorder point</Label>
               <Input type="number" min={0} value={form.reorder_point} onChange={(e) => setForm((f) => ({ ...f, reorder_point: Number(e.target.value) }))} />
@@ -252,7 +252,9 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
               <Label>Reorder qty</Label>
               <Input type="number" min={0} value={form.reorder_qty} onChange={(e) => setForm((f) => ({ ...f, reorder_qty: Number(e.target.value) }))} />
             </div>
-          </div>
+              </div>
+            </>
+          )}
 
           {showCosting && (
             <>
