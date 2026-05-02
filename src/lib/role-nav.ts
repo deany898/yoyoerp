@@ -120,7 +120,6 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     ...COMMON_ROUTES,
   ],
   customer: ["/app/quick-order", "/app/products", ...COMMON_ROUTES],
-  requestor: [],
 };
 
 export function isRouteVisibleToRole(href: string, role: UserRoleType): boolean {
@@ -139,7 +138,6 @@ const ROLE_BOTTOM_NAV: Record<UserRoleType, string[]> = {
   dispatch: ["/app/dashboard", "/app/dispatch-orders", "/app/movements", "/app/inventory"],
   sales: ["/app/dashboard", "/app/dispatch-orders", "/app/customers", "/app/products"],
   customer: ["/app/quick-order", "/app/products", "/app/help"],
-  requestor: [],
 };
 
 export function getBottomNavRoutes(role: UserRoleType): string[] {
