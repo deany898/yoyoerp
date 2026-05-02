@@ -63,7 +63,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       isAdmin: role === "admin",
       isManager: role === "manager",
       isRequestor: role === "requestor",
-      rolesLoading: rolesLoading || (!!user && !matchedRole && authRoles.length === 0),
+      rolesLoading,
     };
   }, [role, realRole, rolesLoading, user, matchedRole, authRoles.length]);
 
