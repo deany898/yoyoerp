@@ -105,9 +105,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let timedOut = false;
     const timeout = setTimeout(() => {
       timedOut = true;
-      console.warn("[AuthContext] getSession timed out after 10s; clearing loading state.");
+      console.warn("[AuthContext] getSession timed out after 8s; clearing loading state.");
       setLoading(false);
-    }, 10000);
+    }, 8000);
 
     supabase.auth
       .getSession()
