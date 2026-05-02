@@ -38,15 +38,13 @@ export function MoCreateSheet({ open, onOpenChange, prefill, onCreated }: Props)
   useEffect(() => {
     if (!open) return;
     (async () => {
-      const [vRes, wRes, sRes, n] = await Promise.all([
+      const [vRes, wRes, rolesRes, n] = await Promise.all([
         supabase.from("product_variants")
           .select("id, sku, variant_name, product:products(name)")
           .eq("is_active", true)
           .order("variant_name"),
         supabase.from("warehouses").select("id, name, code").eq("is_active", true).order("name"),
-        supabase.from("user_roles")
-          .select("user_id, profile:profiles!user_roles_user_id_fkey(id, display_name)")
-          .eq("role", "supervisor"),
+        supabase.from("user_roles").select("user_id").eq("role", "supervisor"),
         nextMoNumber(),
       ]);
       setVariants(((vRes.data ?? []) as unknown as Array<{ id: string; sku: string; variant_name: string; product: { name: string } | null }>).map((v) => ({
@@ -56,13 +54,17 @@ export function MoCreateSheet({ open, onOpenChange, prefill, onCreated }: Props)
         product_name: v.product?.name ?? "—",
       })));
       setWarehouses(wRes.data ?? []);
-      const sups: SupOpt[] = [];
-      const seen = new Set<string>();
-      for (const r of (sRes.data ?? []) as Array<{ profile: { id: string; display_name: string | null } | null }>) {
-        const p = r.profile;
-        if (p && !seen.has(p.id)) { seen.add(p.id); sups.push({ id: p.id, display_name: p.display_name ?? "Unnamed" }); }
+      const supUserIds = Array.from(new Set((rolesRes.data ?? []).map((r) => r.user_id)));
+      if (supUserIds.length > 0) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id, display_name")
+          .in("user_id", supUserIds)
+          .order("display_name");
+        setSupervisors((profs ?? []).map((p) => ({ id: p.id, display_name: p.display_name ?? "Unnamed" })));
+      } else {
+        setSupervisors([]);
       }
-      setSupervisors(sups);
       if (n) setMoNumber(n);
       if (prefill?.variant_id) setVariantId(prefill.variant_id);
       if (prefill?.qty) setQty(String(prefill.qty));
