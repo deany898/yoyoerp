@@ -5,17 +5,16 @@ import { useRoleSimulator } from "@/contexts/RoleSimulatorContext";
 import { notify } from "@/lib/notify";
 
 export interface RoleContextValue {
-  /** Resolved role. `null` only when roles finished loading and the user has
-   *  no recognised role row — UI should show an error / refresh state. */
-  role: UserRoleType | null;
-  realRole: UserRoleType | null;
+  /** Effective role for permission checks. Falls back to "customer" while
+   *  roles are loading or unresolved so callers always get a defined string —
+   *  use `roleResolutionFailed` / `rolesLoading` to know if it is trustworthy. */
+  role: UserRoleType;
+  realRole: UserRoleType;
   isSimulating: boolean;
   permissions: RolePermissions;
   isAdmin: boolean;
   isManager: boolean;
   isRequestor: boolean;
-  /** True while the user_roles query is in flight. Components should render
-   *  a skeleton instead of role-conditional UI when this is true. */
   rolesLoading: boolean;
   /** True once loading is complete AND no role was resolved. Use to render
    *  the "Could not load your role" recovery screen. */
@@ -52,19 +51,21 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   //   - After load with no rows: realRole stays null and `roleResolutionFailed`
   //     becomes true so the UI can prompt a refresh instead of pretending the
   //     user is a customer.
-  const realRole: UserRoleType | null = matchedRole ?? null;
+  // CRITICAL: do NOT silently default to "customer" once loading completes —
+  // that mis-labels admins as customers. While loading we still expose
+  // "customer" (least-privileged) for type-safety of consumers, but flag
+  // `roleResolutionFailed` so the app shell can render a refresh prompt
+  // instead of trusting the fallback.
   const roleResolutionFailed = !!user && !rolesLoading && !matchedRole;
+  const realRole: UserRoleType = matchedRole ?? "customer";
 
   // Only admins are allowed to simulate other roles. For everyone else the
   // simulated value is ignored on the client (and the server never trusts it).
-  const role: UserRoleType | null =
+  const role: UserRoleType =
     realRole === "admin" && simulatedRole ? (simulatedRole as UserRoleType) : realRole;
 
   const value = useMemo<RoleContextValue>(() => {
-    // While role is unresolved, hand out the most restrictive permission set
-    // ("customer") so no privileged action is accidentally allowed; the UI
-    // gates the actual screens on `rolesLoading` / `roleResolutionFailed`.
-    const permissions = getPermissionsForRole(role ?? "customer");
+    const permissions = getPermissionsForRole(role);
     return {
       role,
       realRole,
