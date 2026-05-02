@@ -3,8 +3,8 @@ import { Suspense, useEffect, useRef, useState } from "react";
 // AnimatePresence removed: the wait-mode exit fade was the main source of
 // perceived nav lag; PageTransition now cross-fades in place without it.
 import { Sidebar } from "@/components/layout/Sidebar";
-import { Header } from "@/components/layout/Header";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { MobileTopBar } from "@/components/layout/MobileTopBar";
 import { ShortcutsHelpDialog } from "@/components/command/ShortcutsHelpDialog";
 import { GlobalSearchPalette } from "@/components/command/GlobalSearchPalette";
 import { PageTransition } from "@/components/shared/PageTransition";
@@ -78,6 +78,14 @@ function AppLayout() {
     }
   }, [location.pathname, role, rolesLoading, authLoading, user, navigate]);
 
+  // Customers should never see internal /app shell — push them to /store.
+  useEffect(() => {
+    if (authLoading || !user || rolesLoading) return;
+    if (role === "customer" && location.pathname.startsWith("/app")) {
+      if (typeof window !== "undefined") window.location.assign("/store");
+    }
+  }, [authLoading, user, rolesLoading, role, location.pathname]);
+
   // Initial-page-load default: non-customer users who reload directly onto
   // /app/quick-order should land on the dashboard instead. Only fires once
   // on the very first auth resolution, so client-side navigation to
@@ -120,7 +128,7 @@ function AppLayout() {
   }
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-background">
+    <div className="flex h-screen overflow-hidden bg-background">
       {locked && isLockConfigured() && (
         <LockScreen
           userId={user.id}
@@ -129,24 +137,25 @@ function AppLayout() {
           onSignOut={() => void signOut()}
         />
       )}
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="hidden w-[264px] shrink-0 border-r border-border bg-sidebar md:block">
-          <Sidebar />
-        </aside>
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <div className="hidden md:block">
-            <Header />
-          </div>
-          <main className="relative flex-1 overflow-y-auto p-3 pb-24 md:p-8 md:pb-8">
-            <RouteProgressBar />
-            <PageTransition routeKey={location.pathname}>
-              <Suspense fallback={<RouteSkeleton />}>
-                <Outlet />
-              </Suspense>
-            </PageTransition>
-          </main>
-        </div>
+
+      {/* Desktop sidebar · fixed 240px, md+ only */}
+      <aside className="hidden w-[240px] shrink-0 border-r border-sidebar-border/60 bg-sidebar md:block">
+        <Sidebar />
+      </aside>
+
+      {/* Main column */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <MobileTopBar />
+        <main className="relative flex-1 overflow-y-auto px-4 pt-3 pb-20 md:px-6 md:pt-6 md:pb-4">
+          <RouteProgressBar />
+          <PageTransition routeKey={location.pathname}>
+            <Suspense fallback={<RouteSkeleton />}>
+              <Outlet />
+            </Suspense>
+          </PageTransition>
+        </main>
       </div>
+
       <BottomNav />
       <ShortcutsHelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
       <GlobalSearchPalette open={globalSearchOpen} onOpenChange={setGlobalSearchOpen} />
