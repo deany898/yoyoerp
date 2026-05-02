@@ -46,26 +46,14 @@ export function DevRolePill() {
 
   return (
     <div
-      className="fixed left-3 z-50 md:left-4"
-      // On mobile sit above the 64px bottom nav + safe area; on desktop hug bottom.
-      style={{
-        bottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)",
-      }}
+      className="fixed left-3 z-50 bottom-[calc(env(safe-area-inset-bottom,0px)+76px)] md:left-4 md:bottom-3"
     >
-      <div className="md:hidden h-0" aria-hidden />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
             type="button"
             aria-label="Dev role switcher"
-            className="flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 pl-2.5 pr-3 py-1.5 text-[11.5px] font-semibold text-amber-900 shadow-lg shadow-amber-900/10 transition hover:bg-amber-100 md:bottom-4"
-            style={{
-              // raise pill above mobile bottom nav (h-16 = 64px)
-              transform:
-                typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches
-                  ? "translateY(-64px)"
-                  : undefined,
-            }}
+            className="flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 pl-2.5 pr-3 py-1.5 text-[11.5px] font-semibold text-amber-900 shadow-lg shadow-amber-900/10 transition hover:bg-amber-100"
           >
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-200 text-amber-900">
               <FlaskConical className="h-3 w-3" />
