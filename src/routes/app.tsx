@@ -25,8 +25,8 @@ export const Route = createFileRoute("/app")({
 });
 
 function AppLayout() {
-  const { role, rolesLoading } = useRole();
-  const { user, loading: authLoading, displayName, signOut } = useAuth();
+  const { role, realRole, rolesLoading } = useRole();
+  const { user, loading: authLoading, displayName, signOut, roles } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [helpOpen, setHelpOpen] = useState(false);
@@ -73,19 +73,21 @@ function AppLayout() {
   //    role array is briefly empty).
   useEffect(() => {
     if (authLoading || !user || rolesLoading) return;
+    if (roles.length === 0) return;
     if (!canAccessRoute(location.pathname, role)) {
       toast.error("You don't have permission to access that page.");
       navigate({ to: role === "customer" ? "/app/quick-order" : "/app/dashboard", replace: true });
     }
-  }, [location.pathname, role, rolesLoading, authLoading, user, navigate]);
+  }, [location.pathname, role, rolesLoading, authLoading, user, roles.length, navigate]);
 
   // Customers should never see internal /app shell — push them to /store.
   useEffect(() => {
     if (authLoading || !user || rolesLoading) return;
-    if (role === "customer" && location.pathname.startsWith("/app")) {
+    if (roles.length === 0) return;
+    if (realRole === "customer" && location.pathname.startsWith("/app")) {
       if (typeof window !== "undefined") window.location.assign("/store");
     }
-  }, [authLoading, user, rolesLoading, role, location.pathname]);
+  }, [authLoading, user, rolesLoading, realRole, roles.length, location.pathname]);
 
   // Initial-page-load default: non-customer users who reload directly onto
   // /app/quick-order should land on the dashboard instead. Only fires once
@@ -94,12 +96,13 @@ function AppLayout() {
   const initialRedirectDoneRef = useRef(false);
   useEffect(() => {
     if (authLoading || !user || rolesLoading) return;
+    if (roles.length === 0) return;
     if (initialRedirectDoneRef.current) return;
     initialRedirectDoneRef.current = true;
     if (role !== "customer" && location.pathname === "/app/quick-order") {
       navigate({ to: "/app/dashboard", replace: true });
     }
-  }, [authLoading, user, rolesLoading, role, location.pathname, navigate]);
+  }, [authLoading, user, rolesLoading, role, roles.length, location.pathname, navigate]);
 
   // Access guard — must be signed in. Use replace so back button doesn't
   // re-enter the (now unauthenticated) app shell.

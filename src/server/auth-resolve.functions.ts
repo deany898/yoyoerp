@@ -59,6 +59,9 @@ export const resolveLoginEmail = createServerFn({ method: "POST" })
 
       const { data: u, error } = await supabaseAdmin.auth.admin.getUserById(userId);
       if (error || !u?.user?.email) return { email: null };
+      if (u.user.email.toLowerCase() === "spareking.deany@gmail.com") {
+        return { email: "spareking.deany@gmail.com" };
+      }
       return { email: u.user.email };
     } catch (e) {
       console.error("[resolveLoginEmail] failed:", e);

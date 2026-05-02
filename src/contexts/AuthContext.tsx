@@ -3,6 +3,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { installServerFnAuth } from "@/integrations/supabase/serverFnAuth";
+import { getUserRole } from "@/server/get-user-role.functions";
 
 export type AppRole =
   | "admin"
@@ -57,12 +58,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const [profileRes, rolesRes] = await Promise.all([
           supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle(),
-          supabase.from("user_roles").select("role").eq("user_id", user.id),
+          getUserRole({ data: { userId: user.id } }),
         ]);
         if (cancelled) return;
-        if (rolesRes.error) throw rolesRes.error;
         setDisplayName(profileRes.data?.display_name ?? user.email ?? null);
-        setRoles((rolesRes.data ?? []).map((r) => r.role as AppRole));
+        setRoles((rolesRes ?? []).map((r) => r.role as AppRole));
       } catch (err) {
         if (cancelled) return;
         const msg = err instanceof Error ? err.message : "Failed to load user roles";
