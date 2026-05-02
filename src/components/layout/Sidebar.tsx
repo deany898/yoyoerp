@@ -1,124 +1,12 @@
-import { useState } from "react";
-import {
-  LayoutDashboard,
-  ArrowLeftRight,
-  Truck,
-  ClipboardList,
-  Inbox,
-  ChevronRight,
-  HelpCircle,
-  Boxes,
-  Warehouse,
-  Layers,
-  Send,
-  Users,
-  ShieldCheck,
-  ClipboardCheck,
-  Undo2,
-  LogOut,
-  Tags,
-  Zap as ZapIcon,
-  Wrench,
-  Database,
-  Sliders,
-  ScrollText,
-} from "lucide-react";
-import { Cpu, Hammer, HardHat, Zap, Lightbulb } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/hooks/useRole";
 import { Logo } from "@/components/brand/Logo";
-import { isRouteVisibleToRole } from "@/lib/role-nav";
 import { useAuth } from "@/hooks/useAuth";
-import { useAppConfig } from "@/contexts/AppConfigContext";
-import { ROUTE_FLAGS } from "@/lib/feature-flags";
 import { toast } from "sonner";
 import { SidebarRoleSimulator } from "@/components/layout/SidebarRoleSimulator";
-
-
-const ROLE_LABELS: Record<string, string> = {
-  admin: "Administrator",
-  manager: "Manager",
-  supervisor: "Supervisor",
-  worker: "Worker",
-  dispatch: "Dispatch",
-  sales: "Sales",
-  customer: "Customer",
-  requestor: "Requestor",
-};
-
-interface NavItem {
-  label: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-}
-
-interface NavGroup {
-  label: string;
-  items: NavItem[];
-}
-
-const navGroups: NavGroup[] = [
-  {
-    label: "Overview",
-    items: [
-      { label: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard },
-    ],
-  },
-  {
-    label: "Products",
-    items: [
-      { label: "Products", href: "/app/products", icon: Boxes },
-      { label: "Categories", href: "/app/categories", icon: Tags },
-    ],
-  },
-  {
-    label: "Operations",
-    items: [
-      { label: "Inventory", href: "/app/inventory", icon: Layers },
-      { label: "Movements", href: "/app/movements", icon: ArrowLeftRight },
-      { label: "Requests", href: "/app/requests", icon: Inbox },
-      { label: "Quick order", href: "/app/quick-order", icon: Zap },
-      { label: "Dispatch orders", href: "/app/dispatch-orders", icon: Send },
-      { label: "Goods returns", href: "/app/goods-returns", icon: Undo2 },
-      { label: "Purchase orders", href: "/app/purchase-orders", icon: ClipboardList },
-      { label: "Warehouses", href: "/app/warehouses", icon: Warehouse },
-      { label: "Utilities", href: "/app/utilities", icon: Lightbulb },
-    ],
-  },
-  {
-    label: "Manufacturing",
-    items: [
-      { label: "Machines", href: "/app/machines", icon: Cpu },
-      { label: "Moulds", href: "/app/moulds", icon: Hammer },
-      { label: "Team", href: "/app/workers", icon: HardHat },
-      { label: "Work logs", href: "/app/work-logs", icon: ClipboardCheck },
-    ],
-  },
-  {
-    label: "Contacts",
-    items: [
-      { label: "Customers", href: "/app/customers", icon: Users },
-      { label: "Suppliers", href: "/app/suppliers", icon: Truck },
-    ],
-  },
-  {
-    label: "Admin",
-    items: [
-      { label: "User management", href: "/app/users", icon: ShieldCheck },
-      { label: "System config", href: "/app/admin/system", icon: Sliders },
-      { label: "Presets", href: "/app/admin/presets", icon: Wrench },
-      { label: "Inventory settings", href: "/app/admin/inventory-settings", icon: Database },
-      { label: "Audit log", href: "/app/admin/audit", icon: ScrollText },
-    ],
-  },
-  {
-    label: "Support",
-    items: [
-      { label: "Help", href: "/app/help", icon: HelpCircle },
-    ],
-  },
-];
+import { navForRole, ROLE_LABELS } from "./shellNav";
 
 interface SidebarProps {
   onNavigate?: () => void;
@@ -126,15 +14,14 @@ interface SidebarProps {
 
 export function Sidebar({ onNavigate }: SidebarProps) {
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const { role } = useRole();
   const { user, displayName: authDisplayName, signOut } = useAuth();
   const navigate = useNavigate();
-  const { isEnabled } = useAppConfig();
 
   const displayName = authDisplayName ?? user?.email?.split("@")[0] ?? "Account";
   const initial = displayName.trim().charAt(0).toUpperCase() || "U";
   const roleLabel = ROLE_LABELS[role] ?? role;
+  const items = navForRole(role);
 
   const handleSignOut = async () => {
     try {
@@ -143,65 +30,92 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       console.error("Sign out failed:", err);
       toast.error("Could not sign out. Please try again.");
     }
-    // Navigate regardless — local state is already cleared by signOut.
     try {
       await navigate({ to: "/auth", replace: true });
     } catch {
-      // Hard fallback if SPA navigation is blocked.
       if (typeof window !== "undefined") window.location.assign("/auth");
     }
   };
 
-  const toggleGroup = (label: string) => {
-    setCollapsed((prev) => ({ ...prev, [label]: !prev[label] }));
+  const isActive = (href: string) => {
+    const path = location.pathname;
+    if (path === href) return true;
+    // Treat nested routes as active (e.g. /app/manufacturing/$moId).
+    return href !== "/app/dashboard" && path.startsWith(href + "/");
   };
 
-  const isActive = (href: string) => location.pathname === href;
-
-  const visibleGroups = navGroups
-    .map((g) => ({
-      ...g,
-      items: g.items.filter((i) => {
-        if (!isRouteVisibleToRole(i.href, role)) return false;
-        const flag = ROUTE_FLAGS[i.href];
-        if (flag && !isEnabled(flag)) return false;
-        return true;
-      }),
-    }))
-    .filter((g) => g.items.length > 0);
-
   return (
-    <nav data-tour="sidebar" className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      <div className="flex flex-col gap-4 border-b border-sidebar-border px-5 py-5">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/15">
-            <Logo size={28} showWordmark={false} />
-          </div>
-          <div className="flex flex-col leading-tight">
-            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
-              YOYO
-            </span>
-            <span className="text-[15px] font-semibold text-foreground">
-              ERP Platform
-            </span>
-          </div>
+    <nav
+      data-tour="sidebar"
+      className="flex h-full w-full flex-col bg-sidebar text-sidebar-foreground"
+    >
+      {/* Logo / app name */}
+      <div className="flex items-center gap-3 border-b border-sidebar-border/60 px-5 py-5">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15">
+          <Logo size={26} showWordmark={false} />
         </div>
+        <div className="flex flex-col leading-tight">
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-sidebar-foreground/60">
+            YOYO
+          </span>
+          <span className="text-[15px] font-semibold text-sidebar-foreground">
+            ERP Platform
+          </span>
+        </div>
+      </div>
 
-        <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/40 px-2 py-2">
+      {/* Nav links */}
+      <div className="flex-1 overflow-y-auto px-3 py-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <ul className="space-y-1">
+          {items.map((item) => {
+            const active = isActive(item.href);
+            return (
+              <li key={item.href}>
+                <Link
+                  to={item.href}
+                  preload="intent"
+                  onClick={onNavigate}
+                  className={cn(
+                    "relative flex items-center gap-3 rounded-lg pl-4 pr-3 py-2.5 text-[13.5px] font-medium transition-colors",
+                    active
+                      ? "bg-white/10 text-white"
+                      : "text-sidebar-foreground/80 hover:bg-white/5 hover:text-white",
+                  )}
+                >
+                  {/* Active left border */}
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full transition-opacity",
+                      active ? "bg-accent opacity-100" : "opacity-0",
+                    )}
+                  />
+                  <item.icon className="h-[18px] w-[18px] shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      {/* User block at bottom */}
+      <div className="border-t border-sidebar-border/60 px-3 py-3">
+        <div className="flex items-center gap-2 rounded-xl bg-white/5 px-2 py-2">
           <Link
             to="/app/profile"
             onClick={onNavigate}
-            className="group flex min-w-0 flex-1 items-center gap-3 rounded-lg px-1 py-0.5 transition-colors hover:bg-background"
+            className="group flex min-w-0 flex-1 items-center gap-3 rounded-lg px-1 py-0.5 transition-colors hover:bg-white/5"
             aria-label="Open profile"
           >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-semibold text-primary-foreground shadow-sm">
               {initial}
             </div>
             <div className="flex min-w-0 flex-1 flex-col leading-tight">
-              <span className="truncate text-[13px] font-semibold text-foreground">
+              <span className="truncate text-[13px] font-semibold text-sidebar-foreground">
                 {displayName}
               </span>
-              <span className="truncate text-[11px] text-muted-foreground">
+              <span className="truncate text-[10.5px] font-semibold uppercase tracking-wide text-accent">
                 {roleLabel}
               </span>
             </div>
@@ -211,63 +125,13 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             onClick={handleSignOut}
             aria-label="Sign out"
             title="Sign out"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-white/10 hover:text-white"
           >
             <LogOut className="h-4 w-4" />
           </button>
         </div>
+        <SidebarRoleSimulator />
       </div>
-
-      <div className="flex-1 overflow-y-auto px-3 py-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-        {visibleGroups.map((group, idx) => {
-          const isCollapsed = collapsed[group.label] ?? false;
-          return (
-            <div key={group.label}>
-              {idx > 0 && <div className="mx-3 my-3 border-t border-sidebar-border" />}
-              <button
-                type="button"
-                onClick={() => toggleGroup(group.label)}
-                className="flex w-full items-center gap-1 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
-              >
-                <ChevronRight className={cn("h-3 w-3 transition-transform duration-150", !isCollapsed && "rotate-90")} />
-                {group.label}
-              </button>
-
-              {!isCollapsed && (
-                <div className="mt-1 space-y-1">
-                  {group.items.map((item) => (
-                    <Link
-                      key={item.href}
-                      to={item.href}
-                      preload="intent"
-                      onClick={onNavigate}
-                      className={cn(
-                        "group/nav relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13.5px] font-medium transition-all",
-                        isActive(item.href)
-                          ? "bg-primary text-primary-foreground shadow-[0_4px_12px_-2px_oklch(0.55_0.20_261/0.35)]"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground",
-                      )}
-                    >
-                      <span className={cn(
-                        "flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors",
-                        isActive(item.href)
-                          ? "bg-white/15 text-primary-foreground"
-                          : "bg-muted/60 text-muted-foreground group-hover/nav:bg-primary/10 group-hover/nav:text-primary",
-                      )}>
-                        <item.icon className="h-4 w-4" />
-                      </span>
-                      <span className="truncate">{item.label}</span>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      <SidebarRoleSimulator />
-
     </nav>
   );
 }
