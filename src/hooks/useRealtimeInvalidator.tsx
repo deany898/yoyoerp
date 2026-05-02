@@ -49,9 +49,8 @@ export function useRealtimeInvalidator(enabled: boolean): void {
 
     for (const table of Object.keys(TABLE_TO_KEYS)) {
       channel.on(
-        // @ts-expect-error - postgres_changes is valid but typed loosely
-        "postgres_changes",
-        { event: "*", schema: "public", table },
+        "postgres_changes" as never,
+        { event: "*", schema: "public", table } as never,
         () => {
           const keys = TABLE_TO_KEYS[table];
           if (!keys) return;
