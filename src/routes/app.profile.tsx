@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { Lock, Loader2, ShieldCheck, Mail, Phone, AtSign, User as UserIcon } from "lucide-react";
+import { toast } from "sonner";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -47,8 +48,9 @@ function ProfilePage() {
     mobile: "",
   });
 
-  const [pwd, setPwd] = useState({ next: "", confirm: "" });
-  const [pwdSaving, setPwdSaving] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -100,19 +102,32 @@ function ProfilePage() {
     notify.success("Profile updated");
   }
 
-  async function changePassword(e: FormEvent) {
-    e.preventDefault();
-    if (pwd.next.length < 8) { notify.warning("Password must be at least 8 characters"); return; }
-    if (pwd.next !== pwd.confirm) { notify.warning("Passwords do not match"); return; }
-    setPwdSaving(true);
-    const { error } = await supabase.auth.updateUser({ password: pwd.next });
-    setPwdSaving(false);
-    if (error) {
-      notify.error(friendlyAuthError(error.message));
-      return;
+  const handleChangePassword = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters')
+      return
     }
-    setPwd({ next: "", confirm: "" });
-    notify.success("Password changed");
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match · पासवर्ड मेल नहीं खाता')
+      return
+    }
+
+    setChangingPassword(true)
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    })
+
+    setChangingPassword(false)
+
+    if (error) {
+      toast.error('Failed: ' + error.message)
+      return
+    }
+
+    toast.success('Password updated · पासवर्ड बदल गया')
+    setNewPassword('')
+    setConfirmPassword('')
   }
 
   if (loading) {
@@ -206,14 +221,20 @@ function ProfilePage() {
       <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
         <h2 className="text-sm font-semibold">Security</h2>
         <Separator className="my-4" />
-        <form onSubmit={changePassword} className="space-y-4">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void handleChangePassword();
+          }}
+          className="space-y-4"
+        >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>New password</Label>
               <Input
                 type="password"
-                value={pwd.next}
-                onChange={(e) => setPwd((p) => ({ ...p, next: e.target.value }))}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
                 autoComplete="new-password"
               />
             </div>
@@ -221,15 +242,15 @@ function ProfilePage() {
               <Label>Confirm password</Label>
               <Input
                 type="password"
-                value={pwd.confirm}
-                onChange={(e) => setPwd((p) => ({ ...p, confirm: e.target.value }))}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 autoComplete="new-password"
               />
             </div>
           </div>
           <div className="flex justify-end">
-            <Button type="submit" variant="outline" disabled={pwdSaving}>
-              {pwdSaving ? "Updating…" : "Change password"}
+            <Button type="submit" variant="outline" disabled={changingPassword}>
+              {changingPassword ? "Updating…" : "Change password"}
             </Button>
           </div>
         </form>
