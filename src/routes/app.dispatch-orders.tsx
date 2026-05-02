@@ -16,6 +16,7 @@ import { ExportButton } from "@/components/shared/ExportButton";
 import { useAppConfig } from "@/contexts/AppConfigContext";
 import { FLAGS } from "@/lib/feature-flags";
 import { postDispatchDeductions } from "@/lib/dispatch-stock";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
@@ -87,6 +88,7 @@ interface DORow {
 }
 
 function DispatchOrdersPage() {
+  const { t } = useLanguage();
   const { products } = useProducts();
   const { warehouses } = useWarehouses();
   const { role } = useRole();
@@ -276,14 +278,26 @@ function DispatchOrdersPage() {
     setDeleting(null); void refresh();
   }
 
+  const STATUS_LABEL_KEY: Record<DispatchStatus, string> = {
+    draft: "do_status_draft",
+    pending_approval: "do_status_pending_approval",
+    approved: "do_status_approved",
+    ready_for_dispatch: "do_status_ready_for_dispatch",
+    dispatched: "do_status_dispatched",
+    delivered: "do_status_delivered",
+    cancelled: "do_status_cancelled",
+  };
+
   return (
     <div className="mx-auto max-w-[1400px] space-y-6">
       <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Sales · Outbound</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-3xl">Dispatch orders</h1>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t("do_subtitle")}</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-3xl">{t("do_title")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {loading ? "Loading…" : `${orders.length} order${orders.length === 1 ? "" : "s"}`}
+            {loading
+              ? t("do_loading")
+              : `${orders.length} ${orders.length === 1 ? t("do_count_one") : t("do_count_other")}`}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -292,34 +306,34 @@ function DispatchOrdersPage() {
             capability="dispatch.export"
             rows={orders as unknown as Record<string, unknown>[]}
             columns={[
-              { key: "do_number", label: "DO #" },
-              { key: "customer", label: "Customer", format: (v) => (v as { name?: string } | null)?.name ?? "" },
-              { key: "status", label: "Status" },
-              { key: "order_date", label: "Order date" },
-              { key: "expected_dispatch_date", label: "Expected dispatch" },
-              { key: "grand_total", label: "Total" },
+              { key: "do_number", label: t("do_col_number") },
+              { key: "customer", label: t("do_col_customer"), format: (v) => (v as { name?: string } | null)?.name ?? "" },
+              { key: "status", label: t("do_col_status") },
+              { key: "order_date", label: t("do_col_order_date") },
+              { key: "expected_dispatch_date", label: t("do_col_expected") },
+              { key: "grand_total", label: t("qo_total") },
             ]}
           />
-          {canEdit && <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> New dispatch order</Button>}
+          {canEdit && <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> {t("do_new")}</Button>}
         </div>
       </header>
 
       <div className="rounded-xl border border-border bg-card overflow-x-auto">
         {orders.length === 0 ? (
-          <EmptyState icon={Send} title="No dispatch orders yet"
-            description="Create a customer dispatch order to begin fulfillment."
-            actionLabel={canEdit ? "New dispatch order" : undefined}
+          <EmptyState icon={Send} title={t("do_empty_title")}
+            description={t("do_empty_desc")}
+            actionLabel={canEdit ? t("do_new") : undefined}
             onAction={canEdit ? openCreate : undefined} />
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>DO #</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Order date</TableHead>
-                <TableHead>Expected dispatch</TableHead>
-                <TableHead className="text-right font-mono">Total ₹</TableHead>
+                <TableHead>{t("do_col_number")}</TableHead>
+                <TableHead>{t("do_col_customer")}</TableHead>
+                <TableHead>{t("do_col_status")}</TableHead>
+                <TableHead>{t("do_col_order_date")}</TableHead>
+                <TableHead>{t("do_col_expected")}</TableHead>
+                <TableHead className="text-right font-mono">{t("do_col_total")}</TableHead>
                 <TableHead className="w-32"></TableHead>
               </TableRow>
             </TableHeader>
@@ -328,7 +342,7 @@ function DispatchOrdersPage() {
                 <TableRow key={o.id}>
                   <TableCell className="font-mono text-xs">{o.do_number}</TableCell>
                   <TableCell className="font-medium">{o.customer?.name ?? "—"}</TableCell>
-                  <TableCell><Badge variant="outline" className={STATUS_TONE[o.status]}>{o.status.replace(/_/g, " ")}</Badge></TableCell>
+                  <TableCell><Badge variant="outline" className={STATUS_TONE[o.status]}>{t(STATUS_LABEL_KEY[o.status])}</Badge></TableCell>
                   <TableCell className="text-sm text-muted-foreground">{o.order_date}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{o.expected_dispatch_date ?? "—"}</TableCell>
                   <TableCell className="text-right font-mono">{Number(o.grand_total).toLocaleString("en-IN")}</TableCell>
@@ -354,26 +368,26 @@ function DispatchOrdersPage() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent className="w-full sm:max-w-3xl overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>{draft?.id ? "Edit dispatch order" : "New dispatch order"}</SheetTitle>
-            <SheetDescription>Customer, line items, logistics, and totals.</SheetDescription>
+            <SheetTitle>{draft?.id ? t("do_edit_title") : t("do_create_title")}</SheetTitle>
+            <SheetDescription>{t("do_sheet_desc")}</SheetDescription>
           </SheetHeader>
           {draft && (
             <div className="mt-6 space-y-5">
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>DO number</Label><Input value={draft.do_number || "Auto-generated on save"} disabled className="bg-muted/40" /></div>
+                <div><Label>{t("do_number_label")}</Label><Input value={draft.do_number || t("do_number_auto")} disabled className="bg-muted/40" /></div>
                 <div>
-                  <Label>Status</Label>
+                  <Label>{t("do_col_status")}</Label>
                   <SmartSelect
-                    options={(["draft","pending_approval","approved","ready_for_dispatch","dispatched","delivered","cancelled"] as DispatchStatus[]).map((s) => ({ value: s, label: s.replace(/_/g, " ") }))}
+                    options={(["draft","pending_approval","approved","ready_for_dispatch","dispatched","delivered","cancelled"] as DispatchStatus[]).map((s) => ({ value: s, label: t(STATUS_LABEL_KEY[s]) }))}
                     value={draft.status}
                     onChange={(v) => v && patchDraft({ status: v as DispatchStatus })}
-                    searchPlaceholder="Search status…"
+                    searchPlaceholder={t("do_search_status")}
                   />
                 </div>
               </div>
 
               <div>
-                <Label>Customer</Label>
+                <Label>{t("do_col_customer")}</Label>
                 <SmartSelect
                   options={customerOptions}
                   value={draft.customer_id || null}
@@ -384,41 +398,41 @@ function DispatchOrdersPage() {
                       delivery_address: draft.delivery_address || (c?.delivery_address ?? ""),
                     });
                   }}
-                  placeholder="Search customer…"
-                  searchPlaceholder="Type customer name or code"
-                  emptyText="No customers found. Add via Customers page."
+                  placeholder={t("do_search_customer")}
+                  searchPlaceholder={t("do_customer_search_ph")}
+                  emptyText={t("do_no_customers")}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>Warehouse</Label>
+                  <Label>{t("mfg_warehouse")}</Label>
                   <SmartSelect
                     options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
                     value={draft.warehouse_id || null}
                     onChange={(v) => patchDraft({ warehouse_id: v ?? "" })}
-                    placeholder="Pick warehouse"
-                    searchPlaceholder="Search warehouse…"
+                    placeholder={t("do_pick_warehouse")}
+                    searchPlaceholder={t("do_search_warehouse")}
                   />
                 </div>
-                <div><Label>Expected dispatch date</Label><Input type="date" value={draft.expected_dispatch_date} onChange={(e) => patchDraft({ expected_dispatch_date: e.target.value })} /></div>
+                <div><Label>{t("do_expected_date")}</Label><Input type="date" value={draft.expected_dispatch_date} onChange={(e) => patchDraft({ expected_dispatch_date: e.target.value })} /></div>
               </div>
 
-              <div><Label>Delivery address</Label><Textarea rows={2} value={draft.delivery_address} onChange={(e) => patchDraft({ delivery_address: e.target.value })} /></div>
+              <div><Label>{t("do_delivery_address")}</Label><Textarea rows={2} value={draft.delivery_address} onChange={(e) => patchDraft({ delivery_address: e.target.value })} /></div>
 
               <div className="grid grid-cols-3 gap-3">
-                <div><Label>Transporter</Label><Input value={draft.transporter} onChange={(e) => patchDraft({ transporter: e.target.value })} /></div>
-                <div><Label>Vehicle no.</Label><Input value={draft.vehicle_number} onChange={(e) => patchDraft({ vehicle_number: e.target.value })} /></div>
-                <div><Label>LR number</Label><Input value={draft.lr_number} onChange={(e) => patchDraft({ lr_number: e.target.value })} /></div>
+                <div><Label>{t("do_transporter")}</Label><Input value={draft.transporter} onChange={(e) => patchDraft({ transporter: e.target.value })} /></div>
+                <div><Label>{t("do_vehicle_no")}</Label><Input value={draft.vehicle_number} onChange={(e) => patchDraft({ vehicle_number: e.target.value })} /></div>
+                <div><Label>{t("do_lr_number")}</Label><Input value={draft.lr_number} onChange={(e) => patchDraft({ lr_number: e.target.value })} /></div>
               </div>
 
               <div className="space-y-2 pt-2">
                 <div className="flex items-center justify-between">
-                  <Label>Line items</Label>
-                  <Button size="sm" variant="outline" onClick={addLine}><Plus className="mr-1 h-3.5 w-3.5" /> Add line</Button>
+                  <Label>{t("do_line_items")}</Label>
+                  <Button size="sm" variant="outline" onClick={addLine}><Plus className="mr-1 h-3.5 w-3.5" /> {t("do_add_line")}</Button>
                 </div>
                 {draft.lines.length === 0 ? (
-                  <p className="rounded border border-dashed border-border py-4 text-center text-xs text-muted-foreground">No lines yet</p>
+                  <p className="rounded border border-dashed border-border py-4 text-center text-xs text-muted-foreground">{t("do_no_lines")}</p>
                 ) : (
                   <div className="space-y-2">
                     {draft.lines.map((l, i) => (
@@ -430,7 +444,7 @@ function DispatchOrdersPage() {
                             const opt = variantOptions.find((o) => o.value === v);
                             updateLine(i, { variant_id: v ?? "", unit_price: l.unit_price || (opt?.cost ?? 0) });
                           }}
-                          placeholder="Search product…"
+                          placeholder={t("do_search_product")}
                         />
                         <div
                           className="grid gap-2"
@@ -438,13 +452,13 @@ function DispatchOrdersPage() {
                             gridTemplateColumns: `1fr 1fr ${showDiscount ? "1fr " : ""}${showTax ? "1fr " : ""}36px`,
                           }}
                         >
-                          <Input type="number" min={0} step="0.01" placeholder="Qty" value={l.qty} onChange={(e) => updateLine(i, { qty: Number(e.target.value) })} />
-                          <Input type="number" min={0} step="0.01" placeholder="Unit price" value={l.unit_price} onChange={(e) => updateLine(i, { unit_price: Number(e.target.value) })} />
+                          <Input type="number" inputMode="decimal" min={0} step="0.01" placeholder={t("do_qty")} value={l.qty} onChange={(e) => updateLine(i, { qty: Number(e.target.value) })} />
+                          <Input type="number" inputMode="decimal" min={0} step="0.01" placeholder={t("do_unit_price")} value={l.unit_price} onChange={(e) => updateLine(i, { unit_price: Number(e.target.value) })} />
                           {showDiscount && (
-                            <Input type="number" min={0} step="0.01" placeholder="Discount" value={l.discount_value} onChange={(e) => updateLine(i, { discount_value: Number(e.target.value) })} />
+                            <Input type="number" inputMode="decimal" min={0} step="0.01" placeholder={t("do_discount")} value={l.discount_value} onChange={(e) => updateLine(i, { discount_value: Number(e.target.value) })} />
                           )}
                           {showTax && (
-                            <Input type="number" min={0} step="0.01" placeholder="Tax %" value={l.tax_rate} onChange={(e) => updateLine(i, { tax_rate: Number(e.target.value) })} />
+                            <Input type="number" inputMode="decimal" min={0} step="0.01" placeholder={t("do_tax_pct")} value={l.tax_rate} onChange={(e) => updateLine(i, { tax_rate: Number(e.target.value) })} />
                           )}
                           <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive" onClick={() => removeLine(i)}><X className="h-3.5 w-3.5" /></Button>
                         </div>
@@ -456,25 +470,25 @@ function DispatchOrdersPage() {
 
               {showShipping && (
                 <div className="grid grid-cols-3 gap-3">
-                  <div><Label>Freight</Label><Input type="number" min={0} step="0.01" value={draft.freight_cost} onChange={(e) => patchDraft({ freight_cost: Number(e.target.value) })} /></div>
-                  <div><Label>Packing</Label><Input type="number" min={0} step="0.01" value={draft.packing_cost} onChange={(e) => patchDraft({ packing_cost: Number(e.target.value) })} /></div>
-                  <div><Label>Other charges</Label><Input type="number" min={0} step="0.01" value={draft.other_charges} onChange={(e) => patchDraft({ other_charges: Number(e.target.value) })} /></div>
+                  <div><Label>{t("do_freight")}</Label><Input type="number" inputMode="decimal" min={0} step="0.01" value={draft.freight_cost} onChange={(e) => patchDraft({ freight_cost: Number(e.target.value) })} /></div>
+                  <div><Label>{t("do_packing")}</Label><Input type="number" inputMode="decimal" min={0} step="0.01" value={draft.packing_cost} onChange={(e) => patchDraft({ packing_cost: Number(e.target.value) })} /></div>
+                  <div><Label>{t("do_other_charges")}</Label><Input type="number" inputMode="decimal" min={0} step="0.01" value={draft.other_charges} onChange={(e) => patchDraft({ other_charges: Number(e.target.value) })} /></div>
                 </div>
               )}
 
               <div className="rounded-md border border-border bg-muted/40 p-3 text-sm space-y-1 font-mono">
-                <div className="flex justify-between"><span>Subtotal</span><span>₹{totals.subtotal.toFixed(2)}</span></div>
-                {showDiscount && <div className="flex justify-between"><span>Discount</span><span>-₹{totals.discount.toFixed(2)}</span></div>}
-                {showTax && <div className="flex justify-between"><span>Tax</span><span>₹{totals.tax.toFixed(2)}</span></div>}
-                {showShipping && <div className="flex justify-between"><span>Freight + packing + other</span><span>₹{(draft.freight_cost + draft.packing_cost + draft.other_charges).toFixed(2)}</span></div>}
-                <div className="flex justify-between border-t border-border pt-1 font-semibold"><span>Grand total</span><span>₹{totals.grand.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span>{t("do_subtotal")}</span><span>₹{totals.subtotal.toFixed(2)}</span></div>
+                {showDiscount && <div className="flex justify-between"><span>{t("do_discount")}</span><span>-₹{totals.discount.toFixed(2)}</span></div>}
+                {showTax && <div className="flex justify-between"><span>{t("do_tax")}</span><span>₹{totals.tax.toFixed(2)}</span></div>}
+                {showShipping && <div className="flex justify-between"><span>{t("do_freight_combo")}</span><span>₹{(draft.freight_cost + draft.packing_cost + draft.other_charges).toFixed(2)}</span></div>}
+                <div className="flex justify-between border-t border-border pt-1 font-semibold"><span>{t("do_grand_total")}</span><span>₹{totals.grand.toFixed(2)}</span></div>
               </div>
 
-              <div><Label>Notes</Label><Textarea rows={2} value={draft.notes} onChange={(e) => patchDraft({ notes: e.target.value })} /></div>
+              <div><Label>{t("do_notes")}</Label><Textarea rows={2} value={draft.notes} onChange={(e) => patchDraft({ notes: e.target.value })} /></div>
 
               <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save dispatch order"}</Button>
+                <Button variant="outline" onClick={() => setOpen(false)}>{t("btn_cancel")}</Button>
+                <Button onClick={save} disabled={saving}>{saving ? t("do_saving") : t("do_save")}</Button>
               </div>
             </div>
           )}
@@ -484,12 +498,12 @@ function DispatchOrdersPage() {
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete {deleting?.do_number}?</AlertDialogTitle>
-            <AlertDialogDescription>This deletes the order and all line items.</AlertDialogDescription>
+            <AlertDialogTitle>{t("btn_delete")} {deleting?.do_number}?</AlertDialogTitle>
+            <AlertDialogDescription>{t("do_delete_desc")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={handleDelete}>Delete</AlertDialogAction>
+            <AlertDialogCancel>{t("btn_cancel")}</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={handleDelete}>{t("btn_delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
