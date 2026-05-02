@@ -2,7 +2,6 @@ import { LogOut } from "lucide-react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/hooks/useRole";
-import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { SidebarRoleSimulator } from "@/components/layout/SidebarRoleSimulator";
@@ -51,10 +50,15 @@ export function Sidebar({ onNavigate }: SidebarProps) {
     >
       {/* Logo / app name */}
       <div className="flex items-center gap-3 border-b border-sidebar-border/60 px-5 py-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white">
-          <Logo size={32} showWordmark={false} />
-        </div>
-        <span className="text-[18px] font-semibold tracking-tight text-sidebar-foreground">
+        <img
+          src="/LOGO.png"
+          alt="Yoyo"
+          style={{ width: 36, height: 36, borderRadius: 8, objectFit: "contain" }}
+        />
+        <span
+          className="text-white"
+          style={{ fontWeight: 700, fontSize: 18, letterSpacing: "-0.01em" }}
+        >
           Yoyo
         </span>
       </div>
@@ -73,18 +77,10 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                   className={cn(
                     "relative flex items-center gap-3 rounded-lg pl-4 pr-3 py-2.5 text-[13.5px] font-medium transition-colors",
                     active
-                      ? "bg-[#1E3A6E] text-white"
-                      : "text-[#94A3B8] hover:bg-white/5 hover:text-white",
+                      ? "bg-[#1E3A6E] text-white border-l-[3px] border-[#3B82F6]"
+                      : "text-[#94A3B8] hover:bg-[#1E293B] hover:text-white border-l-[3px] border-transparent",
                   )}
                 >
-                  {/* Active left border */}
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full transition-opacity",
-                      active ? "bg-accent opacity-100" : "opacity-0",
-                    )}
-                  />
                   <item.icon className="h-[18px] w-[18px] shrink-0" />
                   <span className="truncate">{item.label}</span>
                 </Link>
