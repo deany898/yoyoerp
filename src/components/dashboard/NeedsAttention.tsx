@@ -2,10 +2,12 @@ import { Link } from "@tanstack/react-router";
 import { useItems, usePurchaseOrders } from "@/hooks/useInventoryData";
 import { StatusBadge } from "@/components/StatusBadge";
 import { CheckCircle2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function NeedsAttention() {
   const { data: items } = useItems();
   const { data: purchaseOrders } = usePurchaseOrders();
+  const { t } = useLanguage();
 
   const lowStockItems = items.filter((i) => i.currentStock > 0 && i.currentStock <= i.reorderPoint);
   const outOfStockItems = items.filter((i) => i.currentStock === 0);
@@ -19,10 +21,10 @@ export function NeedsAttention() {
   if (!hasIssues) {
     return (
       <div className="h-full rounded-xl border border-border bg-card p-6 shadow-xs">
-        <h2 className="mb-4 text-base font-semibold">Needs attention</h2>
+        <h2 className="mb-4 text-base font-semibold">{t("dash_needs_attention")}</h2>
         <div className="flex flex-col items-center gap-2 py-6 text-center">
           <CheckCircle2 className="h-8 w-8 text-stock-healthy" />
-          <p className="text-sm text-muted-foreground">All clear — inventory is healthy</p>
+          <p className="text-sm text-muted-foreground">{t("dash_inventory_healthy")}</p>
         </div>
       </div>
     );
@@ -32,16 +34,16 @@ export function NeedsAttention() {
 
   return (
     <div className="h-full rounded-xl border border-border bg-card p-6 shadow-xs">
-      <h2 className="mb-4 text-base font-semibold">Needs attention</h2>
+      <h2 className="mb-4 text-base font-semibold">{t("dash_needs_attention")}</h2>
 
       {/* Low stock items */}
       {displayLow.length > 0 && (
         <div className="mb-4">
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Low stock</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("dash_low_stock")}</p>
             {lowStockItems.length > 5 && (
               <Link to="/app/products" className="text-xs font-medium text-primary hover:underline">
-                View all ({lowStockItems.length})
+                {t("dash_view_all")} ({lowStockItems.length})
               </Link>
             )}
           </div>
@@ -64,7 +66,7 @@ export function NeedsAttention() {
       {outOfStockItems.length > 0 && (
         <div className="mb-4">
           <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Out of stock ({outOfStockItems.length})
+            {t("dash_out_of_stock")} ({outOfStockItems.length})
           </p>
           <div className="space-y-2">
             {outOfStockItems.slice(0, 3).map((item) => (
@@ -81,15 +83,15 @@ export function NeedsAttention() {
       {/* Pending + Overdue POs */}
       {(pendingPOs.length > 0 || overduePOs.length > 0) && (
         <div>
-          <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">Purchase orders</p>
+          <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("dash_purchase_orders")}</p>
           <div className="flex gap-4 text-sm">
             {pendingPOs.length > 0 && (
               <Link to="/app/purchase-orders" className="text-primary hover:underline">
-                {pendingPOs.length} pending
+                {pendingPOs.length} {t("dash_pending")}
               </Link>
             )}
             {overduePOs.length > 0 && (
-              <span className="font-medium text-stock-out">{overduePOs.length} overdue</span>
+              <span className="font-medium text-stock-out">{overduePOs.length} {t("dash_overdue")}</span>
             )}
           </div>
         </div>

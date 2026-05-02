@@ -7,9 +7,11 @@ import { useStockSummary } from "@/hooks/useInventoryData";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/hooks/useAuth";
 import { useMoStats } from "@/hooks/useMoStats";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function AdminDashboard() {
   const { displayName, user } = useAuth();
+  const { t } = useLanguage();
   const name = (displayName ?? user?.email?.split("@")[0] ?? "जी").split(" ")[0];
   const { data: summary } = useStockSummary();
   const { data: notifications } = useNotifications();
@@ -24,40 +26,40 @@ export function AdminDashboard() {
         className="rounded-2xl px-5 py-5 text-white"
         style={{ background: "linear-gradient(135deg, #0D1B2A 0%, #1E3A8A 100%)" }}
       >
-        <div className="text-[13px] font-medium text-white/70">Admin overview</div>
+        <div className="text-[13px] font-medium text-white/70">{t("dash_admin_overview")}</div>
         <h1 className="mt-1 text-[22px] font-semibold leading-tight">
-          नमस्ते {name} जी 👋
+          {t("dash_hello")} {name} 👋
         </h1>
-        <p className="mt-1 text-[12px] text-white/70">Here's your factory at a glance · आज की झलक</p>
+        <p className="mt-1 text-[12px] text-white/70">{t("dash_factory_glance")}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <GradientMetricCard
           variant="blue"
-          label="Units today"
+          label={t("dash_units_today")}
           value={moStats.unitsToday}
-          sublabel="Produced today · आज"
+          sublabel={t("dash_produced_today")}
           icon={IndianRupee}
         />
         <GradientMetricCard
           variant="orange"
-          label="Active MOs"
+          label={t("dash_active_mos")}
           value={moStats.activeMOs}
-          sublabel="In production"
+          sublabel={t("dash_in_production")}
           icon={Factory}
         />
         <GradientMetricCard
           variant="teal"
-          label="Units in stock"
+          label={t("dash_units_in_stock")}
           value={summary.inStock}
-          sublabel="Across warehouses"
+          sublabel={t("dash_across_warehouses")}
           icon={Boxes}
         />
         <GradientMetricCard
           variant="amber"
-          label="Pending approvals"
+          label={t("dash_pending_approvals")}
           value={pendingApprovals}
-          sublabel="Needs your action"
+          sublabel={t("dash_needs_action")}
           icon={ClockAlert}
         />
       </div>
@@ -67,12 +69,12 @@ export function AdminDashboard() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr]">
         <OperationsOverviewChart movements={[]} />
         <div className="rounded-2xl bg-card p-4 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-          <h3 className="text-[13px] font-semibold">Quick actions</h3>
+          <h3 className="text-[13px] font-semibold">{t("dash_quick_actions")}</h3>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <QuickLink to="/app/manufacturing" label="New MO" />
-            <QuickLink to="/app/dispatch-orders" label="Dispatch" />
-            <QuickLink to="/app/products" label="Products" />
-            <QuickLink to="/app/settings/users" label="Users" />
+            <QuickLink to="/app/manufacturing" label={t("dash_new_mo")} />
+            <QuickLink to="/app/dispatch-orders" label={t("dash_dispatch")} />
+            <QuickLink to="/app/products" label={t("dash_products")} />
+            <QuickLink to="/app/settings/users" label={t("dash_users")} />
           </div>
         </div>
       </div>

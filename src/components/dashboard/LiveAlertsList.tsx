@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
 import { useNotifications } from "@/hooks/useNotifications";
 import { getNotificationIcon } from "@/components/notifications/notification-icons";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const ACCENT: Record<string, string> = {
   low_stock: "#D97706",
@@ -15,12 +16,13 @@ const ACCENT: Record<string, string> = {
 
 export function LiveAlertsList({ limit = 3 }: { limit?: number }) {
   const { data: notifications } = useNotifications();
+  const { t } = useLanguage();
   const items = notifications.slice(0, limit);
 
   if (items.length === 0) {
     return (
       <div className="rounded-2xl bg-card p-5 text-center text-sm text-muted-foreground shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-        All clear · कोई अलर्ट नहीं
+        {t("dash_all_clear")}
       </div>
     );
   }
@@ -28,9 +30,9 @@ export function LiveAlertsList({ limit = 3 }: { limit?: number }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between px-1">
-        <h3 className="text-[13px] font-semibold text-foreground">Live alerts</h3>
+        <h3 className="text-[13px] font-semibold text-foreground">{t("dash_live_alerts")}</h3>
         <Link to="/app/dashboard" className="text-[11px] font-medium text-primary hover:underline">
-          View all
+          {t("dash_view_all")}
         </Link>
       </div>
       {items.map((n) => {

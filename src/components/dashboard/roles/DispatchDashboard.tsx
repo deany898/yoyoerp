@@ -1,9 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { Truck, CheckCircle2, MapPin } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function DispatchDashboard() {
   const { displayName, user } = useAuth();
+  const { t } = useLanguage();
   const name = (displayName ?? user?.email?.split("@")[0] ?? "Driver").split(" ")[0];
   const stops = 0;
 
@@ -14,27 +16,27 @@ export function DispatchDashboard() {
         style={{ background: "linear-gradient(135deg, #0D1B2A 0%, #1E293B 100%)" }}
       >
         <div>
-          <div className="text-[12px] text-white/60">Driver</div>
-          <h1 className="text-[20px] font-semibold">नमस्ते {name} जी</h1>
+          <div className="text-[12px] text-white/60">{t("dash_driver")}</div>
+          <h1 className="text-[20px] font-semibold">{t("dash_hello")} {name}</h1>
         </div>
         <div className="flex flex-col items-end">
           <span className="rounded-full bg-[#F97316] px-3 py-1 font-mono text-[13px] font-bold text-white">
             {stops}
           </span>
-          <span className="mt-1 text-[10px] text-white/60">stops today</span>
+          <span className="mt-1 text-[10px] text-white/60">{t("dash_stops_today")}</span>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <DispatchMetric label="Today's deliveries" value={stops} accent="#F97316" icon={Truck} />
-        <DispatchMetric label="Delivered" value={0} accent="#10B981" icon={CheckCircle2} />
+        <DispatchMetric label={t("disp_todays_deliveries")} value={stops} accent="#F97316" icon={Truck} />
+        <DispatchMetric label={t("nav_delivered")} value={0} accent="#10B981" icon={CheckCircle2} />
       </div>
 
       <section>
-        <h2 className="mb-2 px-1 text-[13px] font-semibold">Today's route</h2>
+        <h2 className="mb-2 px-1 text-[13px] font-semibold">{t("dash_todays_route")}</h2>
         <div className="space-y-3">
           <div className="rounded-2xl bg-card p-5 text-center text-sm text-muted-foreground shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-            <Link to="/app/dispatch-orders" className="text-primary hover:underline">Open today's route →</Link>
+            <Link to="/app/dispatch-orders" className="text-primary hover:underline">{t("dash_open_route")} →</Link>
           </div>
         </div>
       </section>
