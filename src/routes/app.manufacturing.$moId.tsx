@@ -15,6 +15,7 @@ import { useConfirm } from "@/components/forms/ConfirmDialog";
 import { useAppConfig } from "@/contexts/AppConfigContext";
 import { FLAGS } from "@/lib/feature-flags";
 import { getMoDetail } from "@/server/manufacturing.functions";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export const Route = createFileRoute("/app/manufacturing/$moId")({
   head: () => ({ meta: [{ title: "Production log · Yoyo" }] }),
@@ -48,6 +49,7 @@ const STATUS_TONE: Record<MOStatus, string> = {
 function MoDetailPage() {
   const { moId } = Route.useParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { isEnabled } = useAppConfig();
   const showMaterialIssues = isEnabled(FLAGS.manufacturing.materialIssues, true);
   const showMoulds = isEnabled(FLAGS.manufacturing.moulds, true);
@@ -102,9 +104,9 @@ function MoDetailPage() {
 
   const tryCancel = async () => {
     const ok = await confirm({
-      title: "Cancel this production log?",
-      description: "This will mark the order as cancelled. Material issues and outputs already posted are kept for audit.",
-      confirmLabel: "Cancel order",
+      title: t("mfg_cancel_title"),
+      description: t("mfg_cancel_desc"),
+      confirmLabel: t("mfg_cancel_order"),
       destructive: true,
     });
     if (ok) setStatus("cancelled");
@@ -113,8 +115,8 @@ function MoDetailPage() {
   const totalIssued = (variantId: string) =>
     issues.filter((i) => i.variant_id === variantId).reduce((s, i) => s + Number(i.qty), 0);
 
-  if (loading) return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
-  if (!mo) return <div className="p-6 text-sm text-muted-foreground">Not found.</div>;
+  if (loading) return <div className="p-6 text-sm text-muted-foreground">{t("mfg_loading")}</div>;
+  if (!mo) return <div className="p-6 text-sm text-muted-foreground">{t("mfg_log_not_found")}</div>;
 
   const planned = Number(mo.qty_planned);
   const produced = Number(mo.qty_produced);
@@ -123,27 +125,27 @@ function MoDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-2 text-sm">
         <Link to="/app/work-logs" className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Back to work logs
+          <ArrowLeft className="h-4 w-4" /> {t("mfg_back_to_logs")}
         </Link>
       </div>
 
       <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Production log</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t("mfg_production_log")}</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-3xl font-mono">{mo.mo_number}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <Badge className={STATUS_TONE[mo.status]}>{mo.status.replace("_"," ")}</Badge>
+            <Badge className={STATUS_TONE[mo.status]}>{t(`status_${mo.status}`, mo.status.replace("_"," "))}</Badge>
             <span>·</span>
             <span>{mo.variant?.variant_name ?? "—"} <span className="font-mono text-xs">({mo.variant?.sku})</span></span>
             {mo.warehouse && (<><span>·</span><span>{mo.warehouse.name}</span></>)}
-            {mo.source_do && (<><span>·</span><span>From DO {mo.source_do.do_number}</span></>)}
+            {mo.source_do && (<><span>·</span><span>{t("mfg_from_do")} {mo.source_do.do_number}</span></>)}
             <span>·</span>
             <span>
-              Supervisor:{" "}
+              {t("mfg_supervisor_label")}:{" "}
               {mo.supervisor?.display_name ? (
                 <span className="text-foreground font-medium">{mo.supervisor.display_name}</span>
               ) : (
-                <span className="text-amber-700 font-medium">Unassigned</span>
+                <span className="text-amber-700 font-medium">{t("mfg_unassigned")}</span>
               )}
             </span>
           </div>
@@ -152,54 +154,54 @@ function MoDetailPage() {
           {(mo.status === "released" || mo.status === "in_progress") && mo.variant && (
             <>
               {showMoulds && (
-                <Button onClick={() => setMouldOpen(true)} variant="outline" className="gap-2"><Hammer className="h-4 w-4" /> Moulding run</Button>
+                <Button onClick={() => setMouldOpen(true)} variant="outline" className="gap-2"><Hammer className="h-4 w-4" /> {t("mfg_moulding_run")}</Button>
               )}
-              <Button onClick={() => setPackOpen(true)} variant="outline" className="gap-2"><PackageOpen className="h-4 w-4" /> Packing run</Button>
+              <Button onClick={() => setPackOpen(true)} variant="outline" className="gap-2"><PackageOpen className="h-4 w-4" /> {t("mfg_packing_run")}</Button>
             </>
           )}
           {mo.status === "draft" && (
-            <Button onClick={() => setStatus("released")} className="gap-2"><Send className="h-4 w-4" /> Release</Button>
+            <Button onClick={() => setStatus("released")} className="gap-2"><Send className="h-4 w-4" /> {t("mfg_release")}</Button>
           )}
           {mo.status === "released" && (
-            <Button onClick={() => setStatus("in_progress")} className="gap-2"><PlayCircle className="h-4 w-4" /> Start</Button>
+            <Button onClick={() => setStatus("in_progress")} className="gap-2"><PlayCircle className="h-4 w-4" /> {t("mfg_start")}</Button>
           )}
           {(mo.status === "released" || mo.status === "in_progress") && (
-            <Button onClick={() => setStatus("done")} variant="secondary" className="gap-2"><CheckCircle2 className="h-4 w-4" /> Mark done</Button>
+            <Button onClick={() => setStatus("done")} variant="secondary" className="gap-2"><CheckCircle2 className="h-4 w-4" /> {t("mfg_mark_done")}</Button>
           )}
           {mo.status !== "cancelled" && mo.status !== "done" && (
-            <Button onClick={tryCancel} variant="ghost" className="gap-2 text-destructive"><XCircle className="h-4 w-4" /> Cancel</Button>
+            <Button onClick={tryCancel} variant="ghost" className="gap-2 text-destructive"><XCircle className="h-4 w-4" /> {t("mfg_cancel")}</Button>
           )}
         </div>
       </header>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Stat label="Planned" value={planned.toFixed(0)} />
-        <Stat label="Produced" value={produced.toFixed(0)} sub={`${planned > 0 ? Math.round((produced / planned) * 100) : 0}%`} />
-        <Stat label="Scrapped" value={Number(mo.qty_scrapped).toFixed(0)} />
+        <Stat label={t("mfg_planned")} value={planned.toFixed(0)} />
+        <Stat label={t("mfg_produced")} value={produced.toFixed(0)} sub={`${planned > 0 ? Math.round((produced / planned) * 100) : 0}%`} />
+        <Stat label={t("mfg_scrapped")} value={Number(mo.qty_scrapped).toFixed(0)} />
       </div>
 
       <section className="rounded-xl border border-border bg-card p-5">
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Bill of materials</h2>
-            <p className="text-xs text-muted-foreground">Required vs issued · scaled to planned qty</p>
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("mfg_bom")}</h2>
+            <p className="text-xs text-muted-foreground">{t("mfg_bom_sub")}</p>
           </div>
           <Button onClick={() => setOutputOpen(true)} variant="secondary" className="gap-2" disabled={mo.status === "draft" || mo.status === "cancelled"}>
-            <Inbox className="h-4 w-4" /> Receive output
+            <Inbox className="h-4 w-4" /> {t("mfg_receive_output")}
           </Button>
         </div>
         {bom.length === 0 ? (
           <p className="rounded-md border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-            No active BOM for {mo.variant?.variant_name}. Add one in Products to enable component issuing.
+            {t("mfg_no_active_bom")}
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
-                  <th className="px-3 py-2 text-left font-medium">Component</th>
-                  <th className="px-3 py-2 text-right font-medium">Required</th>
-                  <th className="px-3 py-2 text-right font-medium">Issued</th>
+                  <th className="px-3 py-2 text-left font-medium">{t("mfg_component")}</th>
+                  <th className="px-3 py-2 text-right font-medium">{t("mfg_required")}</th>
+                  <th className="px-3 py-2 text-right font-medium">{t("mfg_issued")}</th>
                   <th className="px-3 py-2" />
                 </tr>
               </thead>
@@ -232,7 +234,7 @@ function MoDetailPage() {
                             disabled={mo.status === "draft" || mo.status === "cancelled" || mo.status === "done"}
                             onClick={() => { setIssueComponent(line); setIssueOpen(true); }}
                           >
-                            <Package className="h-3.5 w-3.5" /> Issue
+                            <Package className="h-3.5 w-3.5" /> {t("mfg_issue")}
                           </Button>
                         )}
                       </td>
@@ -248,9 +250,9 @@ function MoDetailPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         {showMaterialIssues && (
         <section className="rounded-xl border border-border bg-card p-5">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Material issues</h2>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("mfg_material_issues")}</h2>
           {issues.length === 0 ? (
-            <p className="rounded-md border border-dashed border-border px-4 py-4 text-center text-xs text-muted-foreground">No materials issued yet.</p>
+            <p className="rounded-md border border-dashed border-border px-4 py-4 text-center text-xs text-muted-foreground">{t("mfg_no_materials_yet")}</p>
           ) : (
             <ul className="space-y-1.5 text-sm">
               {issues.map((i) => (
@@ -265,9 +267,9 @@ function MoDetailPage() {
         )}
 
         <section className="rounded-xl border border-border bg-card p-5">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Outputs received</h2>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("mfg_outputs_received")}</h2>
           {outputs.length === 0 ? (
-            <p className="rounded-md border border-dashed border-border px-4 py-4 text-center text-xs text-muted-foreground">No output received yet.</p>
+            <p className="rounded-md border border-dashed border-border px-4 py-4 text-center text-xs text-muted-foreground">{t("mfg_no_output_yet")}</p>
           ) : (
             <ul className="space-y-1.5 text-sm">
               {outputs.map((o) => (

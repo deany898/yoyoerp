@@ -7,6 +7,7 @@ import { SmartSelect } from "@/components/forms/SmartSelect";
 import { supabase } from "@/integrations/supabase/client";
 import { notify } from "@/lib/notify";
 import { postPackingRun } from "@/lib/mfg-posting";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface VariationOpt { id: string; sku: string; variant_name: string; units_per_pack: number }
 interface ZoneOpt { id: string; name: string; code: string; kind: string; warehouse_id: string }
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export function PackingRunDialog({ open, onOpenChange, moId, baseVariantId, baseVariantLabel, warehouseId, onPosted }: Props) {
+  const { t } = useLanguage();
   const [variations, setVariations] = useState<VariationOpt[]>([]);
   const [workers, setWorkers] = useState<Array<{ id: string; label: string; hint: string }>>([]);
   const [zones, setZones] = useState<ZoneOpt[]>([]);
@@ -88,55 +90,55 @@ export function PackingRunDialog({ open, onOpenChange, moId, baseVariantId, base
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Packing run</DialogTitle>
-          <DialogDescription>Pack <span className="font-medium">{baseVariantLabel}</span> into a sellable variation.</DialogDescription>
+          <DialogTitle>{t("mfg_packing_run")}</DialogTitle>
+          <DialogDescription><span className="font-medium">{baseVariantLabel}</span></DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Variation *</Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_variation")} *</Label>
             <SmartSelect
               options={variations.map((v) => ({ value: v.id, label: `${v.variant_name} · pack of ${v.units_per_pack}`, hint: v.sku }))}
               value={variationId}
               onChange={setVariationId}
-              placeholder={variations.length === 0 ? "No variations linked to this base" : "Select variation"}
-              emptyText="Link variations on the product detail page"
+              placeholder={variations.length === 0 ? t("mfg_no_variations") : t("mfg_select_variation")}
+              emptyText={t("mfg_no_variations")}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Packs *</Label>
-              <Input type="number" value={packs} onChange={(e) => setPacks(e.target.value)} />
+              <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_packs")} *</Label>
+              <Input type="number" inputMode="numeric" value={packs} onChange={(e) => setPacks(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Units/pack</Label>
+              <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_units_per_pack")}</Label>
               <Input value={upp || "—"} readOnly className="bg-muted/30 font-mono" />
             </div>
           </div>
           <div className="rounded-md border border-border bg-muted/20 px-3 py-2 text-sm">
-            Base units consumed · <span className="font-mono font-semibold">{baseUnits.toLocaleString()}</span>
+            {t("mfg_base_units_consumed")} · <span className="font-mono font-semibold">{baseUnits.toLocaleString()}</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">From base zone *</Label>
-              <SmartSelect options={zones.filter((z) => z.kind === "finished_good" || z.kind === "wip").map((z) => ({ value: z.id, label: z.name, hint: `${z.code} · ${z.kind}` }))} value={baseZone} onChange={setBaseZone} placeholder="Pick base zone" />
+              <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_from_base_zone")} *</Label>
+              <SmartSelect options={zones.filter((z) => z.kind === "finished_good" || z.kind === "wip").map((z) => ({ value: z.id, label: z.name, hint: `${z.code} · ${z.kind}` }))} value={baseZone} onChange={setBaseZone} placeholder={t("mfg_pick_base_zone")} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">To FG zone *</Label>
-              <SmartSelect options={zones.filter((z) => z.kind === "finished_good").map((z) => ({ value: z.id, label: z.name, hint: z.code }))} value={fgZone} onChange={setFgZone} placeholder="Pick FG zone" />
+              <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_to_fg_zone")} *</Label>
+              <SmartSelect options={zones.filter((z) => z.kind === "finished_good").map((z) => ({ value: z.id, label: z.name, hint: z.code }))} value={fgZone} onChange={setFgZone} placeholder={t("mfg_pick_fg_zone")} />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Worker</Label>
-            <SmartSelect options={workers.map((w) => ({ value: w.id, label: w.label, hint: w.hint }))} value={workerId} onChange={setWorkerId} placeholder="Optional" />
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_worker")}</Label>
+            <SmartSelect options={workers.map((w) => ({ value: w.id, label: w.label, hint: w.hint }))} value={workerId} onChange={setWorkerId} placeholder={t("mfg_optional")} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Notes</Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_notes")}</Label>
             <Input value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
-          <Button onClick={submit} disabled={saving}>{saving ? "Posting…" : "Post packing"}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t("btn_cancel")}</Button>
+          <Button onClick={submit} disabled={saving}>{saving ? t("mfg_posting") : t("mfg_post_packing")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

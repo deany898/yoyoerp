@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type MOStatus = Database["public"]["Enums"]["mo_status"];
 
@@ -35,12 +36,12 @@ const STATUS_TONE: Record<MOStatus, string> = {
   cancelled: "bg-red-100 text-red-900 border-red-200",
 };
 
-const STATUS_LABEL: Record<MOStatus, string> = {
-  draft: "Planned",
-  released: "Planned",
-  in_progress: "In progress",
-  done: "Completed",
-  cancelled: "Cancelled",
+const STATUS_LABEL_KEY: Record<MOStatus, string> = {
+  draft: "mfg_tab_planned",
+  released: "mfg_tab_planned",
+  in_progress: "mfg_tab_in_progress",
+  done: "mfg_tab_done",
+  cancelled: "mfg_tab_cancelled",
 };
 
 type TabKey = "all" | "planned" | "in_progress" | "done" | "cancelled";
@@ -54,6 +55,7 @@ const TAB_FILTERS: Record<TabKey, MOStatus[]> = {
 
 function ManufacturingPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { orders: allOrders, loading, refresh } = useManufacturingOrders();
   const { user } = useAuth();
   const { role } = useRole();
@@ -136,26 +138,28 @@ function ManufacturingPage() {
   return (
     <div className="space-y-6 pb-24">
       <header className="flex flex-col gap-1">
-        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Production floor</p>
-        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Manufacturing</h1>
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t("mfg_subtitle")}</p>
+        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">{t("nav_manufacturing")}</h1>
         <p className="text-sm text-muted-foreground">
-          {loading ? "Loading…" : `${orders.length} production log${orders.length === 1 ? "" : "s"}`}
+          {loading
+            ? t("mfg_loading")
+            : `${orders.length} ${orders.length === 1 ? t("mfg_logs_count_one") : t("mfg_logs_count_other")}`}
         </p>
       </header>
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <MetricCard icon={Factory} label="Active MOs" value={counts.active} tone="amber" />
-        <MetricCard icon={Package2} label="Units produced today" value={Math.round(unitsToday).toLocaleString()} tone="emerald" />
-        <MetricCard icon={CalendarClock} label="Open MOs" value={counts.planned} tone="sky" />
+        <MetricCard icon={Factory} label={t("dash_active_mos")} value={counts.active} tone="amber" />
+        <MetricCard icon={Package2} label={t("mfg_units_today")} value={Math.round(unitsToday).toLocaleString()} tone="emerald" />
+        <MetricCard icon={CalendarClock} label={t("mfg_open_mos")} value={counts.planned} tone="sky" />
       </section>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as TabKey)}>
         <TabsList className="w-full overflow-x-auto sm:w-auto">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="planned">Planned</TabsTrigger>
-          <TabsTrigger value="in_progress">In progress</TabsTrigger>
-          <TabsTrigger value="done">Completed</TabsTrigger>
-          <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
+          <TabsTrigger value="all">{t("mfg_tab_all")}</TabsTrigger>
+          <TabsTrigger value="planned">{t("mfg_tab_planned")}</TabsTrigger>
+          <TabsTrigger value="in_progress">{t("mfg_tab_in_progress")}</TabsTrigger>
+          <TabsTrigger value="done">{t("mfg_tab_done")}</TabsTrigger>
+          <TabsTrigger value="cancelled">{t("mfg_tab_cancelled")}</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -167,12 +171,8 @@ function ManufacturingPage() {
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           <EmptyState
             icon={Factory}
-            title={orders.length === 0 ? "No production logs yet" : "No matching production logs"}
-            description={
-              orders.length === 0
-                ? "Create your first MO to start tracking production on the floor."
-                : "Try a different status tab."
-            }
+            title={orders.length === 0 ? t("mfg_empty_title") : t("mfg_empty_match_title")}
+            description={orders.length === 0 ? t("mfg_empty_desc") : t("mfg_empty_match_desc")}
           />
         </div>
       ) : (
@@ -182,6 +182,7 @@ function ManufacturingPage() {
               key={mo.id}
               mo={mo}
               mould={mouldByMo[mo.id]}
+              t={t}
               onOpen={() => navigate({ to: "/app/manufacturing/$moId", params: { moId: mo.id } })}
             />
           ))}
@@ -192,7 +193,7 @@ function ManufacturingPage() {
         <button
           type="button"
           onClick={() => setCreateOpen(true)}
-          aria-label="New manufacturing order"
+          aria-label={t("mfg_new_mo_aria")}
           className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-teal-600 text-white shadow-lg transition hover:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 md:bottom-6 md:right-6"
         >
           <Plus className="h-6 w-6" />
@@ -238,7 +239,7 @@ function MetricCard({ icon: Icon, label, value, tone }: MetricCardProps) {
   );
 }
 
-function MoCard({ mo, mould, onOpen }: { mo: MOWithDetails; mould?: string; onOpen: () => void }) {
+function MoCard({ mo, mould, onOpen, t }: { mo: MOWithDetails; mould?: string; onOpen: () => void; t: (k: string, f?: string) => string }) {
   const planned = Number(mo.qty_planned ?? 0);
   const produced = Number(mo.qty_produced ?? 0);
   const pct = planned > 0 ? Math.min(100, Math.round((produced / planned) * 100)) : 0;
@@ -257,13 +258,13 @@ function MoCard({ mo, mould, onOpen }: { mo: MOWithDetails; mould?: string; onOp
           {sku ? <p className="truncate text-xs text-muted-foreground">{sku}</p> : null}
         </div>
         <Badge variant="outline" className={`shrink-0 ${STATUS_TONE[mo.status]}`}>
-          {STATUS_LABEL[mo.status]}
+          {t(STATUS_LABEL_KEY[mo.status])}
         </Badge>
       </div>
 
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Progress</span>
+          <span>{t("mfg_progress")}</span>
           <span className="font-mono text-foreground">
             {produced.toLocaleString()} / {planned.toLocaleString()} · {pct}%
           </span>
@@ -274,19 +275,19 @@ function MoCard({ mo, mould, onOpen }: { mo: MOWithDetails; mould?: string; onOp
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
           <Hammer className="h-3.5 w-3.5" />
-          {mould ?? "No mould yet"}
+          {mould ?? t("mfg_no_mould_yet")}
         </span>
         <span className="inline-flex items-center gap-1.5">
           <UserCircle2 className="h-3.5 w-3.5" />
           {mo.supervisor?.display_name ? (
             mo.supervisor.display_name
           ) : (
-            <span className="text-amber-700">Unassigned</span>
+            <span className="text-amber-700">{t("mfg_unassigned")}</span>
           )}
         </span>
         <span className="inline-flex items-center gap-1.5">
           <CalendarClock className="h-3.5 w-3.5" />
-          {mo.planned_start ? new Date(mo.planned_start).toLocaleDateString() : "Unscheduled"}
+          {mo.planned_start ? new Date(mo.planned_start).toLocaleDateString() : t("mfg_unscheduled")}
         </span>
         {mo.source_do?.do_number ? (
           <span className="inline-flex items-center gap-1.5">

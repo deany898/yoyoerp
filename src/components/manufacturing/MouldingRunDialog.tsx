@@ -7,6 +7,7 @@ import { SmartSelect } from "@/components/forms/SmartSelect";
 import { supabase } from "@/integrations/supabase/client";
 import { notify } from "@/lib/notify";
 import { postMouldingRun } from "@/lib/mfg-posting";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Opt { id: string; label: string; hint?: string; cavity?: number }
 interface ZoneOpt { id: string; name: string; code: string; kind: string; warehouse_id: string }
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export function MouldingRunDialog({ open, onOpenChange, moId, baseVariantId, baseVariantLabel, warehouseId, onPosted }: Props) {
+  const { t } = useLanguage();
   const [machines, setMachines] = useState<Opt[]>([]);
   const [moulds, setMoulds] = useState<Opt[]>([]);
   const [workers, setWorkers] = useState<Opt[]>([]);
@@ -122,58 +124,58 @@ export function MouldingRunDialog({ open, onOpenChange, moId, baseVariantId, bas
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Moulding run</DialogTitle>
-          <DialogDescription>Produce <span className="font-medium">{baseVariantLabel}</span> via machine + mould.</DialogDescription>
+          <DialogTitle>{t("mfg_moulding_run")}</DialogTitle>
+          <DialogDescription><span className="font-medium">{baseVariantLabel}</span></DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Machine *">
-              <SmartSelect options={machines.map((m) => ({ value: m.id, label: m.label, hint: m.hint }))} value={machineId} onChange={setMachineId} placeholder="Select machine" />
+            <Field label={`${t("mfg_machine")} *`}>
+              <SmartSelect options={machines.map((m) => ({ value: m.id, label: m.label, hint: m.hint }))} value={machineId} onChange={setMachineId} placeholder={t("mfg_select_machine")} />
             </Field>
-            <Field label="Mould *">
-              <SmartSelect options={filteredMoulds.map((m) => ({ value: m.id, label: m.label, hint: m.hint }))} value={mouldId} onChange={setMouldId} placeholder={machineId && filteredMoulds.length === 0 ? "No compatible moulds" : "Select mould"} />
+            <Field label={`${t("mfg_mould")} *`}>
+              <SmartSelect options={filteredMoulds.map((m) => ({ value: m.id, label: m.label, hint: m.hint }))} value={mouldId} onChange={setMouldId} placeholder={machineId && filteredMoulds.length === 0 ? t("mfg_no_compatible_moulds") : t("mfg_select_mould")} />
             </Field>
           </div>
-          <Field label="Worker">
-            <SmartSelect options={workers.map((w) => ({ value: w.id, label: w.label, hint: w.hint }))} value={workerId} onChange={setWorkerId} placeholder="Optional" />
+          <Field label={t("mfg_worker")}>
+            <SmartSelect options={workers.map((w) => ({ value: w.id, label: w.label, hint: w.hint }))} value={workerId} onChange={setWorkerId} placeholder={t("mfg_optional")} />
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Raw material *">
-              <SmartSelect options={materials.map((m) => ({ value: m.id, label: m.label, hint: m.hint }))} value={materialId} onChange={setMaterialId} placeholder="Select material" />
+            <Field label={`${t("mfg_raw_material")} *`}>
+              <SmartSelect options={materials.map((m) => ({ value: m.id, label: m.label, hint: m.hint }))} value={materialId} onChange={setMaterialId} placeholder={t("mfg_select_material")} />
             </Field>
-            <Field label="Material qty (kg/g)">
-              <Input type="number" step="0.001" value={materialQty} onChange={(e) => setMaterialQty(e.target.value)} />
+            <Field label={t("mfg_material_qty")}>
+              <Input type="number" inputMode="decimal" step="0.001" value={materialQty} onChange={(e) => setMaterialQty(e.target.value)} />
             </Field>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <Field label="Good shots *">
-              <Input type="number" value={shotsGood} onChange={(e) => setShotsGood(e.target.value)} />
+            <Field label={`${t("mfg_good_shots")} *`}>
+              <Input type="number" inputMode="numeric" value={shotsGood} onChange={(e) => setShotsGood(e.target.value)} />
             </Field>
-            <Field label="Scrap shots">
-              <Input type="number" value={shotsScrap} onChange={(e) => setShotsScrap(e.target.value)} />
+            <Field label={t("mfg_scrap_shots")}>
+              <Input type="number" inputMode="numeric" value={shotsScrap} onChange={(e) => setShotsScrap(e.target.value)} />
             </Field>
-            <Field label="Cavity">
+            <Field label={t("mfg_cavity")}>
               <Input value={cavity || "—"} readOnly className="bg-muted/30 font-mono" />
             </Field>
           </div>
           <div className="rounded-md border border-border bg-muted/20 px-3 py-2 text-sm">
-            Units produced · <span className="font-mono font-semibold">{units.toLocaleString()}</span>
+            {t("mfg_units_produced")} · <span className="font-mono font-semibold">{units.toLocaleString()}</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="From raw zone *">
-              <SmartSelect options={zones.filter((z) => z.kind === "raw_material").map((z) => ({ value: z.id, label: z.name, hint: z.code }))} value={rawZone} onChange={setRawZone} placeholder="Pick raw zone" />
+            <Field label={`${t("mfg_from_raw_zone")} *`}>
+              <SmartSelect options={zones.filter((z) => z.kind === "raw_material").map((z) => ({ value: z.id, label: z.name, hint: z.code }))} value={rawZone} onChange={setRawZone} placeholder={t("mfg_pick_raw_zone")} />
             </Field>
-            <Field label="To FG zone *">
-              <SmartSelect options={zones.filter((z) => z.kind === "finished_good" || z.kind === "wip").map((z) => ({ value: z.id, label: z.name, hint: `${z.code} · ${z.kind}` }))} value={fgZone} onChange={setFgZone} placeholder="Pick FG zone" />
+            <Field label={`${t("mfg_to_fg_zone")} *`}>
+              <SmartSelect options={zones.filter((z) => z.kind === "finished_good" || z.kind === "wip").map((z) => ({ value: z.id, label: z.name, hint: `${z.code} · ${z.kind}` }))} value={fgZone} onChange={setFgZone} placeholder={t("mfg_pick_fg_zone")} />
             </Field>
           </div>
-          <Field label="Notes">
+          <Field label={t("mfg_notes")}>
             <Input value={notes} onChange={(e) => setNotes(e.target.value)} />
           </Field>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
-          <Button onClick={submit} disabled={saving}>{saving ? "Posting…" : "Post run"}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t("btn_cancel")}</Button>
+          <Button onClick={submit} disabled={saving}>{saving ? t("mfg_posting") : t("mfg_post_run")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
