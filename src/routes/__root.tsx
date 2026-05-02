@@ -4,6 +4,8 @@ import { RoleProvider } from "@/contexts/RoleContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { RoleSimulatorProvider } from "@/contexts/RoleSimulatorContext";
 import { AppConfigProvider } from "@/contexts/AppConfigContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Toaster } from "@/components/ui/sonner";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { ConfirmProvider } from "@/components/forms/ConfirmDialog";
@@ -105,6 +107,8 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
+    <ThemeProvider>
+    <LanguageProvider>
     <AuthProvider>
       <RoleSimulatorProvider>
         <RoleProvider>
@@ -125,6 +129,8 @@ function RootComponent() {
         </RoleProvider>
       </RoleSimulatorProvider>
     </AuthProvider>
+    </LanguageProvider>
+    </ThemeProvider>
     </QueryClientProvider>
   );
 }

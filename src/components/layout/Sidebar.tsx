@@ -6,6 +6,28 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { SidebarRoleSimulator } from "@/components/layout/SidebarRoleSimulator";
 import { navForRole, ROLE_LABELS } from "./shellNav";
+import { useLanguage } from "@/contexts/LanguageContext";
+
+const NAV_LABEL_KEY: Record<string, string> = {
+  Dashboard: "nav.dashboard",
+  Manufacturing: "nav.manufacturing",
+  Orders: "nav.orders",
+  Dispatch: "nav.dispatch",
+  Users: "nav.users",
+  Settings: "nav.settings",
+  "My floor": "nav.my_floor",
+  "My MOs": "nav.my_mos",
+  Handoffs: "nav.handoffs",
+  "New order": "nav.new_order",
+  "My orders": "nav.my_orders",
+  Customers: "nav.customers",
+  Products: "nav.products",
+  Today: "nav.today",
+  "Dispatch orders": "nav.dispatch_orders",
+  Delivered: "nav.delivered",
+  Inventory: "nav.inventory",
+  Requests: "nav.requests",
+};
 
 interface SidebarProps {
   onNavigate?: () => void;
@@ -16,6 +38,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const { role } = useRole();
   const { user, displayName: authDisplayName, signOut } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const displayName = authDisplayName ?? user?.email?.split("@")[0] ?? "Account";
   const initial = displayName.trim().charAt(0).toUpperCase() || "U";
@@ -82,7 +105,9 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                   )}
                 >
                   <item.icon className="h-[18px] w-[18px] shrink-0" />
-                  <span className="truncate">{item.label}</span>
+                  <span className="truncate">
+                    {t(NAV_LABEL_KEY[item.label] ?? "", item.label)}
+                  </span>
                 </Link>
               </li>
             );
