@@ -39,9 +39,9 @@ export const ROLE_NAV: Record<UserRoleType, ShellNavItem[]> = {
     { label: "Dispatch", href: "/app/dispatch-orders", icon: Send },
   ],
   supervisor: [
-    { label: "My floor", href: "/app/floor", icon: Layers },
+    { label: "My floor", href: "/app/manufacturing", icon: Layers },
     { label: "My MOs", href: "/app/manufacturing", icon: Factory },
-    { label: "Handoffs", href: "/app/handoffs", icon: ArrowLeftRight },
+    { label: "Handoffs", href: "/app/wip", icon: ArrowLeftRight },
   ],
   sales: [
     { label: "New order", href: "/app/quick-order", icon: Zap },
@@ -50,9 +50,9 @@ export const ROLE_NAV: Record<UserRoleType, ShellNavItem[]> = {
     { label: "Products", href: "/app/products", icon: Boxes },
   ],
   dispatch: [
-    { label: "Today", href: "/app/driver", icon: Truck },
+    { label: "Today", href: "/app/dispatch-orders", icon: Truck },
     { label: "Dispatch orders", href: "/app/dispatch-orders", icon: Send },
-    { label: "Delivered", href: "/app/delivered", icon: CheckCircle2 },
+    { label: "Delivered", href: "/app/dispatch-orders", icon: CheckCircle2 },
   ],
   worker: [
     { label: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard },
@@ -98,9 +98,9 @@ export const BOTTOM_NAV: Record<UserRoleType, ShellNavItem[]> = {
     { label: "More", href: "__more__", icon: MoreHorizontal },
   ],
   supervisor: [
-    { label: "Floor", href: "/app/floor", icon: Layers },
+    { label: "Floor", href: "/app/manufacturing", icon: Layers },
     { label: "My MOs", href: "/app/manufacturing", icon: Factory },
-    { label: "Handoffs", href: "/app/handoffs", icon: ArrowLeftRight },
+    { label: "Handoffs", href: "/app/wip", icon: ArrowLeftRight },
   ],
   sales: [
     { label: "Home", href: "/app/dashboard", icon: LayoutDashboard },
@@ -109,9 +109,9 @@ export const BOTTOM_NAV: Record<UserRoleType, ShellNavItem[]> = {
     { label: "Customers", href: "/app/customers", icon: Users },
   ],
   dispatch: [
-    { label: "Today", href: "/app/driver", icon: Truck },
+    { label: "Today", href: "/app/dispatch-orders", icon: Truck },
     { label: "Orders", href: "/app/dispatch-orders", icon: Send },
-    { label: "Done", href: "/app/delivered", icon: CheckCircle2 },
+    { label: "Done", href: "/app/dispatch-orders", icon: CheckCircle2 },
   ],
   worker: [
     { label: "Home", href: "/app/dashboard", icon: LayoutDashboard },
