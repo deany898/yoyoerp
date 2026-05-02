@@ -10,6 +10,7 @@ import { notify } from "@/lib/notify";
 import { resolveLoginEmail } from "@/server/auth-resolve.functions";
 import { getUserRole } from "@/server/get-user-role.functions";
 import { GoogleIcon } from "@/components/auth/GoogleIcon";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -55,23 +56,15 @@ function resolveHighestRole(roleRows: { role: string }[] | null | undefined): Ro
 function AuthPage() {
   const { user, loading, roles } = useAuth();
   const navigate = useNavigate();
+  const { lang, setLang, t } = useLanguage();
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [lang, setLang] = useState<"en" | "hi">(() => {
-    if (typeof window === "undefined") return "en";
-    return ((window.localStorage.getItem("yoyo_lang") as "en" | "hi") ?? "en");
-  });
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem("yoyo_theme") === "dark";
   });
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem("yoyo_lang", lang);
-  }, [lang]);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
