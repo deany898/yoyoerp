@@ -4063,6 +4063,7 @@ export type Database = {
         | "dispatch"
         | "worker"
         | "customer"
+        | "accountant"
       attendance_status: "present" | "absent" | "half" | "leave"
       costing_method:
         | "supplier_quote"
@@ -4348,6 +4349,7 @@ export const Constants = {
         "dispatch",
         "worker",
         "customer",
+        "accountant",
       ],
       attendance_status: ["present", "absent", "half", "leave"],
       costing_method: [

@@ -6,6 +6,7 @@ export const ROLE_ORDER: AppRole[] = [
   "admin",
   "manager",
   "supervisor",
+  "accountant",
   "sales",
   "dispatch",
   "worker",
@@ -16,6 +17,7 @@ export const ROLE_LABEL: Record<AppRole, string> = {
   admin: "Administrator",
   manager: "Manager",
   supervisor: "Supervisor",
+  accountant: "Accountant",
   sales: "Sales",
   dispatch: "Dispatch",
   worker: "Worker",
@@ -28,8 +30,8 @@ export interface PermissionRow {
   roles: Record<AppRole, boolean>;
 }
 
-const f = (admin = false, manager = false, supervisor = false, sales = false, dispatch = false, worker = false, customer = false): Record<AppRole, boolean> => ({
-  admin, manager, supervisor, sales, dispatch, worker, customer, requestor: false,
+const f = (admin = false, manager = false, supervisor = false, sales = false, dispatch = false, worker = false, customer = false, accountant = false): Record<AppRole, boolean> => ({
+  admin, manager, supervisor, sales, dispatch, worker, customer, accountant, requestor: false,
 });
 
 export const ROLE_PERMISSION_MATRIX: PermissionRow[] = [
