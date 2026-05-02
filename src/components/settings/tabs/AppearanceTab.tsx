@@ -1,20 +1,22 @@
 import { Sun, Moon, Monitor } from "lucide-react";
 import { useTheme, type Theme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function AppearanceTab() {
   const { theme, setTheme } = useTheme();
+  const { t } = useLanguage();
   const opts: Array<{ value: Theme; label: string; sub: string; Icon: typeof Sun }> = [
-    { value: "light", label: "Light · हल्का", sub: "Bright surfaces", Icon: Sun },
-    { value: "dark", label: "Dark · गहरा", sub: "Low light", Icon: Moon },
-    { value: "auto", label: "Auto · डिवाइस के अनुसार", sub: "Match system", Icon: Monitor },
+    { value: "light", label: t("settings_light"), sub: t("settings_light_sub"), Icon: Sun },
+    { value: "dark", label: t("settings_dark"), sub: t("settings_dark_sub"), Icon: Moon },
+    { value: "auto", label: t("settings_auto"), sub: t("settings_auto_sub"), Icon: Monitor },
   ];
 
   return (
     <div className="rounded-xl border border-border bg-card p-5">
-      <h2 className="text-base font-semibold">Theme</h2>
+      <h2 className="text-base font-semibold">{t("settings_theme")}</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Choose how Yoyo looks on this device.
+        {t("settings_theme_desc")}
       </p>
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         {opts.map(({ value, label, sub, Icon }) => {
