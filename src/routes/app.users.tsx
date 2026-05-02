@@ -1,23 +1,32 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { ShieldCheck, Search, Users as UsersIcon, Loader2 } from "lucide-react";
+import { ShieldCheck, Search, Users as UsersIcon, Loader2, Pencil, KeyRound, UserCheck, UserX, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
-import { supabase } from "@/integrations/supabase/client";
 import { useRole } from "@/hooks/useRole";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { SmartSelect } from "@/components/forms/SmartSelect";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ROLE_PERMISSION_MATRIX, ROLE_ORDER, ROLE_LABEL } from "@/lib/role-permissions";
-import { CreateUserDialog } from "@/components/admin/CreateUserDialog";
-import { UserRowActions } from "@/components/admin/UserRowActions";
+import { UserFormSheet, type UserFormValues } from "@/components/admin/UserFormSheet";
+import { ResetPasswordDialog } from "@/components/admin/ResetPasswordDialog";
 import { PermissionMatrix } from "@/components/settings/PermissionMatrix";
-import { adminSetLock, adminResetPassword } from "@/server/admin-users.functions";
+import { adminListUsers, adminUpdateUser } from "@/server/admin-users.functions";
 import type { Database } from "@/integrations/supabase/types";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
@@ -25,9 +34,11 @@ type AppRole = Database["public"]["Enums"]["app_role"];
 interface UserRow {
   user_id: string;
   display_name: string | null;
+  mobile: string | null;
   created_at: string;
   role: AppRole;
-  admin_locked: boolean;
+  active: boolean;
+  last_sign_in_at: string | null;
 }
 
 export const Route = createFileRoute("/app/users")({
@@ -43,8 +54,12 @@ function UserManagementPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
-  const setLockFn = useServerFn(adminSetLock);
-  const resetPwFn = useServerFn(adminResetPassword);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editing, setEditing] = useState<UserFormValues | null>(null);
+  const [pendingToggle, setPendingToggle] = useState<UserRow | null>(null);
+  const [resetTarget, setResetTarget] = useState<UserRow | null>(null);
+  const listFn = useServerFn(adminListUsers);
+  const updateFn = useServerFn(adminUpdateUser);
 
   useEffect(() => {
     if (role !== "admin") {
@@ -54,106 +69,67 @@ function UserManagementPage() {
   }, [role, navigate]);
 
   useEffect(() => {
-    void load();
-  }, []);
+    if (role === "admin") void load();
+  }, [role]);
 
   async function load() {
     setLoading(true);
-    const [{ data: profiles, error: pErr }, { data: roles, error: rErr }] = await Promise.all([
-      supabase.from("profiles").select("user_id, display_name, created_at, admin_locked"),
-      supabase.from("user_roles").select("user_id, role"),
-    ]);
-    if (pErr || rErr) {
-      toast.error("Failed to load users");
+    try {
+      const res = await listFn();
+      const list = Array.isArray(res?.users) ? (res.users as UserRow[]) : [];
+      list.sort((a, b) => (a.display_name ?? "").localeCompare(b.display_name ?? ""));
+      setRows(list);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to load users");
+      setRows([]);
+    } finally {
       setLoading(false);
-      return;
     }
-    const roleMap = new Map<string, AppRole>();
-    (roles ?? []).forEach((r) => roleMap.set(r.user_id, r.role));
-    const list: UserRow[] = (profiles ?? []).map((p) => ({
-      user_id: p.user_id,
-      display_name: p.display_name,
-      created_at: p.created_at,
-      role: roleMap.get(p.user_id) ?? "customer",
-      admin_locked: p.admin_locked ?? false,
-    }));
-    list.sort((a, b) => (a.display_name ?? "").localeCompare(b.display_name ?? ""));
-    setRows(list);
-    setLoading(false);
   }
 
-  const adminCount = rows.filter((r) => r.role === "admin").length;
-
-  async function changeRole(target: UserRow, newRole: AppRole) {
-    if (newRole === target.role) return;
-    if (target.role === "admin" && newRole !== "admin" && adminCount <= 1) {
-      toast.error("Cannot demote the last admin");
-      return;
-    }
-    if (target.user_id === currentUser?.id && newRole !== "admin") {
-      toast.error("You cannot remove your own admin access");
-      return;
-    }
-    setSavingId(target.user_id);
-    // Replace role: delete old + insert new (user_roles has unique(user_id,role))
-    const { error: delErr } = await supabase
-      .from("user_roles")
-      .delete()
-      .eq("user_id", target.user_id);
-    if (delErr) {
-      toast.error("Update failed");
-      setSavingId(null);
-      return;
-    }
-    const { error: insErr } = await supabase
-      .from("user_roles")
-      .insert({ user_id: target.user_id, role: newRole });
-    if (insErr) {
-      toast.error("Update failed");
-      setSavingId(null);
-      return;
-    }
-    setRows((prev) => prev.map((r) => (r.user_id === target.user_id ? { ...r, role: newRole } : r)));
-    toast.success(`${target.display_name ?? "User"} is now ${ROLE_LABEL[newRole]}`);
-    setSavingId(null);
+  function openAdd() {
+    setEditing(null);
+    setSheetOpen(true);
   }
 
-  async function toggleLock(target: UserRow) {
+  function openEdit(row: UserRow) {
+    setEditing({
+      user_id: row.user_id,
+      display_name: row.display_name ?? "",
+      mobile: row.mobile ?? "",
+      role: row.role,
+      active: row.active,
+      isSelf: row.user_id === currentUser?.id,
+    });
+    setSheetOpen(true);
+  }
+
+  async function confirmToggleActive() {
+    if (!pendingToggle) return;
+    const target = pendingToggle;
     setSavingId(target.user_id);
     try {
-      await setLockFn({ data: { user_id: target.user_id, locked: !target.admin_locked } });
+      await updateFn({ data: { user_id: target.user_id, active: !target.active } });
       setRows((prev) =>
-        prev.map((r) => (r.user_id === target.user_id ? { ...r, admin_locked: !r.admin_locked } : r)),
+        prev.map((r) => (r.user_id === target.user_id ? { ...r, active: !r.active } : r)),
       );
-      toast.success(target.admin_locked ? "Profile unlocked" : "Profile locked");
+      toast.success(target.active ? "User deactivated" : "User activated");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Update failed");
     } finally {
       setSavingId(null);
-    }
-  }
-
-  async function resetPassword(target: UserRow) {
-    const pwd = window.prompt(`Set a new password for ${target.display_name ?? "user"} (min 8 chars):`);
-    if (!pwd || pwd.length < 8) {
-      if (pwd !== null) toast.error("Password must be at least 8 characters");
-      return;
-    }
-    setSavingId(target.user_id);
-    try {
-      await resetPwFn({ data: { user_id: target.user_id, password: pwd } });
-      toast.success("Password updated");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Reset failed");
-    } finally {
-      setSavingId(null);
+      setPendingToggle(null);
     }
   }
 
   const filtered = useMemo(() => {
     if (!search.trim()) return rows;
     const q = search.toLowerCase();
-    return rows.filter((r) => (r.display_name ?? "").toLowerCase().includes(q));
+    return rows.filter(
+      (r) =>
+        (r.display_name ?? "").toLowerCase().includes(q) ||
+        (r.mobile ?? "").toLowerCase().includes(q),
+    );
   }, [rows, search]);
 
   if (role !== "admin") return null;
@@ -171,7 +147,9 @@ function UserManagementPage() {
               Manage team roles and permissions across the platform.
             </p>
           </div>
-          <CreateUserDialog onCreated={load} />
+          <Button size="sm" onClick={openAdd} className="gap-1.5">
+            <Plus className="h-4 w-4" /> Add user
+          </Button>
         </div>
 
         {/* Users table */}
@@ -181,7 +159,7 @@ function UserManagementPage() {
             <div className="relative w-full max-w-xs">
               <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search users…"
+                placeholder="Search name or mobile…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9 h-9 text-sm"
@@ -200,8 +178,10 @@ function UserManagementPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Mobile</TableHead>
                   <TableHead>Role</TableHead>
-                  <TableHead>Joined</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Date added</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -215,34 +195,43 @@ function UserManagementPage() {
                         {isSelf && (
                           <Badge variant="outline" className="ml-2 text-[10px]">You</Badge>
                         )}
-                        {u.admin_locked && (
-                          <Badge variant="outline" className="ml-2 bg-amber-50 text-amber-800 ring-1 ring-amber-200 text-[10px]">
-                            Locked
-                          </Badge>
-                        )}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">{u.mobile ?? "—"}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{ROLE_LABEL[u.role] ?? u.role}</Badge>
                       </TableCell>
                       <TableCell>
-                        <SmartSelect
-                          options={ROLE_ORDER.map((r) => ({ value: r, label: ROLE_LABEL[r] }))}
-                          value={u.role}
-                          onChange={(v) => v && changeRole(u, v as AppRole)}
-                          disabled={savingId === u.user_id}
-                          searchPlaceholder="Search role…"
-                          size="sm"
-                          triggerClassName="w-[200px]"
-                        />
+                        {u.active ? (
+                          <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 ring-1 ring-emerald-200">Active</Badge>
+                        ) : (
+                          <Badge className="bg-rose-100 text-rose-800 hover:bg-rose-100 ring-1 ring-rose-200">Inactive</Badge>
+                        )}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {format(new Date(u.created_at), "MMM d, yyyy")}
                       </TableCell>
                       <TableCell className="text-right">
-                        <UserRowActions
-                          locked={u.admin_locked}
-                          isSelf={isSelf}
-                          saving={savingId === u.user_id}
-                          onToggleLock={() => toggleLock(u)}
-                          onResetPassword={() => resetPassword(u)}
-                        />
+                        <div className="flex justify-end gap-1.5">
+                          <Button size="sm" variant="ghost" onClick={() => openEdit(u)} className="gap-1">
+                            <Pencil className="h-3.5 w-3.5" /> Edit
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => setResetTarget(u)} className="gap-1">
+                            <KeyRound className="h-3.5 w-3.5" /> Reset password
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setPendingToggle(u)}
+                            disabled={savingId === u.user_id || isSelf}
+                            className="gap-1"
+                          >
+                            {u.active ? (
+                              <><UserX className="h-3.5 w-3.5" /> Deactivate</>
+                            ) : (
+                              <><UserCheck className="h-3.5 w-3.5" /> Activate</>
+                            )}
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -295,6 +284,36 @@ function UserManagementPage() {
           </div>
         </section>
       </div>
+
+      <UserFormSheet open={sheetOpen} onOpenChange={setSheetOpen} initial={editing} onSaved={load} />
+
+      <ResetPasswordDialog
+        open={!!resetTarget}
+        onOpenChange={(o) => !o && setResetTarget(null)}
+        userId={resetTarget?.user_id ?? null}
+        userName={resetTarget?.display_name ?? null}
+      />
+
+      <AlertDialog open={!!pendingToggle} onOpenChange={(o) => !o && setPendingToggle(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingToggle?.active ? "Deactivate user?" : "Activate user?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingToggle?.active
+                ? `${pendingToggle?.display_name ?? "This user"} will no longer be able to sign in.`
+                : `${pendingToggle?.display_name ?? "This user"} will regain access to the app.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmToggleActive}>
+              {pendingToggle?.active ? "Deactivate" : "Activate"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </ErrorBoundary>
   );
 }
