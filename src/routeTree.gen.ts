@@ -45,6 +45,7 @@ import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
 import { Route as AppAiInsightsRouteImport } from './routes/app.ai-insights'
 import { Route as AppAdminRouteImport } from './routes/app.admin'
 import { Route as AppAboutRouteImport } from './routes/app.about'
+import { Route as AppWorkersAttendanceRouteImport } from './routes/app.workers.attendance'
 import { Route as AppWorkersIdRouteImport } from './routes/app.workers.$id'
 import { Route as AppStaffingDailyRouteImport } from './routes/app.staffing.daily'
 import { Route as AppSettingsUsersRouteImport } from './routes/app.settings.users'
@@ -236,6 +237,11 @@ const AppAboutRoute = AppAboutRouteImport.update({
   path: '/about',
   getParentRoute: () => AppRoute,
 } as any)
+const AppWorkersAttendanceRoute = AppWorkersAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => AppWorkersRoute,
+} as any)
 const AppWorkersIdRoute = AppWorkersIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -335,6 +341,7 @@ export interface FileRoutesByFullPath {
   '/app/settings/users': typeof AppSettingsUsersRoute
   '/app/staffing/daily': typeof AppStaffingDailyRoute
   '/app/workers/$id': typeof AppWorkersIdRoute
+  '/app/workers/attendance': typeof AppWorkersAttendanceRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -382,6 +389,7 @@ export interface FileRoutesByTo {
   '/app/settings/users': typeof AppSettingsUsersRoute
   '/app/staffing/daily': typeof AppStaffingDailyRoute
   '/app/workers/$id': typeof AppWorkersIdRoute
+  '/app/workers/attendance': typeof AppWorkersAttendanceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -431,6 +439,7 @@ export interface FileRoutesById {
   '/app/settings/users': typeof AppSettingsUsersRoute
   '/app/staffing/daily': typeof AppStaffingDailyRoute
   '/app/workers/$id': typeof AppWorkersIdRoute
+  '/app/workers/attendance': typeof AppWorkersAttendanceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -481,6 +490,7 @@ export interface FileRouteTypes {
     | '/app/settings/users'
     | '/app/staffing/daily'
     | '/app/workers/$id'
+    | '/app/workers/attendance'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -528,6 +538,7 @@ export interface FileRouteTypes {
     | '/app/settings/users'
     | '/app/staffing/daily'
     | '/app/workers/$id'
+    | '/app/workers/attendance'
   id:
     | '__root__'
     | '/'
@@ -576,6 +587,7 @@ export interface FileRouteTypes {
     | '/app/settings/users'
     | '/app/staffing/daily'
     | '/app/workers/$id'
+    | '/app/workers/attendance'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -838,6 +850,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAboutRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/workers/attendance': {
+      id: '/app/workers/attendance'
+      path: '/attendance'
+      fullPath: '/app/workers/attendance'
+      preLoaderRoute: typeof AppWorkersAttendanceRouteImport
+      parentRoute: typeof AppWorkersRoute
+    }
     '/app/workers/$id': {
       id: '/app/workers/$id'
       path: '/$id'
@@ -956,10 +975,12 @@ const AppManufacturingRouteWithChildren =
 
 interface AppWorkersRouteChildren {
   AppWorkersIdRoute: typeof AppWorkersIdRoute
+  AppWorkersAttendanceRoute: typeof AppWorkersAttendanceRoute
 }
 
 const AppWorkersRouteChildren: AppWorkersRouteChildren = {
   AppWorkersIdRoute: AppWorkersIdRoute,
+  AppWorkersAttendanceRoute: AppWorkersAttendanceRoute,
 }
 
 const AppWorkersRouteWithChildren = AppWorkersRoute._addFileChildren(
