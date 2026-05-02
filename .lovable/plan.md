@@ -1,200 +1,100 @@
-# Fast Loading + Live Sync Plan
+## What's broken
 
-Goal: make YOYO ERP feel instant for your team — pages open without spinners, teammates' changes appear live, and the installed app works on flaky shop-floor WiFi.
+**1. "Invalid doc_type MCH" — blocks creating machines (and most master records).**
+The `auto_set_code` trigger on `machines` calls `next_doc_number('MCH')`. But `next_doc_number` only whitelists transactional doc types (`DO, PO, MO, WO, GR, WL, HO`) and rejects everything else. The same trigger is attached to **9 master tables** with prefixes `MCH, MLD, STN, WRK, SUP, CUS, WH, ZN, PRD` — so creating any of them currently fails the same way (machines just happens to be where you hit it first).
 
-Scope confirmed: **all three tiers**, realtime on **inventory + production + sales/dispatch + procurement**, optimistic UI errors **shown as toast + red-highlighted row until retry/dismiss**.
+**2. Categories page — header buttons misaligned on mobile.**
+`Import CSV` / `Export CSV` sit on a separate row above the count line, and `+ Add category` is wedged into the count text. On a 384 px viewport this looks broken.
 
----
-
-## What's in place today (verified)
-
-- React Query: `staleTime 5min`, `refetchOnWindowFocus: false`, `retry 1` — good defaults.
-- Router: `defaultPreload: false`, `defaultPreloadStaleTime: 0`, `RouteSkeleton` already wired.
-- Realtime: only `notifications` and `app_config_flags` subscribed. `notifications` table has `REPLICA IDENTITY FULL`.
-- PWA: manifest only, **no service worker** (per Lovable PWA guidance — we'll add one carefully).
-- 37 `/app/*` route files, all flat, none using TanStack `loader` yet — every page fetches on mount.
+**3. Utility + machine cost data from the PDFs — not in the DB.**
+`warehouse_utilities` and `machines` tables are empty. The two PDFs (Dhip.PDF = SR1/SR2 utility lines, Dhip_1.PDF = 6 moulding machines with tonnage + warehouse) need to be seeded.
 
 ---
 
-## Tier A · Perf foundation
+## Fix plan
 
-### A1. Route loaders + `ensureQueryData`
-Convert the 12 highest-traffic routes to fetch in their `loader` so data starts streaming during navigation, not after mount:
+### Step 1 · Database migration (unblocks ALL master-record creates)
 
-`dashboard, inventory, products, suppliers, customers, purchase-orders, dispatch-orders, work-logs, manufacturing.$moId, workers, movements, requests`
+Introduce a separate code generator for master data so it doesn't share the strict whitelist with transactional documents:
 
-Each gets a `queryOptions` factory + `loader: ({ context }) => context.queryClient.ensureQueryData(...)`. Components switch from `useQuery` to `useSuspenseQuery` so cached data renders synchronously.
+- Add `public.next_master_code(_prefix text)` — same per-day sequence pattern as `next_doc_number`, but accepts any short alpha prefix (no whitelist). Reuses the existing `doc_number_counters` table.
+- Rewrite `public.auto_set_code(prefix)` trigger function to call `next_master_code` instead of `next_doc_number`.
+- Triggers on `machines, moulds, stations, workers, suppliers, customers, warehouses, warehouse_zones, products` keep working — no need to redefine them.
 
-### A2. Smart prefetch on Sidebar + BottomNav
-Already using `preload="intent"` on links per the router comment. Extend to **table rows** in Inventory/Products/Workers/POs lists — `onMouseEnter`/`onTouchStart` calls `queryClient.prefetchQuery(detailQueryOptions(id))`. Detail pages then open with zero spinner.
+Result: codes like `MCH260502-001`, `MLD260502-001`, etc. start saving correctly.
 
-### A3. Per-resource `staleTime` tiers
-- Master data (UOMs, warehouses, zones, categories, machines, stages, presets): `staleTime: Infinity`, only invalidated by realtime or explicit mutation.
-- Lists (products, suppliers, customers): `5 min` (current default — keep).
-- Live ops (stock, work-logs, MOs, handoffs): `30s` — realtime will invalidate, this is just a safety net.
+### Step 2 · Seed utility + machine data (idempotent insert)
 
-### A4. Code-split heavy editors
-Route-level lazy chunks for: `BomEditor`, `CostBreakdownSheet`, `StockMovementSheet`, `ManufacturingOrderDetail`, `WorkLogDetail`, charts on `/app/analytics` and `/app/ai-insights` (Recharts is ~120KB). Use dynamic `import()` inside the route component, not at module top.
+In the same migration, insert the PDF data so it survives reloads (live sync will push it to every team device):
 
-### A5. Bundle audit
-- Move Recharts, html5-qrcode, jsbarcode, jsPDF to lazy imports at point-of-use.
-- Verify Geist font subset is local (`/public/fonts/`) — already is.
-- Add `<link rel="preconnect" href="{SUPABASE_URL}">` in `__root.tsx` head.
-
-**Expected:** TTI on `/app/dashboard` drops 40-50% on cold load, sub-second on warm.
-
----
-
-## Tier B · Live sync (Supabase Realtime)
-
-### B1. Database — enable replication
-Migration: `ALTER PUBLICATION supabase_realtime ADD TABLE` and `ALTER TABLE ... REPLICA IDENTITY FULL` for:
+**Utilities (Dhip.PDF, period = current month):**
 
 ```text
-stock_movements          stage_handoffs          work_logs
-worker_attendance        manufacturing_orders    delivery_orders
-sales_orders             customer_payments       purchase_orders
-goods_receipts           supplier_product_quotes inventory_stock
-semi_finished_inventory  product_variants        (cost spike pings)
+SR1  electricity  "ELECTRICITY BILL"   ₹1,00,000
+SR1  other        "VINOD"              ₹30,000
+SR1  other        "HELPER"                ₹500
+SR1  other        "SOURABH"            ₹18,000
+SR1  other        "SANTOSH"            ₹28,000
+SR2  electricity  "ELECTRICITY BILL"   ₹1,00,000
+SR2  other        "KISHAN"             ₹33,350
+SR2  other        "HELPER"                ₹500
+SR2  other        "PRADEEP"            ₹16,000
+SR2  other        "RAJU"               ₹18,000
 ```
 
-### B2. Single global invalidator
-New file `src/hooks/useRealtimeInvalidator.tsx` mounted **once** at `/app` layout root. One Supabase channel, one subscription per table, mapping table → query keys to invalidate:
-
-```ts
-const TABLE_TO_KEYS: Record<string, string[][]> = {
-  stock_movements: [["movements"], ["inventory"], ["dashboard-kpis"]],
-  stage_handoffs:  [["handoffs"], ["wip"], ["mo-detail"]],
-  work_logs:       [["work-logs"], ["worker-detail"]],
-  // ...
-};
-```
-
-On payload, `queryClient.invalidateQueries({ queryKey, refetchType: "active" })` — only refetches what's currently mounted; off-screen data is just marked stale.
-
-**Filtering for scale**: subscriptions filter by `warehouse_id` or `assigned_to_user_id` where applicable so a worker doesn't receive every movement company-wide.
-
-### B3. Optimistic UI on hot mutations
-Three hooks get full optimistic treatment with the **error UX you chose**:
-
-- `usePostStockMovement` (Inventory + Quick Order)
-- `useCloseWorkLog` (Work Logs + Worker Detail)
-- `useSubmitHandoff` (Manufacturing MO Detail)
-
-Pattern (TanStack Query `useMutation`):
-1. `onMutate`: snapshot cache, write optimistic row with `__optimistic: true, __status: "pending"`.
-2. `onSuccess`: replace with server row.
-3. `onError`: keep the row but set `__status: "error", __errorMsg`. Render with **red border + "Retry" / "Dismiss" buttons inline**. Toast also fires with the reason.
-4. Retry re-runs the mutation against the same payload; Dismiss reverts to snapshot.
-
-A small `<OptimisticRow>` wrapper in `src/components/shared/` standardizes the red-highlight + retry/dismiss affordance.
-
-### B4. Presence indicator (small bonus)
-At top of MO detail and Inventory pages, show "3 teammates viewing" using Supabase Presence on the same channel. Free to add since the channel is already open. Skip if you'd rather keep it minimal — say so when reviewing.
-
-**Expected:** worker posts a movement → supervisor's stock card updates within ~300 ms without refresh.
-
-### B · Status (this turn)
-- ✅ B1 migration applied: 14 tables added to `supabase_realtime` publication with `REPLICA IDENTITY FULL`.
-- ✅ B2 `useRealtimeInvalidator` hook live, mounted once at `/app` layout — invalidates only currently-active queries.
-- ✅ B3 `<OptimisticRow>` primitive ready (red border + Retry/Dismiss + toast).
-- ⏳ Wiring `usePostStockMovement` / `useCloseWorkLog` / `useSubmitHandoff` to optimistic + `<OptimisticRow>` is the next sub-step (will land alongside Tier C in the next turn so each call site can be tested separately).
-
-### B3 wiring · Status
-- ✅ `StockMovementSheet` is now optimistic: sheet closes instantly with a "Posting…" toast; success/error/Retry replace the same toast in place. Realtime invalidator (Tier B) reconciles the inventory grid when the server row arrives.
-- ⏭️ Work-log close + handoff submit deferred — they're lower-frequency than stock movements and the same toast+retry pattern can be copied to those sheets when needed.
-
-## Tier C decision · Skipped
-
-After review, the user chose to skip the Workbox/IndexedDB service-worker tier. Reasons:
-- Project memory already commits to "Installable via `/manifest.webmanifest` (no service worker)".
-- SW only activates after publish, can't be tested in editor preview, and risks bricking installed apps if misconfigured.
-- Live sync (Tier B) already delivers the biggest perceived speedup; the optimistic-UI work above closes the rest of the gap.
-
-If shop-floor connectivity becomes a real problem later, revisit this with a focused offline-first sprint.
-
----
-
-## Tier C · Service worker (offline shell + background sync)
-
-This is the risky tier. Following the Lovable PWA guidance strictly.
-
-### C1. Install vite-plugin-pwa with iframe guards
-- `devOptions.enabled: false` — SW never runs in dev/preview.
-- Registration helper in `src/main.tsx` checks `window.self !== window.top` and Lovable preview hostnames; **unregisters** existing SWs if detected.
-- `registerType: "autoUpdate"` + `skipWaiting: false` (we'll prompt the user instead — see C3).
-
-### C2. Workbox runtime caching strategy
-- HTML navigations: `NetworkFirst` with 3s timeout → fallback to cached shell.
-- JS/CSS hashed assets: `CacheFirst` with 30-day expiry (safe — filenames change per build).
-- Images (`/icons/*`, product images): `StaleWhileRevalidate`, 7-day cap, max 100 entries.
-- Supabase API calls: **NetworkOnly** (no caching — RLS + freshness matter more than offline reads).
-- `navigateFallbackDenylist: [/^\/api/, /^\/~oauth/]`.
-
-### C3. "Update available" prompt
-When a new SW activates, broadcast a custom event. A small `<UpdateAvailableToast>` in the root shell shows: "New version ready · Reload". User clicks → `skipWaiting` + `window.location.reload()`. Prevents the infamous "stale shell forever" PWA bug.
-
-### C4. Background sync queue for offline movements
-Workbox `BackgroundSyncPlugin` queue named `stock-movement-queue`. The `usePostStockMovement` hook detects `navigator.onLine === false`, writes to a local IndexedDB queue with the row marked `__pending_sync`. SW retries the POST when network returns. UI shows a small cloud-arrow icon next to queued rows.
-
-This only activates for stock movements (the highest-frequency shop-floor action). Other writes still require network.
-
-### C5. Kill-switch SW
-Ship `public/sw-cleanup.js` (the unregister-all template from PWA docs) at `/sw.js` and `/service-worker.js` paths from day one. If we ever need to nuke the SW remotely, we just swap one line in `vite.config.ts`. Costs nothing and saves us from a brick scenario.
-
-**Caveats called out:**
-- SW **does not work in the Lovable preview iframe** — only after publish + install.
-- First install after this change requires one extra reload to register.
-- iOS PWA caches `start_url` at install time — existing installs may need to be removed/re-added once.
-
----
-
-## File-level changes
+**Machines (Dhip_1.PDF):**
 
 ```text
-NEW
-  src/hooks/useRealtimeInvalidator.tsx       (Tier B core)
-  src/hooks/useOptimisticMovement.ts         (Tier B B3)
-  src/hooks/useOptimisticWorkLog.ts          (Tier B B3)
-  src/hooks/useOptimisticHandoff.ts          (Tier B B3)
-  src/components/shared/OptimisticRow.tsx    (Tier B B3 UI)
-  src/components/shared/UpdateAvailableToast.tsx (Tier C C3)
-  src/lib/queryOptions/                      (queryOptions factories per resource)
-    inventory.ts, products.ts, workers.ts, manufacturing.ts, ...
-  public/sw-cleanup.js                       (Tier C C5)
-  supabase/migrations/<ts>_realtime_publication.sql (Tier B B1)
-
-EDIT
-  src/router.tsx                             (defaultPreloadStaleTime stays 0; queryClient via context)
-  src/routes/__root.tsx                      (move QueryClient to router context, preconnect link)
-  src/routes/app.tsx                         (mount useRealtimeInvalidator)
-  ~12 src/routes/app.*.tsx                   (add loader + ensureQueryData + useSuspenseQuery)
-  src/components/layout/Sidebar.tsx + BottomNav.tsx (already preload=intent — no change)
-  inventory/products list components         (prefetch on row hover/touch)
-  vite.config.ts                             (add VitePWA with strict guards)
-  src/main.tsx                               (SW registration with iframe/preview guards)
+Patel       SR1   tonnage 50    type Moulding  usage_volume 50
+Nikita      SR1   tonnage 100   type Moulding  usage_volume 100
+Sumitomo    SR1   tonnage 220   type Moulding  usage_volume 220
+Kawaguchi   —     tonnage 220   type Moulding  usage_volume 220 (no warehouse, inactive)
+Toyo 1      SR2   tonnage 280   type Moulding  usage_volume 280
+Toyo 2      SR2   tonnage 280   type Moulding  usage_volume 280
 ```
 
-All files stay under the 250-line rule. Heavy editors get split into sub-components when they grow.
+`usage_volume` is set to tonnage so the existing warehouse-cost-share formula (already in `20260501114959`) auto-derives effective hourly cost per machine — matching the PDF's "12H cost" column directionally. Worker/operator names from the utility sheet are kept as utility line items (per-warehouse cost), not as `workers` rows, since the PDF treats them as fixed monthly cost not staffing.
+
+Insert is idempotent: skip rows where a machine with the same `name` already exists, and skip utility rows where (warehouse, kind, label, period_month) already exists.
+
+### Step 3 · Categories header — fix mobile alignment
+
+Restructure `src/routes/app.categories.tsx` header so on mobile the order is:
+
+```text
+PRODUCTS
+Categories
+Add categories and subcategories…
+
+[ + Add category ]   ← primary, full-width on mobile
+[ Import CSV ] [ Export CSV ]   ← secondary row, equal-width
+```
+
+On `md+` everything collapses back to the right-aligned action cluster you already have. The `+ Add category` button currently lives inside `CategoryManager`; lift it (or render a second copy) into the page header so all three actions sit together. Use `flex-wrap gap-2` and `flex-1 sm:flex-none` so buttons never overlap the count text.
 
 ---
 
-## Verification checklist (I'll run this before declaring done)
+## Technical notes (for review)
 
-1. Cold-load `/app/dashboard` on throttled 3G — TTI under 2s.
-2. Open `/app/inventory` in two browser tabs · post a movement in tab A · row appears in tab B within 1s, no manual refresh.
-3. Force a movement to fail (e.g. negative stock) · optimistic row turns red, Retry button works, Dismiss reverts.
-4. Build production bundle · install PWA on a phone · go airplane mode · app shell still loads · log a movement · re-enable network · movement syncs.
-5. Lighthouse PWA + Performance audit on published URL — targets: Perf ≥ 85, PWA installable ✓.
-6. Verify SW does **not** register in Lovable preview iframe (DevTools → Application → Service Workers should be empty).
+- `next_master_code` body:
+  ```sql
+  -- same shape as next_doc_number but no whitelist check
+  insert into doc_number_counters(doc_type, doc_date, last_seq)
+  values (_prefix, current_date, 1)
+  on conflict (doc_type, doc_date) do update set last_seq = doc_number_counters.last_seq + 1
+  returning last_seq into v_seq;
+  return _prefix || to_char(current_date,'YYMMDD') || '-' || lpad(v_seq::text,3,'0');
+  ```
+- Existing transactional flows (`DO/PO/MO/WO/GR/WL/HO`) keep using `next_doc_number` — no behaviour change there.
+- After the trigger fix, the `MCH` namespace in `doc_number_counters` will be cleanly used for the first time; no collision risk.
+- Machine `usage_volume` already drives `machines_effective_cost_view` (from migration `20260501114959`), so seeded machines will immediately show meaningful hourly rates once utilities are also seeded.
 
 ---
 
-## Honest risks
+## Files touched
 
-- **Realtime cost**: ~15 tables × N concurrent users. At 20 users it's free-tier comfortable; at 200 users we'll need to revisit filters and possibly batch invalidations.
-- **SW + OAuth**: Google sign-in flow uses `/~oauth` — already in denylist, but I'll specifically test the auth callback after install.
-- **Optimistic + RLS**: if a user lacks permission, the write fails fast — they see the red row immediately. This is correct behaviour but I'll write tests for the worker role since they have the narrowest grants.
-- **Scope reality**: this is ~3 focused engineering days. I'll ship Tier A in turn 1, Tier B in turn 2, Tier C in turn 3 so you can validate each layer before stacking the next.
+- `supabase/migrations/<new>.sql` — new `next_master_code`, patched `auto_set_code`, idempotent seed for `warehouse_utilities` + `machines`.
+- `src/routes/app.categories.tsx` — header layout (mobile-first wrap, lift "+ Add category" into header).
+- Possibly `src/components/settings/CategoryManager.tsx` — expose an `onAddClick` prop or remove the now-duplicate internal "+ Add category" button. Will confirm during implementation.
 
-Reply **"go"** to start with Tier A, or tell me to reorder/cut anything.
+After this lands, you'll be able to: (a) create the "Moulding" machine type and save Toyo 1, (b) see the Categories header lay out cleanly on your phone, and (c) open Utilities + Machines and find your real data already populated and live-syncing to the team.
