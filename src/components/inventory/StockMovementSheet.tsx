@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { postMovement, useInventory, useProducts, useWarehouses } from "@/hooks/useErpData";
+import { postMovement, useInventory, useProducts, useWarehouses, type PostMovementInput } from "@/hooks/useErpData";
 import type { Database } from "@/integrations/supabase/types";
 
 type Reason = Database["public"]["Enums"]["movement_reason"];
@@ -67,19 +67,52 @@ export function StockMovementSheet({ open, onOpenChange, onPosted, defaultVarian
     if (reasonDef.needsFrom && !fromZone) return toast.error("Pick a source zone");
     if (reasonDef.needsTo && !toZone) return toast.error("Pick a destination zone");
 
+    const payload: PostMovementInput = {
+      variant_id: variantId, reason, qty: q,
+      from_zone_id: reasonDef.needsFrom ? fromZone : null,
+      to_zone_id: reasonDef.needsTo ? toZone : null,
+      unit_cost: unitCost ? Number(unitCost) : null,
+      notes: notes || null,
+    };
+
+    // Optimistic: close the sheet immediately, show a pending toast.
+    // Realtime invalidator (Tier B) will refresh the inventory grid
+    // when the server row lands. No spinner round-trip in the sheet.
     setSubmitting(true);
+    const toastId = toast.loading("Posting movement…");
+    reset();
+    onOpenChange(false);
+
     try {
-      await postMovement({
-        variant_id: variantId, reason, qty: q,
-        from_zone_id: reasonDef.needsFrom ? fromZone : null,
-        to_zone_id: reasonDef.needsTo ? toZone : null,
-        unit_cost: unitCost ? Number(unitCost) : null,
-        notes: notes || null,
-      });
-      toast.success("Movement posted");
-      reset(); onOpenChange(false); refreshInv(); onPosted?.();
+      await postMovement(payload);
+      toast.success("Movement posted", { id: toastId });
+      refreshInv();
+      onPosted?.();
     } catch (e) {
-      toast.error("Failed to post movement", { description: (e as Error).message });
+      toast.error("Failed to post movement", {
+        id: toastId,
+        description: (e as Error).message,
+        duration: 12000,
+        action: {
+          label: "Retry",
+          onClick: () => {
+            void (async () => {
+              const retryId = toast.loading("Retrying…");
+              try {
+                await postMovement(payload);
+                toast.success("Movement posted", { id: retryId });
+                refreshInv();
+                onPosted?.();
+              } catch (err) {
+                toast.error("Retry failed", {
+                  id: retryId,
+                  description: (err as Error).message,
+                });
+              }
+            })();
+          },
+        },
+      });
     } finally {
       setSubmitting(false);
     }

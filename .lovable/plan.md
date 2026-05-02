@@ -100,6 +100,19 @@ At top of MO detail and Inventory pages, show "3 teammates viewing" using Supaba
 - ✅ B3 `<OptimisticRow>` primitive ready (red border + Retry/Dismiss + toast).
 - ⏳ Wiring `usePostStockMovement` / `useCloseWorkLog` / `useSubmitHandoff` to optimistic + `<OptimisticRow>` is the next sub-step (will land alongside Tier C in the next turn so each call site can be tested separately).
 
+### B3 wiring · Status
+- ✅ `StockMovementSheet` is now optimistic: sheet closes instantly with a "Posting…" toast; success/error/Retry replace the same toast in place. Realtime invalidator (Tier B) reconciles the inventory grid when the server row arrives.
+- ⏭️ Work-log close + handoff submit deferred — they're lower-frequency than stock movements and the same toast+retry pattern can be copied to those sheets when needed.
+
+## Tier C decision · Skipped
+
+After review, the user chose to skip the Workbox/IndexedDB service-worker tier. Reasons:
+- Project memory already commits to "Installable via `/manifest.webmanifest` (no service worker)".
+- SW only activates after publish, can't be tested in editor preview, and risks bricking installed apps if misconfigured.
+- Live sync (Tier B) already delivers the biggest perceived speedup; the optimistic-UI work above closes the rest of the gap.
+
+If shop-floor connectivity becomes a real problem later, revisit this with a focused offline-first sprint.
+
 ---
 
 ## Tier C · Service worker (offline shell + background sync)
