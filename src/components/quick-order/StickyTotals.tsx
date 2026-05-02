@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export interface ExtraCharge {
   id: string;
@@ -26,6 +27,7 @@ interface Props {
 }
 
 export function StickyTotals(p: Props) {
+  const { t } = useLanguage();
   return (
     <div className="sticky bottom-0 left-0 right-0 z-30 border-t border-border bg-card/95 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.18)] backdrop-blur">
       <div className="mx-auto flex max-w-[1600px] flex-col gap-2 px-4 py-2.5 md:flex-row md:items-center md:justify-between">
@@ -60,17 +62,17 @@ export function StickyTotals(p: Props) {
         <div className="flex items-center gap-3">
           <div className="text-right">
             <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Subtotal · ₹{p.subtotal.toFixed(2)}
+              {t("qo_subtotal")} · ₹{p.subtotal.toFixed(2)}
             </div>
             <div className="font-mono text-xl font-bold tabular-nums text-primary">
-              Total ₹{p.total.toFixed(2)}
+              {t("qo_total")} ₹{p.total.toFixed(2)}
             </div>
           </div>
           <Button onClick={p.onSaveDraft} disabled={p.saving || !p.canEdit} variant="outline" size="sm" className="gap-1.5">
-            <Save className="h-3.5 w-3.5" /> Draft
+            <Save className="h-3.5 w-3.5" /> {t("qo_draft")}
           </Button>
           <Button onClick={p.onSubmit} disabled={p.saving || !p.canEdit} size="sm" className="gap-1.5">
-            <Send className="h-3.5 w-3.5" /> {p.saving ? "Submitting…" : "Submit"}
+            <Send className="h-3.5 w-3.5" /> {p.saving ? t("qo_submitting") : t("qo_submit")}
           </Button>
         </div>
       </div>
@@ -90,6 +92,7 @@ function AddChargePopover({
   disabled?: boolean;
   subtotal?: number;
 }) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState<ChargeKind>("discount");
   const [unit, setUnit] = useState<DiscountUnit>("pct");
@@ -123,30 +126,30 @@ function AddChargePopover({
     <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
       <PopoverTrigger asChild>
         <Button type="button" size="sm" variant="outline" disabled={disabled} className="gap-1.5">
-          <Plus className="h-3.5 w-3.5" /> Add charge
+          <Plus className="h-3.5 w-3.5" /> {t("qo_add_charge")}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 space-y-3" align="start">
         <div className="space-y-1">
-          <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Type</label>
+          <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{t("qo_type")}</label>
           <Select value={kind} onValueChange={(v) => setKind(v as ChargeKind)}>
             <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="discount">Discount · subtract</SelectItem>
-              <SelectItem value="gst">GST · add</SelectItem>
-              <SelectItem value="custom">Custom label · add</SelectItem>
+              <SelectItem value="discount">{t("qo_discount_kind")}</SelectItem>
+              <SelectItem value="gst">{t("qo_gst_kind")}</SelectItem>
+              <SelectItem value="custom">{t("qo_custom_kind")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {kind === "custom" && (
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Label</label>
+            <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{t("qo_label")}</label>
             <Input
               autoFocus
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              placeholder="Shipping, Packing…"
+              placeholder={t("qo_custom_ph")}
               className="h-9"
               onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
             />
@@ -155,7 +158,7 @@ function AddChargePopover({
 
         <div className="space-y-1">
           <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            {kind === "gst" ? "GST rate (%)" : kind === "discount" ? "Discount" : "Amount (₹)"}
+            {kind === "gst" ? t("qo_gst_rate") : kind === "discount" ? t("do_discount") : t("qo_amount")}
           </label>
           <div className="flex h-9 items-stretch rounded-md border border-input">
             <Input
@@ -186,8 +189,8 @@ function AddChargePopover({
         </div>
 
         <div className="flex justify-end gap-2 pt-1">
-          <Button type="button" size="sm" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button type="button" size="sm" onClick={submit}>Add</Button>
+          <Button type="button" size="sm" variant="ghost" onClick={() => setOpen(false)}>{t("btn_cancel")}</Button>
+          <Button type="button" size="sm" onClick={submit}>{t("qo_add")}</Button>
         </div>
       </PopoverContent>
     </Popover>
