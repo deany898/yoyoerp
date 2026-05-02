@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/sheet";
 import { SmartSelect } from "@/components/forms/SmartSelect";
 import { ROLE_LABEL } from "@/lib/role-permissions";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   adminCreateUser,
   adminUpdateUser,
@@ -52,6 +53,7 @@ interface Props {
 
 export function UserFormSheet({ open, onOpenChange, initial, onSaved }: Props) {
   const isEdit = Boolean(initial?.user_id);
+  const { t } = useLanguage();
   const createFn = useServerFn(adminCreateUser);
   const updateFn = useServerFn(adminUpdateUser);
   const resetPwFn = useServerFn(adminResetPassword);
@@ -84,15 +86,15 @@ export function UserFormSheet({ open, onOpenChange, initial, onSaved }: Props) {
   async function handleSave() {
     setMobileError(null);
     if (!name.trim() || name.trim().length < 2) {
-      toast.error("Enter a full name");
+      toast.error(t("uf_full_name"));
       return;
     }
     if (!/^[+0-9 ()-]{4,20}$/.test(mobile.trim())) {
-      toast.error("Enter a valid mobile number");
+      toast.error(t("uf_mobile"));
       return;
     }
     if (!isEdit && password.length < 8) {
-      toast.error("Password must be at least 8 characters");
+      toast.error(t("uf_min_8"));
       return;
     }
     setSaving(true);
@@ -107,7 +109,7 @@ export function UserFormSheet({ open, onOpenChange, initial, onSaved }: Props) {
             active,
           },
         });
-        toast.success("User updated");
+        toast.success(t("uf_save_changes"));
       } else {
         await createFn({
           data: {
@@ -120,14 +122,14 @@ export function UserFormSheet({ open, onOpenChange, initial, onSaved }: Props) {
             username: "",
           },
         });
-        toast.success("User added. Share their mobile number and password with them directly.");
+        toast.success(t("um_add_user"));
       }
       onSaved();
       onOpenChange(false);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Save failed";
+      const msg = err instanceof Error ? err.message : t("uf_save_changes");
       if (msg.toLowerCase().includes("mobile already")) {
-        setMobileError("Mobile already registered");
+        setMobileError(t("uf_mobile_taken"));
       } else {
         toast.error(msg);
       }
@@ -139,16 +141,16 @@ export function UserFormSheet({ open, onOpenChange, initial, onSaved }: Props) {
   async function handleResetPassword() {
     if (!initial?.user_id) return;
     if (newPw.length < 8) {
-      toast.error("Password must be at least 8 characters");
+      toast.error(t("uf_min_8"));
       return;
     }
     setResetting(true);
     try {
       await resetPwFn({ data: { user_id: initial.user_id, password: newPw } });
-      toast.success("Password updated");
+      toast.success(t("settings_password_updated"));
       setNewPw("");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Reset failed");
+      toast.error(err instanceof Error ? err.message : t("rpw_title"));
     } finally {
       setResetting(false);
     }
@@ -158,22 +160,21 @@ export function UserFormSheet({ open, onOpenChange, initial, onSaved }: Props) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>{isEdit ? "Edit user" : "Add user"}</SheetTitle>
+          <SheetTitle>{isEdit ? t("uf_edit_title") : t("uf_add_title")}</SheetTitle>
           <SheetDescription>
-            {isEdit
-              ? "Update profile, role, and active status."
-              : "Create a staff account. They sign in with their mobile and password."}
+            {isEdit ? t("uf_edit_desc") : t("uf_add_desc")}
           </SheetDescription>
         </SheetHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-1.5">
-            <Label className="text-xs">Full name</Label>
+            <Label className="text-xs">{t("uf_full_name")}</Label>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Riya Sharma" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Mobile number</Label>
+            <Label className="text-xs">{t("uf_mobile")}</Label>
             <Input
               type="tel"
+              inputMode="tel"
               value={mobile}
               onChange={(e) => {
                 setMobile(e.target.value);
@@ -187,7 +188,7 @@ export function UserFormSheet({ open, onOpenChange, initial, onSaved }: Props) {
             )}
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Role</Label>
+            <Label className="text-xs">{t("uf_role")}</Label>
             <SmartSelect
               options={ROLE_OPTIONS}
               value={role}
@@ -196,25 +197,25 @@ export function UserFormSheet({ open, onOpenChange, initial, onSaved }: Props) {
               disabled={initial?.isSelf}
             />
             {initial?.isSelf && (
-              <p className="text-xs text-muted-foreground">You cannot change your own role.</p>
+              <p className="text-xs text-muted-foreground">{t("uf_role_self")}</p>
             )}
           </div>
           {!isEdit && (
             <div className="space-y-1.5">
-              <Label className="text-xs">Temporary password</Label>
+              <Label className="text-xs">{t("uf_temp_password")}</Label>
               <div className="relative">
                 <Input
                   type={showPw ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Min 8 characters"
+                  placeholder={t("uf_min_8")}
                   className="pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPw((s) => !s)}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  aria-label={showPw ? "Hide password" : "Show password"}
+                  aria-label={showPw ? t("uf_hide_pw") : t("uf_show_pw")}
                 >
                   {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -223,28 +224,28 @@ export function UserFormSheet({ open, onOpenChange, initial, onSaved }: Props) {
           )}
           <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
             <div>
-              <Label className="text-sm">Active</Label>
-              <p className="text-xs text-muted-foreground">Inactive users cannot sign in.</p>
+              <Label className="text-sm">{t("uf_active")}</Label>
+              <p className="text-xs text-muted-foreground">{t("uf_active_desc")}</p>
             </div>
             <Switch checked={active} onCheckedChange={setActive} />
           </div>
 
           {isEdit && (
             <div className="space-y-2 rounded-lg border border-border p-3">
-              <Label className="text-xs font-semibold">Set new password</Label>
+              <Label className="text-xs font-semibold">{t("uf_set_new_pw")}</Label>
               <div className="relative">
                 <Input
                   type={showNewPw ? "text" : "password"}
                   value={newPw}
                   onChange={(e) => setNewPw(e.target.value)}
-                  placeholder="Min 8 characters"
+                  placeholder={t("uf_min_8")}
                   className="pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowNewPw((s) => !s)}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  aria-label={showNewPw ? "Hide password" : "Show password"}
+                  aria-label={showNewPw ? t("uf_hide_pw") : t("uf_show_pw")}
                 >
                   {showNewPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -257,18 +258,18 @@ export function UserFormSheet({ open, onOpenChange, initial, onSaved }: Props) {
                 disabled={resetting || newPw.length < 8}
               >
                 {resetting && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
-                Update password
+                {t("uf_update_pw")}
               </Button>
             </div>
           )}
         </div>
         <SheetFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-            Cancel
+            {t("btn_cancel")}
           </Button>
           <Button onClick={handleSave} disabled={saving}>
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isEdit ? "Save changes" : "Add user"}
+            {isEdit ? t("uf_save_changes") : t("uf_add_title")}
           </Button>
         </SheetFooter>
       </SheetContent>
