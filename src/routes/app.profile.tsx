@@ -261,7 +261,16 @@ function ProfilePage() {
         <Separator className="my-4" />
         <div className="space-y-3 text-sm">
           <Row label="Role" value={<Badge variant="secondary">{ROLE_LABEL[role] ?? role}</Badge>} />
-          <Row label="Account source" value={createdByAdmin ? "Created by admin" : "Self-registered"} />
+          <Row
+            label="Account source"
+            value={
+              role === "admin"
+                ? "Administrator account"
+                : createdByAdmin
+                  ? "Created by admin"
+                  : "Self-registered"
+            }
+          />
           <Row
             label="Identity locked"
             value={
