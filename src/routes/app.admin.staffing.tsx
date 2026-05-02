@@ -29,16 +29,28 @@ function AdminStaffingPage() {
 
   useEffect(() => {
     (async () => {
-      const [m, w, s, wk] = await Promise.all([
+      const [m, w, sRoles, wk] = await Promise.all([
         supabase.from("machines").select("id,name").eq("is_active", true).order("name"),
         supabase.from("warehouses").select("id,name").eq("is_active", true).order("name"),
-        supabase.from("user_roles").select("user_id, profiles!inner(user_id, display_name)").eq("role", "supervisor"),
+        supabase.from("user_roles").select("user_id").eq("role", "supervisor"),
         supabase.from("workers").select("id,name"),
       ]);
       setMachines((m.data ?? []) as RefRow[]);
       setWarehouses((w.data ?? []) as RefRow[]);
-      const supRows = (s.data ?? []) as Array<{ user_id: string; profiles: { display_name: string | null } }>;
-      setSupervisors(supRows.map((r) => ({ id: r.user_id, name: r.profiles?.display_name ?? "Supervisor" })));
+      const supIds = ((sRoles.data ?? []) as Array<{ user_id: string }>).map((r) => r.user_id);
+      if (supIds.length > 0) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("user_id, display_name")
+          .in("user_id", supIds);
+        const byId = new Map<string, string>();
+        for (const p of (profs ?? []) as Array<{ user_id: string; display_name: string | null }>) {
+          byId.set(p.user_id, p.display_name ?? "Supervisor");
+        }
+        setSupervisors(supIds.map((id) => ({ id, name: byId.get(id) ?? "Supervisor" })));
+      } else {
+        setSupervisors([]);
+      }
       const map: Record<string, string> = {};
       for (const w of (wk.data ?? []) as Array<{ id: string; name: string }>) map[w.id] = w.name;
       setWorkers(map);

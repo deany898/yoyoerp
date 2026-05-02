@@ -48,6 +48,7 @@ import { Route as AppSettingsUsersRouteImport } from './routes/app.settings.user
 import { Route as AppManufacturingMoIdRouteImport } from './routes/app.manufacturing.$moId'
 import { Route as AppMachinesIdRouteImport } from './routes/app.machines.$id'
 import { Route as AppAdminSystemRouteImport } from './routes/app.admin.system'
+import { Route as AppAdminStaffingRouteImport } from './routes/app.admin.staffing'
 import { Route as AppAdminPresetsRouteImport } from './routes/app.admin.presets'
 import { Route as AppAdminInventorySettingsRouteImport } from './routes/app.admin.inventory-settings'
 import { Route as AppAdminAuditRouteImport } from './routes/app.admin.audit'
@@ -247,6 +248,11 @@ const AppAdminSystemRoute = AppAdminSystemRouteImport.update({
   path: '/system',
   getParentRoute: () => AppAdminRoute,
 } as any)
+const AppAdminStaffingRoute = AppAdminStaffingRouteImport.update({
+  id: '/staffing',
+  path: '/staffing',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 const AppAdminPresetsRoute = AppAdminPresetsRouteImport.update({
   id: '/presets',
   path: '/presets',
@@ -302,6 +308,7 @@ export interface FileRoutesByFullPath {
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/inventory-settings': typeof AppAdminInventorySettingsRoute
   '/app/admin/presets': typeof AppAdminPresetsRoute
+  '/app/admin/staffing': typeof AppAdminStaffingRoute
   '/app/admin/system': typeof AppAdminSystemRoute
   '/app/machines/$id': typeof AppMachinesIdRoute
   '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
@@ -345,6 +352,7 @@ export interface FileRoutesByTo {
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/inventory-settings': typeof AppAdminInventorySettingsRoute
   '/app/admin/presets': typeof AppAdminPresetsRoute
+  '/app/admin/staffing': typeof AppAdminStaffingRoute
   '/app/admin/system': typeof AppAdminSystemRoute
   '/app/machines/$id': typeof AppMachinesIdRoute
   '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
@@ -390,6 +398,7 @@ export interface FileRoutesById {
   '/app/admin/audit': typeof AppAdminAuditRoute
   '/app/admin/inventory-settings': typeof AppAdminInventorySettingsRoute
   '/app/admin/presets': typeof AppAdminPresetsRoute
+  '/app/admin/staffing': typeof AppAdminStaffingRoute
   '/app/admin/system': typeof AppAdminSystemRoute
   '/app/machines/$id': typeof AppMachinesIdRoute
   '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
@@ -436,6 +445,7 @@ export interface FileRouteTypes {
     | '/app/admin/audit'
     | '/app/admin/inventory-settings'
     | '/app/admin/presets'
+    | '/app/admin/staffing'
     | '/app/admin/system'
     | '/app/machines/$id'
     | '/app/manufacturing/$moId'
@@ -479,6 +489,7 @@ export interface FileRouteTypes {
     | '/app/admin/audit'
     | '/app/admin/inventory-settings'
     | '/app/admin/presets'
+    | '/app/admin/staffing'
     | '/app/admin/system'
     | '/app/machines/$id'
     | '/app/manufacturing/$moId'
@@ -523,6 +534,7 @@ export interface FileRouteTypes {
     | '/app/admin/audit'
     | '/app/admin/inventory-settings'
     | '/app/admin/presets'
+    | '/app/admin/staffing'
     | '/app/admin/system'
     | '/app/machines/$id'
     | '/app/manufacturing/$moId'
@@ -811,6 +823,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminSystemRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/app/admin/staffing': {
+      id: '/app/admin/staffing'
+      path: '/staffing'
+      fullPath: '/app/admin/staffing'
+      preLoaderRoute: typeof AppAdminStaffingRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/app/admin/presets': {
       id: '/app/admin/presets'
       path: '/presets'
@@ -839,6 +858,7 @@ interface AppAdminRouteChildren {
   AppAdminAuditRoute: typeof AppAdminAuditRoute
   AppAdminInventorySettingsRoute: typeof AppAdminInventorySettingsRoute
   AppAdminPresetsRoute: typeof AppAdminPresetsRoute
+  AppAdminStaffingRoute: typeof AppAdminStaffingRoute
   AppAdminSystemRoute: typeof AppAdminSystemRoute
 }
 
@@ -846,6 +866,7 @@ const AppAdminRouteChildren: AppAdminRouteChildren = {
   AppAdminAuditRoute: AppAdminAuditRoute,
   AppAdminInventorySettingsRoute: AppAdminInventorySettingsRoute,
   AppAdminPresetsRoute: AppAdminPresetsRoute,
+  AppAdminStaffingRoute: AppAdminStaffingRoute,
   AppAdminSystemRoute: AppAdminSystemRoute,
 }
 
