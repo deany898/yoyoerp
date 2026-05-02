@@ -127,7 +127,11 @@ export const adminUpdateUser = createServerFn({ method: "POST" })
       }
     }
 
-    const profileUpdate: Record<string, unknown> = {};
+    const profileUpdate: {
+      display_name?: string;
+      mobile?: string;
+      admin_locked?: boolean;
+    } = {};
     if (data.display_name !== undefined) profileUpdate.display_name = data.display_name;
     if (data.mobile !== undefined) profileUpdate.mobile = data.mobile;
     if (data.active !== undefined) profileUpdate.admin_locked = !data.active;
