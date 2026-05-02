@@ -1,58 +1,65 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
-import { z } from "zod";
-import { Loader2, Mail, Lock, User as UserIcon, AtSign } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Logo } from "@/components/brand/Logo";
-import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { notify, friendlyAuthError } from "@/lib/notify";
-import { AuthIconInput } from "@/components/auth/AuthIconInput";
-import { GoogleIcon } from "@/components/auth/GoogleIcon";
-import { ForgotPasswordDialog } from "@/components/auth/ForgotPasswordDialog";
-import { PhoneInput } from "@/components/auth/PhoneInput";
-import { COUNTRY_CODES, DEFAULT_COUNTRY_ISO, digitsOnly, toE164 } from "@/lib/country-codes";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { notify } from "@/lib/notify";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
   head: () => ({
     meta: [
-      { title: "Sign in — YOYO ERP" },
-      { name: "description", content: "Sign in to YOYO ERP to manage your operations." },
+      { title: "Staff sign in — YOYO Industries" },
+      { name: "description", content: "Authorised staff access only." },
       { name: "robots", content: "noindex" },
     ],
   }),
 });
 
-const credentialsSchema = z.object({
-  email: z.string().trim().min(3, "Enter your email, username, or mobile").max(255),
-  password: z.string().min(8, "Password must be at least 8 characters").max(72),
-});
+const STAFF_DOMAIN = "@staff.yoyo.internal";
+const ACCESS_DENIED = "Access denied. Contact your administrator.";
 
-const signupSchema = z.object({
-  email: z.string().trim().email("Enter a valid email").max(255),
-  password: z.string().min(8, "Password must be at least 8 characters").max(72),
-  displayName: z.string().trim().min(2, "Name must be at least 2 characters").max(80),
-  mobile: z.string().trim().min(6, "Enter a valid mobile").max(20),
-});
+type Role =
+  | "admin"
+  | "manager"
+  | "accountant"
+  | "supervisor"
+  | "sales"
+  | "dispatch"
+  | "driver"
+  | "customer"
+  | string;
+
+function destinationForRole(role: Role | null): string {
+  switch (role) {
+    case "admin":
+    case "manager":
+    case "accountant":
+      return "/app/dashboard";
+    case "supervisor":
+      return "/app/floor";
+    case "sales":
+      return "/app/quick-order";
+    case "dispatch":
+    case "driver":
+      return "/app/driver";
+    case "customer":
+      return "/store";
+    default:
+      return "/app/dashboard";
+  }
+}
 
 function AuthPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"signin" | "signup">("signin");
+  const [mobile, setMobile] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
-  const [signinEmail, setSigninEmail] = useState("");
-  const [signinPassword, setSigninPassword] = useState("");
-  const [signinCountry, setSigninCountry] = useState(DEFAULT_COUNTRY_ISO);
-
-  const [signupName, setSignupName] = useState("");
-  const [signupEmail, setSignupEmail] = useState("");
-  const [signupPassword, setSignupPassword] = useState("");
-  const [signupMobile, setSignupMobile] = useState("");
-  const [signupCountry, setSignupCountry] = useState(DEFAULT_COUNTRY_ISO);
 
   useEffect(() => {
     if (!loading && user) {
@@ -60,301 +67,168 @@ function AuthPage() {
     }
   }, [user, loading, navigate]);
 
+  const fail = async (signOut = false) => {
+    if (signOut) {
+      try { await supabase.auth.signOut(); } catch { /* noop */ }
+    }
+    notify.error(ACCESS_DENIED);
+    setSubmitting(false);
+  };
+
   const handleSignIn = async (e: FormEvent) => {
     e.preventDefault();
-    const parsed = credentialsSchema.safeParse({ email: signinEmail, password: signinPassword });
-    if (!parsed.success) {
-      notify.warning(parsed.error.issues[0]?.message ?? "Invalid input");
+    if (submitting) return;
+
+    const cleaned = mobile.trim();
+    if (!cleaned || !password) {
+      notify.error(ACCESS_DENIED);
       return;
     }
+
     setSubmitting(true);
-    let identifier = parsed.data.email.trim();
-    // Resolve username / mobile to the email used for auth (server-side)
-    if (!identifier.includes("@")) {
-      // If input is digits-only it's a mobile; prefix country code so server can match.
-      const digits = digitsOnly(identifier);
-      const isMobile = digits.length >= 6 && digits === identifier.replace(/[+\s-]/g, "");
-      if (isMobile && !identifier.startsWith("+")) {
-        identifier = toE164(signinCountry, digits);
-      }
-      const { data: resolved, error: resolveErr } = await supabase.rpc(
-        "resolve_identifier_email",
-        { _identifier: identifier },
-      );
-      if (resolveErr || !resolved) {
-        setSubmitting(false);
-        notify.error("No account found for that username or mobile");
-        return;
-      }
-      identifier = resolved as string;
-    }
-    const { error } = await supabase.auth.signInWithPassword({
-      email: identifier,
-      password: parsed.data.password,
+    const email = `${cleaned}${STAFF_DOMAIN}`;
+
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
-    setSubmitting(false);
-    if (error) {
-      notify.error(friendlyAuthError(error.message), { retry: () => void handleSignIn(e) });
+
+    if (error || !authData.user) {
+      await fail(false);
       return;
     }
+
+    const userId = authData.user.id;
+
+    // Check active status (admin_locked === true means inactive)
+    const { data: profile, error: profileErr } = await supabase
+      .from("profiles")
+      .select("admin_locked")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (profileErr || !profile || profile.admin_locked === true) {
+      await fail(true);
+      return;
+    }
+
+    // Resolve role
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+
+    const roleList = (roles ?? []).map((r) => r.role as Role);
+    const priority: Role[] = [
+      "admin",
+      "manager",
+      "accountant",
+      "supervisor",
+      "sales",
+      "dispatch",
+      "driver",
+      "customer",
+    ];
+    const role = priority.find((p) => roleList.includes(p)) ?? roleList[0] ?? null;
+
+    setSubmitting(false);
     notify.success("Welcome back");
-    navigate({ to: "/app/dashboard" });
+    navigate({ to: destinationForRole(role) });
   };
-
-  const handleSignUp = async (e: FormEvent) => {
-    e.preventDefault();
-    const parsed = signupSchema.safeParse({
-      displayName: signupName,
-      email: signupEmail,
-      password: signupPassword,
-      mobile: signupMobile,
-    });
-    if (!parsed.success) {
-      notify.warning(parsed.error.issues[0]?.message ?? "Invalid input");
-      return;
-    }
-    setSubmitting(true);
-    const { error } = await supabase.auth.signUp({
-      email: parsed.data.email,
-      password: parsed.data.password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/app/dashboard`,
-        data: {
-          display_name: parsed.data.displayName,
-          mobile: toE164(signupCountry, parsed.data.mobile),
-        },
-      },
-    });
-    setSubmitting(false);
-    if (error) {
-      notify.error(friendlyAuthError(error.message));
-      return;
-    }
-    notify.success("Check your email to confirm your account");
-    setTab("signin");
-  };
-
-  const handleGoogle = async () => {
-    setSubmitting(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: `${window.location.origin}/app/dashboard`,
-    });
-    if (result.error) {
-      setSubmitting(false);
-      notify.error("Could not sign in with Google", { retry: () => void handleGoogle() });
-      return;
-    }
-    if (result.redirected) return;
-    navigate({ to: "/app/dashboard" });
-  };
-
-  const [forgotOpen, setForgotOpen] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState("");
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-sidebar">
-        <Loader2 className="h-6 w-6 animate-spin text-sidebar-foreground/60" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-between overflow-hidden bg-gradient-to-br from-sky-50 via-background to-cyan-50/60 px-4 py-10 text-foreground">
-      {/* soft ambient blobs */}
-      <div aria-hidden className="pointer-events-none absolute -left-32 top-10 h-80 w-80 rounded-full bg-sky-200/40 blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute -right-32 bottom-20 h-80 w-80 rounded-full bg-cyan-200/40 blur-3xl" />
-
-      <main className="relative z-10 flex w-full max-w-md flex-1 flex-col items-center justify-center">
-        <div className="mb-6 flex flex-col items-center text-center">
-          <Logo size={88} showWordmark={false} />
-          <h1 className="mt-5 text-3xl font-bold tracking-tight text-foreground">YOYO ERP</h1>
-          <p className="mt-1 text-sm font-medium text-muted-foreground">Internal Operations Platform</p>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-background to-cyan-50/40 px-4 py-10">
+      <main className="w-full max-w-md">
+        <div className="mb-6 text-center">
+          <h1 className="text-2xl font-medium tracking-tight text-foreground" style={{ fontWeight: 500 }}>
+            YOYO Industries
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Staff portal · authorised access only
+          </p>
         </div>
 
-        <div className="w-full rounded-2xl border border-border bg-card p-6 shadow-[0_10px_40px_-12px_rgba(15,23,42,0.15)] md:p-8">
-              <Tabs value={tab} onValueChange={(v) => setTab(v as "signin" | "signup")} className="w-full">
-                <div className="mb-5 text-center">
-                  <h2 className="text-xl font-semibold text-foreground">
-                    {tab === "signin" ? "Welcome back" : "Create your account"}
-                  </h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {tab === "signin"
-                      ? "Sign in to continue"
-                      : "Set up your YOYO ERP workspace access"}
-                  </p>
-                </div>
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-[0_10px_40px_-12px_rgba(15,23,42,0.15)] md:p-8">
+          <form onSubmit={handleSignIn} className="space-y-4" noValidate>
+            <div className="space-y-1.5">
+              <Label htmlFor="mobile-number" className="text-sm font-medium">
+                Mobile number
+              </Label>
+              <Input
+                id="mobile-number"
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel"
+                placeholder="Enter your mobile number"
+                value={mobile}
+                onChange={(e) => setMobile(e.target.value)}
+                disabled={submitting}
+                className="h-[52px] w-full text-base"
+                required
+              />
+            </div>
 
-                <TabsContent value="signin" className="space-y-4">
-                  <form onSubmit={handleSignIn} className="space-y-4">
-                    <div className="space-y-1.5">
-                      <AuthIconInput
-                        id="signin-email"
-                        label="LOGIN"
-                        icon={AtSign}
-                        type="text"
-                        autoComplete="username"
-                        placeholder=""
-                        value={signinEmail}
-                        onChange={(e) => setSigninEmail(e.target.value)}
-                        required
-                      />
-                      {/^[+\d\s-]+$/.test(signinEmail.trim()) && signinEmail.trim().length > 0 && (
-                        <div className="flex items-center gap-2 pt-1">
-                          <span className="text-[11px] text-muted-foreground">Mobile country</span>
-                          <select
-                            aria-label="Mobile country code"
-                            value={signinCountry}
-                            onChange={(e) => setSigninCountry(e.target.value)}
-                            className="h-7 rounded-md border border-input bg-background px-2 text-xs"
-                          >
-                            {COUNTRY_CODES.map((c) => (
-                              <option key={`${c.iso}-${c.code}`} value={c.iso}>{c.flag} +{c.code} {c.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-                    </div>
-                    <AuthIconInput
-                      id="signin-password"
-                      label="Password"
-                      icon={Lock}
-                      password
-                      autoComplete="current-password"
-                      placeholder=""
-                      value={signinPassword}
-                      onChange={(e) => setSigninPassword(e.target.value)}
-                      required
-                    />
-                    <Button
-                      type="submit"
-                      className="h-11 w-full bg-primary text-primary-foreground text-base font-semibold shadow-sm hover:bg-primary/90"
-                      disabled={submitting}
-                    >
-                      {submitting ? (
-                        <span className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" /> Opening dashboard…
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-2">
-                          <Lock className="h-4 w-4" /> Sign in
-                        </span>
-                      )}
-                    </Button>
-                    <div className="text-center">
-                      <button
-                        type="button"
-                        onClick={() => { setForgotEmail(signinEmail); setForgotOpen(true); }}
-                        className="text-xs font-medium text-primary hover:underline"
-                      >
-                        Forgot password?
-                      </button>
-                    </div>
-                  </form>
-                </TabsContent>
-
-                <TabsContent value="signup" className="space-y-4">
-                  <form onSubmit={handleSignUp} className="space-y-4">
-                    <AuthIconInput
-                      id="signup-name"
-                      label="Name"
-                      icon={UserIcon}
-                      autoComplete="name"
-                      placeholder="Jane Doe"
-                      value={signupName}
-                      onChange={(e) => setSignupName(e.target.value)}
-                      required
-                    />
-                    <PhoneInput
-                      id="signup-mobile"
-                      countryIso={signupCountry}
-                      onCountryIsoChange={setSignupCountry}
-                      value={signupMobile}
-                      onChange={setSignupMobile}
-                      required
-                    />
-                    <AuthIconInput
-                      id="signup-email"
-                      label="Email"
-                      icon={Mail}
-                      type="email"
-                      autoComplete="email"
-                      placeholder="you@company.com"
-                      value={signupEmail}
-                      onChange={(e) => setSignupEmail(e.target.value)}
-                      required
-                    />
-                    <AuthIconInput
-                      id="signup-password"
-                      label="Password"
-                      icon={Lock}
-                      password
-                      autoComplete="new-password"
-                      placeholder="At least 8 characters"
-                      value={signupPassword}
-                      onChange={(e) => setSignupPassword(e.target.value)}
-                      required
-                      minLength={8}
-                    />
-                    <p className="-mt-2 text-xs text-muted-foreground">Minimum 8 characters.</p>
-                    <Button
-                      type="submit"
-                      className="h-11 w-full bg-primary text-primary-foreground text-base font-semibold shadow-sm hover:bg-primary/90"
-                      disabled={submitting}
-                    >
-                      {submitting ? (
-                        <span className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" /> Creating account…
-                        </span>
-                      ) : (
-                        "Create account"
-                      )}
-                    </Button>
-                  </form>
-                </TabsContent>
-
-                <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
-                  <div className="h-px flex-1 bg-border" />
-                  <span>OR</span>
-                  <div className="h-px flex-1 bg-border" />
-                </div>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-11 w-full"
-                  onClick={handleGoogle}
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-sm font-medium">
+                Password
+              </Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   disabled={submitting}
+                  className="h-[52px] w-full pr-12 text-base"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                  tabIndex={-1}
                 >
-                  <GoogleIcon className="mr-2 h-4 w-4" />
-                  Continue with Google
-                </Button>
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
 
-                {tab === "signup" && (
-                  <p className="mt-6 text-center text-sm text-muted-foreground">
-                    Already have an account?{" "}
-                    <button
-                      type="button"
-                      onClick={() => setTab("signin")}
-                      className="font-medium text-primary hover:underline"
-                    >
-                      Sign in
-                    </button>
-                  </p>
-                )}
-              </Tabs>
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="h-[52px] w-full bg-teal-600 text-base font-semibold text-white shadow-sm hover:bg-teal-700 focus-visible:ring-teal-500"
+            >
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Signing in…
+                </span>
+              ) : (
+                "Login"
+              )}
+            </Button>
+
+            <p className="pt-2 text-center text-xs text-muted-foreground">
+              Access is for authorised staff only. Contact your administrator for access.
+            </p>
+          </form>
         </div>
+
+        <footer className="mt-8 text-center text-xs text-muted-foreground">
+          © {new Date().getFullYear()} YOYO Industries · All rights reserved.
+        </footer>
       </main>
-
-      <footer className="relative z-10 mt-8 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} YOYO · All rights reserved.
-      </footer>
-
-      <ForgotPasswordDialog
-        open={forgotOpen}
-        onOpenChange={setForgotOpen}
-        defaultEmail={forgotEmail}
-      />
     </div>
   );
 }
