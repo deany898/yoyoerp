@@ -5,18 +5,40 @@ export interface TierPriceMap {
   [key: string]: number;
 }
 
-export async function loadTierPrices(): Promise<TierPriceMap> {
+export interface TierRow {
+  variant_id: string;
+  tier_name: string;
+  price: number;
+  min_qty: number;
+  valid_from: string | null;
+  valid_until: string | null;
+}
+
+/** Reserved tier names — every variant gets one of each for Standard / Dealer. */
+export const RESERVED_TIERS = { standard: "standard", dealer: "dealer" } as const;
+
+export function isBulkTier(tier: string) {
+  return tier !== RESERVED_TIERS.standard && tier !== RESERVED_TIERS.dealer;
+}
+
+/** Loads every active pricing tier row (used by editors and the bulk-buy table). */
+export async function loadTierRows(): Promise<TierRow[]> {
   const { data, error } = await supabase
     .from("product_pricing_tiers")
-    .select("variant_id,tier_name,price,valid_from,valid_until,min_qty");
-  if (error || !data) return {};
+    .select("variant_id,tier_name,price,min_qty,valid_from,valid_until");
+  if (error || !data) return [];
   const today = new Date().toISOString().slice(0, 10);
+  return (data as TierRow[]).filter((r) => {
+    if (r.valid_from && r.valid_from > today) return false;
+    if (r.valid_until && r.valid_until < today) return false;
+    return true;
+  });
+}
+
+export async function loadTierPrices(): Promise<TierPriceMap> {
+  const rows = await loadTierRows();
   const map: TierPriceMap = {};
-  for (const r of data as Array<{ variant_id: string; tier_name: string; price: number; valid_from: string | null; valid_until: string | null }>) {
-    if (r.valid_from && r.valid_from > today) continue;
-    if (r.valid_until && r.valid_until < today) continue;
-    map[`${r.variant_id}:${r.tier_name}`] = Number(r.price);
-  }
+  for (const r of rows) map[`${r.variant_id}:${r.tier_name}`] = Number(r.price);
   return map;
 }
 
