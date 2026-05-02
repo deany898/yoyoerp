@@ -318,7 +318,15 @@ export function AddStageSheet({ open, onClose, mode, groupId, defaultProductId, 
               )}
               <div className="space-y-1.5">
                 <Label htmlFor="machine-cost" className="text-xs">Machine cost (₹)</Label>
-                <Input id="machine-cost" type="number" step="0.01" min="0" value={machineCost} onChange={(e) => setMachineCost(e.target.value)} placeholder="0.00" />
+                {machineId ? (
+                  <div className="rounded-md border border-dashed border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                    {autoMachineCost !== null
+                      ? <>Auto · ₹{autoMachineCost.toFixed(4)} <span className="opacity-70">({machineRate?.toFixed(2)} ₹/h × {hoursPerUnit || 0} h)</span></>
+                      : "Set hours/unit below"}
+                  </div>
+                ) : (
+                  <Input id="machine-cost" type="number" step="0.01" min="0" value={machineCost} onChange={(e) => setMachineCost(e.target.value)} placeholder="0.00" />
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="overhead-cost" className="text-xs">Overhead (₹)</Label>
@@ -330,6 +338,49 @@ export function AddStageSheet({ open, onClose, mode, groupId, defaultProductId, 
               </div>
             </div>
           </section>
+
+          {mode === "product" && (
+            <section className="space-y-3">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                4 · Machine & mould (optional)
+              </Label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Machine</Label>
+                  <SmartSelect
+                    options={machines.map((m) => ({ value: m.id, label: m.name, hint: m.code }))}
+                    value={machineId}
+                    onChange={(v) => setMachineId(v)}
+                    placeholder="Pick machine (auto ₹/h)"
+                    emptyText="No active machines"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Mould</Label>
+                  <SmartSelect
+                    options={moulds.map((m) => ({ value: m.id, label: m.name, hint: `${m.code}${m.cavity_count ? ` · ${m.cavity_count} cav` : ""}` }))}
+                    value={mouldId}
+                    onChange={(v) => setMouldId(v)}
+                    placeholder="Pick mould (splits by cavities)"
+                    emptyText="No active moulds"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="hpu" className="text-xs">Machine hours per unit</Label>
+                  <Input id="hpu" type="number" step="0.0001" min="0" value={hoursPerUnit}
+                         onChange={(e) => setHoursPerUnit(e.target.value)} placeholder="0.0000" />
+                </div>
+                {autoMouldCost !== null && (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Auto mould cost (₹/unit)</Label>
+                    <div className="rounded-md border border-dashed border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                      ₹{autoMouldCost.toFixed(4)} <span className="opacity-70">(machine cost ÷ {selectedMould?.cavity_count} cavities)</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
 
           {mode === "product" && variantIds.length > 0 && (
             <div className="rounded-lg border border-dashed border-border p-3 text-xs text-muted-foreground">
