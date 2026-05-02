@@ -8,6 +8,7 @@ import { useRole } from "@/hooks/useRole";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding, type TourStep } from "@/hooks/useOnboarding";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const TOUR_STEPS: TourStep[] = [
   { title: "Welcome to Yoyo!", description: "Let's take a quick tour of the key features. This will only take a minute." },
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/app/dashboard")({
 function DashboardPage() {
   const { role } = useRole();
   const { user } = useAuth();
+  const { t } = useLanguage();
   useAlertGenerator();
 
   // DEV-only: log what the authenticated session actually sees, so we can
@@ -62,16 +64,7 @@ function DashboardPage() {
     toast.success("Tour complete! Explore freely or start the walkthrough.");
   };
 
-  const greeting =
-    role === "customer"
-      ? "Welcome back \u00b7 here are your orders."
-      : role === "sales"
-        ? "Welcome back \u00b7 here is today\u2019s catalog snapshot."
-        : role === "dispatch"
-          ? "Welcome back \u00b7 here\u2019s what needs to ship."
-          : role === "worker"
-            ? "Welcome back \u00b7 ready to log activity."
-            : "Welcome back \u00b7 here\u2019s your operational overview.";
+  const greeting = t("dash_overview_subtitle");
 
   return (
     <div className="mx-auto max-w-[1400px] space-y-6">
@@ -79,8 +72,8 @@ function DashboardPage() {
         <div className="pointer-events-none absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
         <div className="pointer-events-none absolute -bottom-20 -right-8 h-40 w-40 rounded-full bg-accent/30 blur-3xl" />
         <div className="relative">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">Yoyo · Dashboard</p>
-          <h1 className="mt-1.5 text-2xl font-semibold tracking-tight md:text-[28px]">Hi, welcome back!</h1>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">Yoyo · {t("nav_dashboard")}</p>
+          <h1 className="mt-1.5 text-2xl font-semibold tracking-tight md:text-[28px]">{t("dash_welcome_back")}</h1>
           <p className="mt-1 max-w-2xl text-sm text-white/80">{greeting}</p>
         </div>
       </div>
