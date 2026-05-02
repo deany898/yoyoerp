@@ -17,6 +17,7 @@ import { canAccessRoute } from "@/lib/route-guard";
 import { toast } from "sonner";
 import { useAppLock } from "@/hooks/useAppLock";
 import { LockScreen } from "@/components/lock/LockScreen";
+import { useRealtimeInvalidator } from "@/hooks/useRealtimeInvalidator";
 
 export const Route = createFileRoute("/app")({
   component: AppLayout,
@@ -35,6 +36,10 @@ function AppLayout() {
   }
 
   const { locked, unlock, isLockConfigured, idleTooLong } = useAppLock(user?.id ?? null);
+
+  // Tier B · Live sync: one global Supabase channel invalidates relevant
+  // React Query caches when teammates change inventory/production/sales/procurement data.
+  useRealtimeInvalidator(!!user && !locked);
 
   // Force sign-out if idle longer than 15 days.
   useEffect(() => {
