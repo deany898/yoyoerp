@@ -44,7 +44,7 @@ export function Logo({
           )}
           style={{ fontSize: Math.round(size * 0.5) }}
         >
-          YOYO <span className="font-light opacity-80">ERP</span>
+          Yoyo
         </span>
       )}
     </div>
