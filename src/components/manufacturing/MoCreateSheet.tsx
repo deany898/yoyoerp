@@ -11,6 +11,7 @@ import { AutoCodeField } from "@/components/shared/AutoCodeField";
 
 interface VariantOpt { id: string; sku: string; variant_name: string; product_name: string }
 interface WhOpt { id: string; name: string; code: string }
+interface SupOpt { id: string; display_name: string }
 
 interface Props {
   open: boolean;
@@ -23,10 +24,12 @@ interface Props {
 export function MoCreateSheet({ open, onOpenChange, prefill, onCreated }: Props) {
   const [variants, setVariants] = useState<VariantOpt[]>([]);
   const [warehouses, setWarehouses] = useState<WhOpt[]>([]);
+  const [supervisors, setSupervisors] = useState<SupOpt[]>([]);
   const [moNumber, setMoNumber] = useState("");
   const [variantId, setVariantId] = useState<string | null>(null);
   const [qty, setQty] = useState<string>("");
   const [warehouseId, setWarehouseId] = useState<string | null>(null);
+  const [supervisorId, setSupervisorId] = useState<string | null>(null);
   const [plannedStart, setPlannedStart] = useState<string>("");
   const [plannedEnd, setPlannedEnd] = useState<string>("");
   const [notes, setNotes] = useState("");
@@ -35,12 +38,13 @@ export function MoCreateSheet({ open, onOpenChange, prefill, onCreated }: Props)
   useEffect(() => {
     if (!open) return;
     (async () => {
-      const [vRes, wRes, n] = await Promise.all([
+      const [vRes, wRes, rolesRes, n] = await Promise.all([
         supabase.from("product_variants")
           .select("id, sku, variant_name, product:products(name)")
           .eq("is_active", true)
           .order("variant_name"),
         supabase.from("warehouses").select("id, name, code").eq("is_active", true).order("name"),
+        supabase.from("user_roles").select("user_id").eq("role", "supervisor"),
         nextMoNumber(),
       ]);
       setVariants(((vRes.data ?? []) as unknown as Array<{ id: string; sku: string; variant_name: string; product: { name: string } | null }>).map((v) => ({
@@ -50,6 +54,17 @@ export function MoCreateSheet({ open, onOpenChange, prefill, onCreated }: Props)
         product_name: v.product?.name ?? "—",
       })));
       setWarehouses(wRes.data ?? []);
+      const supUserIds = Array.from(new Set((rolesRes.data ?? []).map((r) => r.user_id)));
+      if (supUserIds.length > 0) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id, display_name")
+          .in("user_id", supUserIds)
+          .order("display_name");
+        setSupervisors((profs ?? []).map((p) => ({ id: p.id, display_name: p.display_name ?? "Unnamed" })));
+      } else {
+        setSupervisors([]);
+      }
       if (n) setMoNumber(n);
       if (prefill?.variant_id) setVariantId(prefill.variant_id);
       if (prefill?.qty) setQty(String(prefill.qty));
@@ -58,6 +73,7 @@ export function MoCreateSheet({ open, onOpenChange, prefill, onCreated }: Props)
 
   const reset = () => {
     setVariantId(null); setQty(""); setWarehouseId(null);
+    setSupervisorId(null);
     setPlannedStart(""); setPlannedEnd(""); setNotes("");
   };
 
@@ -80,6 +96,7 @@ export function MoCreateSheet({ open, onOpenChange, prefill, onCreated }: Props)
         variant_id: variantId,
         qty_planned: qtyNum,
         warehouse_id: warehouseId,
+        supervisor_id: supervisorId,
         source_do_id: prefill?.source_do_id ?? null,
         planned_start: plannedStart || null,
         planned_end: plannedEnd || null,
@@ -134,6 +151,17 @@ export function MoCreateSheet({ open, onOpenChange, prefill, onCreated }: Props)
               onChange={(v) => setWarehouseId(v)}
               placeholder="Select warehouse"
               emptyText="No warehouses"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Assign supervisor</Label>
+            <SmartSelect
+              options={supervisors.map((s) => ({ value: s.id, label: s.display_name }))}
+              value={supervisorId}
+              onChange={(v) => setSupervisorId(v)}
+              placeholder="Unassigned"
+              emptyText="No supervisors yet"
             />
           </div>
 

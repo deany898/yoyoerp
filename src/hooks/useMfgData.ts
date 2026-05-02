@@ -51,6 +51,7 @@ export interface MOWithDetails extends MORow {
   variant?: { id: string; sku: string; variant_name: string; product_id: string } | null;
   source_do?: { id: string; do_number: string } | null;
   warehouse?: { id: string; name: string; code: string } | null;
+  supervisor?: { id: string; display_name: string | null } | null;
 }
 
 export function useManufacturingOrders() {
@@ -64,7 +65,8 @@ export function useManufacturingOrders() {
         *,
         variant:product_variants(id, sku, variant_name, product_id),
         source_do:dispatch_orders(id, do_number),
-        warehouse:warehouses(id, name, code)
+        warehouse:warehouses(id, name, code),
+        supervisor:profiles!manufacturing_orders_supervisor_id_fkey(id, display_name)
       `)
       .order("created_at", { ascending: false });
     if (error) notify.error("Failed to load production logs", { description: error.message });

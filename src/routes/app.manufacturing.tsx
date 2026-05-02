@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Factory, Package2, CalendarClock, Hammer, Truck } from "lucide-react";
+import { Plus, Factory, Package2, CalendarClock, Hammer, Truck, UserCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,6 +12,8 @@ import { useManufacturingOrders, type MOWithDetails } from "@/hooks/useMfgData";
 import { MoCreateSheet } from "@/components/manufacturing/MoCreateSheet";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { useAuth } from "@/hooks/useAuth";
+import { useRole } from "@/hooks/useRole";
 
 type MOStatus = Database["public"]["Enums"]["mo_status"];
 
@@ -52,11 +54,32 @@ const TAB_FILTERS: Record<TabKey, MOStatus[]> = {
 
 function ManufacturingPage() {
   const navigate = useNavigate();
-  const { orders, loading, refresh } = useManufacturingOrders();
+  const { orders: allOrders, loading, refresh } = useManufacturingOrders();
+  const { user } = useAuth();
+  const { role } = useRole();
+  const [myProfileId, setMyProfileId] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("all");
   const [createOpen, setCreateOpen] = useState(false);
   const [unitsToday, setUnitsToday] = useState<number>(0);
   const [mouldByMo, setMouldByMo] = useState<Record<string, string>>({});
+
+  // Resolve current user's profile.id once (supervisor_id references profiles.id, not auth.uid()).
+  useEffect(() => {
+    if (!user?.id) { setMyProfileId(null); return; }
+    (async () => {
+      const { data } = await supabase.from("profiles").select("id").eq("user_id", user.id).maybeSingle();
+      setMyProfileId(data?.id ?? null);
+    })();
+  }, [user?.id]);
+
+  // Supervisors only see their own MOs; admin/manager see all; other staff see all (read-only).
+  const orders = useMemo(() => {
+    if (role === "supervisor") {
+      if (!myProfileId) return [];
+      return allOrders.filter((o) => o.supervisor_id === myProfileId);
+    }
+    return allOrders;
+  }, [allOrders, role, myProfileId]);
 
   // Units produced today (sum of mo_outputs.qty for outputs posted today)
   useEffect(() => {
@@ -252,6 +275,14 @@ function MoCard({ mo, mould, onOpen }: { mo: MOWithDetails; mould?: string; onOp
         <span className="inline-flex items-center gap-1.5">
           <Hammer className="h-3.5 w-3.5" />
           {mould ?? "No mould yet"}
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <UserCircle2 className="h-3.5 w-3.5" />
+          {mo.supervisor?.display_name ? (
+            mo.supervisor.display_name
+          ) : (
+            <span className="text-amber-700">Unassigned</span>
+          )}
         </span>
         <span className="inline-flex items-center gap-1.5">
           <CalendarClock className="h-3.5 w-3.5" />

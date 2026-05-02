@@ -25,6 +25,7 @@ interface MOFull extends MORow {
   variant: { id: string; sku: string; variant_name: string; product_id: string } | null;
   warehouse: { id: string; name: string; code: string } | null;
   source_do: { id: string; do_number: string } | null;
+  supervisor: { id: string; display_name: string | null } | null;
 }
 
 interface BomLineRow {
@@ -136,6 +137,15 @@ function MoDetailPage() {
             <span>{mo.variant?.variant_name ?? "—"} <span className="font-mono text-xs">({mo.variant?.sku})</span></span>
             {mo.warehouse && (<><span>·</span><span>{mo.warehouse.name}</span></>)}
             {mo.source_do && (<><span>·</span><span>From DO {mo.source_do.do_number}</span></>)}
+            <span>·</span>
+            <span>
+              Supervisor:{" "}
+              {mo.supervisor?.display_name ? (
+                <span className="text-foreground font-medium">{mo.supervisor.display_name}</span>
+              ) : (
+                <span className="text-amber-700 font-medium">Unassigned</span>
+              )}
+            </span>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
