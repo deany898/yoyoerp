@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { notify } from "@/lib/notify";
 import { nextMoNumber } from "@/hooks/useMfgData";
 import { AutoCodeField } from "@/components/shared/AutoCodeField";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface VariantOpt { id: string; sku: string; variant_name: string; product_name: string }
 interface WhOpt { id: string; name: string; code: string }
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export function MoCreateSheet({ open, onOpenChange, prefill, onCreated }: Props) {
+  const { t } = useLanguage();
   const [variants, setVariants] = useState<VariantOpt[]>([]);
   const [warehouses, setWarehouses] = useState<WhOpt[]>([]);
   const [supervisors, setSupervisors] = useState<SupOpt[]>([]);
@@ -120,71 +122,71 @@ export function MoCreateSheet({ open, onOpenChange, prefill, onCreated }: Props)
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>New production log</SheetTitle>
-          <SheetDescription>Plan production for a finished or semi-finished variant.</SheetDescription>
+          <SheetTitle>{t("mfg_new_log_title")}</SheetTitle>
+          <SheetDescription>{t("mfg_new_log_desc")}</SheetDescription>
         </SheetHeader>
         <div className="mt-6 space-y-4">
-          <AutoCodeField label="Log number" pendingCode={moNumber} />
+          <AutoCodeField label={t("mfg_log_number")} pendingCode={moNumber} />
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Product variant *</Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_product_variant")} *</Label>
             <SmartSelect
               options={variants.map((v) => ({ value: v.id, label: `${v.product_name} · ${v.variant_name}`, hint: v.sku }))}
               value={variantId}
               onChange={(v) => setVariantId(v)}
-              placeholder="Search products…"
-              searchPlaceholder="Type SKU or name…"
-              emptyText="No active variants"
+              placeholder={t("mfg_search_products")}
+              searchPlaceholder={t("mfg_type_sku_or_name")}
+              emptyText={t("mfg_no_active_variants")}
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Planned quantity *</Label>
-            <Input type="number" step="0.001" value={qty} onChange={(e) => setQty(e.target.value)} placeholder="0" />
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_planned_qty")} *</Label>
+            <Input type="number" inputMode="numeric" step="0.001" value={qty} onChange={(e) => setQty(e.target.value)} placeholder="0" />
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Warehouse</Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_warehouse")}</Label>
             <SmartSelect
               options={warehouses.map((w) => ({ value: w.id, label: w.name, hint: w.code }))}
               value={warehouseId}
               onChange={(v) => setWarehouseId(v)}
-              placeholder="Select warehouse"
-              emptyText="No warehouses"
+              placeholder={t("mfg_select_warehouse")}
+              emptyText={t("mfg_no_warehouses")}
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Assign supervisor</Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_assign_supervisor")}</Label>
             <SmartSelect
               options={supervisors.map((s) => ({ value: s.id, label: s.display_name }))}
               value={supervisorId}
               onChange={(v) => setSupervisorId(v)}
-              placeholder="Unassigned"
-              emptyText="No supervisors yet"
+              placeholder={t("mfg_unassigned")}
+              emptyText={t("mfg_no_supervisors")}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Planned start</Label>
+              <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_planned_start")}</Label>
               <Input type="date" value={plannedStart} onChange={(e) => setPlannedStart(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Planned end</Label>
+              <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_planned_end")}</Label>
               <Input type="date" value={plannedEnd} onChange={(e) => setPlannedEnd(e.target.value)} />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Notes</Label>
-            <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional production notes" />
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("mfg_notes")}</Label>
+            <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t("mfg_notes_placeholder")} />
           </div>
         </div>
 
         <SheetFooter className="mt-6 flex-row justify-end gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
-          <Button onClick={save} disabled={saving}>{saving ? "Creating…" : "Create order"}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t("btn_cancel")}</Button>
+          <Button onClick={save} disabled={saving}>{saving ? t("mfg_creating") : t("mfg_create_order")}</Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>
