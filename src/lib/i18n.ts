@@ -604,6 +604,26 @@ export const translations = {
 
   page_admin_staffing: { en: "Staffing rules · Admin", hi: "स्टाफिंग नियम · एडमिन" },
   page_daily_staffing: { en: "Daily staffing", hi: "आज की टीम" },
+
+  // Staffing extras
+  staff_today_team: { en: "Today's staffing", hi: "आज की टीम" },
+  staff_fully_staffed: { en: "Fully staffed", hi: "पूरी टीम" },
+  staff_understaffed: { en: "Understaffed", hi: "कम स्टाफ" },
+  staff_save_all: { en: "Save all assignments", hi: "सभी असाइनमेंट सेव करें" },
+  staff_saved_toast: { en: "workers assigned", hi: "कर्मचारी असाइन हुए" },
+  staff_moulding_note: { en: "Each machine needs 1 operator minimum", hi: "प्रत्येक मशीन को न्यूनतम 1 ऑपरेटर चाहिए" },
+  staff_printing_note: { en: "Printing team is shared across all MOs", hi: "प्रिंटिंग टीम सभी MO के लिए साझा है" },
+  staff_delivery_note: { en: "Delivery is fixed at 1 driver + 1 helper per vehicle", hi: "डिलीवरी में प्रति वाहन 1 ड्राइवर + 1 सहायक तय है" },
+
+  // Attendance
+  attendance_title: { en: "Mark attendance", hi: "हाजिरी दर्ज करें" },
+  attendance_save: { en: "Save attendance", hi: "हाजिरी सेव करें" },
+  attendance_present: { en: "Present", hi: "उपस्थित" },
+  attendance_half: { en: "Half day", hi: "आधा दिन" },
+  attendance_absent: { en: "Absent", hi: "अनुपस्थित" },
+  attendance_quick_link: { en: "Mark attendance today · आज हाजिरी", hi: "आज हाजिरी दर्ज करें" },
+  attendance_time_in: { en: "Time in", hi: "आने का समय" },
+  attendance_time_out: { en: "Time out", hi: "जाने का समय" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
