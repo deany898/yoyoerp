@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { notify, friendlyAuthError } from "@/lib/notify";
+import { notify } from "@/lib/notify";
 import { LockSettingsCard } from "@/components/lock/LockSettingsCard";
 
 export const Route = createFileRoute("/app/profile")({
