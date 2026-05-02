@@ -44,6 +44,7 @@ import { Route as AppAiInsightsRouteImport } from './routes/app.ai-insights'
 import { Route as AppAdminRouteImport } from './routes/app.admin'
 import { Route as AppAboutRouteImport } from './routes/app.about'
 import { Route as AppWorkersIdRouteImport } from './routes/app.workers.$id'
+import { Route as AppStaffingDailyRouteImport } from './routes/app.staffing.daily'
 import { Route as AppSettingsUsersRouteImport } from './routes/app.settings.users'
 import { Route as AppManufacturingMoIdRouteImport } from './routes/app.manufacturing.$moId'
 import { Route as AppMachinesIdRouteImport } from './routes/app.machines.$id'
@@ -228,6 +229,11 @@ const AppWorkersIdRoute = AppWorkersIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AppWorkersRoute,
 } as any)
+const AppStaffingDailyRoute = AppStaffingDailyRouteImport.update({
+  id: '/staffing/daily',
+  path: '/staffing/daily',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSettingsUsersRoute = AppSettingsUsersRouteImport.update({
   id: '/settings/users',
   path: '/settings/users',
@@ -313,6 +319,7 @@ export interface FileRoutesByFullPath {
   '/app/machines/$id': typeof AppMachinesIdRoute
   '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
   '/app/settings/users': typeof AppSettingsUsersRoute
+  '/app/staffing/daily': typeof AppStaffingDailyRoute
   '/app/workers/$id': typeof AppWorkersIdRoute
 }
 export interface FileRoutesByTo {
@@ -357,6 +364,7 @@ export interface FileRoutesByTo {
   '/app/machines/$id': typeof AppMachinesIdRoute
   '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
   '/app/settings/users': typeof AppSettingsUsersRoute
+  '/app/staffing/daily': typeof AppStaffingDailyRoute
   '/app/workers/$id': typeof AppWorkersIdRoute
 }
 export interface FileRoutesById {
@@ -403,6 +411,7 @@ export interface FileRoutesById {
   '/app/machines/$id': typeof AppMachinesIdRoute
   '/app/manufacturing/$moId': typeof AppManufacturingMoIdRoute
   '/app/settings/users': typeof AppSettingsUsersRoute
+  '/app/staffing/daily': typeof AppStaffingDailyRoute
   '/app/workers/$id': typeof AppWorkersIdRoute
 }
 export interface FileRouteTypes {
@@ -450,6 +459,7 @@ export interface FileRouteTypes {
     | '/app/machines/$id'
     | '/app/manufacturing/$moId'
     | '/app/settings/users'
+    | '/app/staffing/daily'
     | '/app/workers/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -494,6 +504,7 @@ export interface FileRouteTypes {
     | '/app/machines/$id'
     | '/app/manufacturing/$moId'
     | '/app/settings/users'
+    | '/app/staffing/daily'
     | '/app/workers/$id'
   id:
     | '__root__'
@@ -539,6 +550,7 @@ export interface FileRouteTypes {
     | '/app/machines/$id'
     | '/app/manufacturing/$moId'
     | '/app/settings/users'
+    | '/app/staffing/daily'
     | '/app/workers/$id'
   fileRoutesById: FileRoutesById
 }
@@ -795,6 +807,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWorkersIdRouteImport
       parentRoute: typeof AppWorkersRoute
     }
+    '/app/staffing/daily': {
+      id: '/app/staffing/daily'
+      path: '/staffing/daily'
+      fullPath: '/app/staffing/daily'
+      preLoaderRoute: typeof AppStaffingDailyRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/settings/users': {
       id: '/app/settings/users'
       path: '/settings/users'
@@ -942,6 +961,7 @@ interface AppRouteChildren {
   AppWorkersRoute: typeof AppWorkersRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
   AppSettingsUsersRoute: typeof AppSettingsUsersRoute
+  AppStaffingDailyRoute: typeof AppStaffingDailyRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -977,6 +997,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppWorkersRoute: AppWorkersRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
   AppSettingsUsersRoute: AppSettingsUsersRoute,
+  AppStaffingDailyRoute: AppStaffingDailyRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
