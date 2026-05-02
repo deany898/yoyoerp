@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { adminResetPassword } from "@/server/admin-users.functions";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Props {
   open: boolean;
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export function ResetPasswordDialog({ open, onOpenChange, userId, userName }: Props) {
+  const { t } = useLanguage();
   const resetFn = useServerFn(adminResetPassword);
   const [pw, setPw] = useState("");
   const [show, setShow] = useState(false);
@@ -38,16 +40,16 @@ export function ResetPasswordDialog({ open, onOpenChange, userId, userName }: Pr
   async function handleSave() {
     if (!userId) return;
     if (pw.length < 8) {
-      toast.error("Password must be at least 8 characters");
+      toast.error(t("uf_min_8"));
       return;
     }
     setSaving(true);
     try {
       await resetFn({ data: { user_id: userId, password: pw } });
-      toast.success("Password updated. Share it with the user directly. No email sent.");
+      toast.success(t("settings_password_updated"));
       onOpenChange(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Reset failed");
+      toast.error(err instanceof Error ? err.message : t("rpw_title"));
     } finally {
       setSaving(false);
     }
@@ -57,19 +59,19 @@ export function ResetPasswordDialog({ open, onOpenChange, userId, userName }: Pr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Reset password</DialogTitle>
+          <DialogTitle>{t("rpw_title")}</DialogTitle>
           <DialogDescription>
-            Set a new password for {userName ?? "this user"}. They must use it on next sign in. No email is sent.
+            {`${t("rpw_desc")}${userName ? ` · ${userName}` : ""}`}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-1.5">
-          <Label className="text-xs">New password</Label>
+          <Label className="text-xs">{t("rpw_new_password")}</Label>
           <div className="relative">
             <Input
               type={show ? "text" : "password"}
               value={pw}
               onChange={(e) => setPw(e.target.value)}
-              placeholder="Min 8 characters"
+              placeholder={t("uf_min_8")}
               className="pr-10"
               autoFocus
             />
@@ -77,7 +79,7 @@ export function ResetPasswordDialog({ open, onOpenChange, userId, userName }: Pr
               type="button"
               onClick={() => setShow((s) => !s)}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label={show ? "Hide password" : "Show password"}
+              aria-label={show ? t("uf_hide_pw") : t("uf_show_pw")}
             >
               {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -85,11 +87,11 @@ export function ResetPasswordDialog({ open, onOpenChange, userId, userName }: Pr
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-            Cancel
+            {t("btn_cancel")}
           </Button>
           <Button onClick={handleSave} disabled={saving || pw.length < 8}>
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Update password
+            {t("uf_update_pw")}
           </Button>
         </DialogFooter>
       </DialogContent>
