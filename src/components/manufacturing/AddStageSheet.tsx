@@ -146,12 +146,13 @@ export function AddStageSheet({ open, onClose, mode, groupId, defaultProductId, 
         unit_cost: payMode === "per_unit" ? Number(unitCost || 0) : 0,
         labour_cost: payMode === "salary" ? Number(labourCost || 0) : Number(unitCost || 0),
         machine_cost: machineId ? 0 : Number(machineCost || 0),
-        mould_cost: mouldId ? 0 : 0,
+        overhead_cost: Number(overheadCost || 0),
+        rejection_pct: Number(rejectionPct || 0),
+      };
+      const stageExtras = {
         machine_id: machineId,
         mould_id: mouldId,
         machine_hours_per_unit: Number(hoursPerUnit || 0),
-        overhead_cost: Number(overheadCost || 0),
-        rejection_pct: Number(rejectionPct || 0),
       };
 
       if (mode === "group") {
@@ -181,7 +182,7 @@ export function AddStageSheet({ open, onClose, mode, groupId, defaultProductId, 
               .order("sequence", { ascending: false })
               .limit(1)
               .maybeSingle();
-            return { ...base, variant_id: vid, sequence: (last?.sequence ?? 0) + 1 };
+            return { ...base, ...stageExtras, variant_id: vid, sequence: (last?.sequence ?? 0) + 1 };
           }),
         );
         const { error } = await supabase.from("production_stages").insert(rows);
