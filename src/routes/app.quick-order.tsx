@@ -22,6 +22,7 @@ import {
   saveLastCustomer, loadLastCustomer,
   type DraftLine,
 } from "@/lib/quick-order-store";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export const Route = createFileRoute("/app/quick-order")({
   component: QuickOrderPage,
@@ -40,6 +41,7 @@ function newLine(): DraftLine {
 
 function QuickOrderPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { products } = useProducts();
   const { role } = useRole();
   const isCustomer = role === "customer";
@@ -479,12 +481,12 @@ function QuickOrderPage() {
           <thead>
             <tr className="border-b border-border bg-muted/40 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
               <th className="py-2 text-center">#</th>
-              <th className="px-1.5 text-left">Product</th>
-              <th className="px-1.5 text-center">Qty</th>
-              <th className="px-1.5 text-left">UOM</th>
-              <th className="px-1.5 text-right">Price ₹</th>
-              <th className="px-1.5 text-right">Disc</th>
-              <th className="px-1.5 text-right">Total</th>
+              <th className="px-1.5 text-left">{t("qo_t_product")}</th>
+              <th className="px-1.5 text-center">{t("qo_t_qty")}</th>
+              <th className="px-1.5 text-left">{t("qo_t_uom")}</th>
+              <th className="px-1.5 text-right">{t("qo_t_price")}</th>
+              <th className="px-1.5 text-right">{t("qo_t_disc")}</th>
+              <th className="px-1.5 text-right">{t("qo_t_total")}</th>
               <th className="px-1.5"></th>
             </tr>
           </thead>
@@ -506,14 +508,14 @@ function QuickOrderPage() {
         </table>
         <div className="flex items-center justify-between border-t border-border bg-muted/20 px-3 py-2 text-xs">
           <span className="text-muted-foreground">
-            {filled.length} {filled.length === 1 ? "item" : "items"} · keyboard · Enter to add row · Cmd/Ctrl+D duplicate · Cmd/Ctrl+S draft · Cmd/Ctrl+Enter submit
+            {filled.length} {filled.length === 1 ? t("qo_item_one") : t("qo_item_other")}
           </span>
           <Button
             size="sm" variant="ghost"
             onClick={() => setLines((p) => [...p, newLine()])}
             className="h-7 gap-1 text-xs"
           >
-            <Plus className="h-3.5 w-3.5" /> Add row
+            <Plus className="h-3.5 w-3.5" /> {t("qo_add_row")}
           </Button>
         </div>
       </section>
@@ -535,7 +537,7 @@ function QuickOrderPage() {
           variants={variants}
           recentIds={recentIds}
           onPick={appendVariant}
-          placeholder={filled.length === 0 ? "Search & add first product…" : "Add another product…"}
+          placeholder={filled.length === 0 ? t("qo_search_first") : t("qo_add_another")}
         />
       </section>
 
