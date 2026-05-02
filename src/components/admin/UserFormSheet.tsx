@@ -29,7 +29,6 @@ type AppRole = Database["public"]["Enums"]["app_role"];
 const ROLE_OPTIONS: { value: AppRole; label: string }[] = [
   { value: "manager", label: ROLE_LABEL.manager },
   { value: "supervisor", label: ROLE_LABEL.supervisor },
-  { value: "accountant", label: ROLE_LABEL.accountant },
   { value: "sales", label: ROLE_LABEL.sales },
   { value: "dispatch", label: "Driver / Dispatch" },
   { value: "worker", label: ROLE_LABEL.worker },
