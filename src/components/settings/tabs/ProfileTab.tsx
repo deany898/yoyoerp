@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { notify } from "@/lib/notify";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const profileSchema = z.object({
   display_name: z.string().trim().min(2).max(80),
@@ -29,6 +30,7 @@ const profileSchema = z.object({
 
 export function ProfileTab() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [adminLocked, setAdminLocked] = useState(false);
@@ -81,7 +83,7 @@ export function ProfileTab() {
   }
 
   if (loading) {
-    return <div className="py-12 text-center text-sm text-muted-foreground">Loading…</div>;
+    return <div className="py-12 text-center text-sm text-muted-foreground">{t("settings_loading")}</div>;
   }
 
   return (
@@ -90,15 +92,15 @@ export function ProfileTab() {
         <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
           <Lock className="mt-0.5 h-4 w-4 shrink-0" />
           <div>
-            <div className="font-semibold">Account is admin-locked</div>
-            <div className="text-xs">Identity fields cannot be changed. Contact an administrator.</div>
+            <div className="font-semibold">{t("settings_admin_locked")}</div>
+            <div className="text-xs">{t("settings_admin_locked_desc")}</div>
           </div>
         </div>
       )}
-      <h2 className="text-base font-semibold">Identity</h2>
+      <h2 className="text-base font-semibold">{t("settings_identity")}</h2>
       <Separator className="my-4" />
       <form onSubmit={save} className="space-y-4">
-        <Field label="Display name" Icon={UserIcon}>
+        <Field label={t("settings_display_name")} Icon={UserIcon}>
           <Input
             disabled={adminLocked}
             value={form.display_name}
@@ -107,7 +109,7 @@ export function ProfileTab() {
           />
         </Field>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Username" Icon={AtSign}>
+          <Field label={t("settings_username")} Icon={AtSign}>
             <Input
               disabled={adminLocked}
               placeholder="yourname"
@@ -116,22 +118,24 @@ export function ProfileTab() {
               className="pl-9"
             />
           </Field>
-          <Field label="Mobile" Icon={Phone}>
+          <Field label={t("settings_mobile")} Icon={Phone}>
             <Input
               disabled={adminLocked}
               placeholder="+91 98765 43210"
               value={form.mobile}
               onChange={(e) => setForm((f) => ({ ...f, mobile: e.target.value }))}
               className="pl-9"
+              type="tel"
+              inputMode="tel"
             />
           </Field>
         </div>
-        <Field label="Email" Icon={Mail}>
+        <Field label={t("settings_email")} Icon={Mail}>
           <Input value={user?.email ?? ""} disabled className="pl-9" />
         </Field>
         <div className="flex justify-end">
           <Button type="submit" disabled={saving || adminLocked}>
-            {saving ? "Saving…" : "Save changes"}
+            {saving ? t("settings_saving") : t("settings_save_changes")}
           </Button>
         </div>
       </form>
