@@ -26,7 +26,7 @@ export const Route = createFileRoute("/app")({
 });
 
 function AppLayout() {
-  const { role, realRole, rolesLoading } = useRole();
+  const { role, realRole, rolesLoading, roleResolutionFailed } = useRole();
   const { user, loading: authLoading, displayName, signOut, roles } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -128,6 +128,61 @@ function AppLayout() {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Role resolution recovery: signed in, roles loading finished, but no role
+  // row was returned (RLS hiccup, dropped request, etc). DO NOT redirect to
+  // /store and DO NOT trust the "customer" fallback — show a refresh prompt.
+  if (roleResolutionFailed) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+          gap: 16,
+          padding: 24,
+          textAlign: "center",
+        }}
+      >
+        <div style={{ fontSize: 20, fontWeight: 700 }}>Could not load your role</div>
+        <div style={{ fontSize: 14, color: "#6B7280" }}>
+          Please refresh the page · पेज रिफ्रेश करें
+        </div>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          style={{
+            padding: "10px 24px",
+            background: "#2454A4",
+            color: "#fff",
+            border: "none",
+            borderRadius: 8,
+            fontSize: 14,
+            cursor: "pointer",
+          }}
+        >
+          Refresh · रिफ्रेश करें
+        </button>
+        <button
+          type="button"
+          onClick={() => void signOut()}
+          style={{
+            padding: "8px 20px",
+            background: "transparent",
+            color: "#6B7280",
+            border: "1px solid #E5E7EB",
+            borderRadius: 8,
+            fontSize: 13,
+            cursor: "pointer",
+          }}
+        >
+          Sign out
+        </button>
       </div>
     );
   }

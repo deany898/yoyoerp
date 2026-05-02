@@ -5,6 +5,9 @@ import { useRoleSimulator } from "@/contexts/RoleSimulatorContext";
 import { notify } from "@/lib/notify";
 
 export interface RoleContextValue {
+  /** Effective role for permission checks. Falls back to "customer" while
+   *  roles are loading or unresolved so callers always get a defined string —
+   *  use `roleResolutionFailed` / `rolesLoading` to know if it is trustworthy. */
   role: UserRoleType;
   realRole: UserRoleType;
   isSimulating: boolean;
@@ -12,9 +15,10 @@ export interface RoleContextValue {
   isAdmin: boolean;
   isManager: boolean;
   isRequestor: boolean;
-  /** True while the user_roles query is in flight. Components should render
-   *  a skeleton instead of role-conditional UI when this is true. */
   rolesLoading: boolean;
+  /** True once loading is complete AND no role was resolved. Use to render
+   *  the "Could not load your role" recovery screen. */
+  roleResolutionFailed: boolean;
 }
 
 export const RoleContext = createContext<RoleContextValue | null>(null);
@@ -41,11 +45,18 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       notify.error("Could not load your permissions. Please refresh or contact admin.");
     }
   }, [rolesLoading, user, authRoles.length]);
-  // While roles are loading OR no user is signed in, fall back to the LEAST-
-  // privileged real role ("customer") so we never silently grant write access.
-  // Components gate role-dependent UI with `rolesLoading` instead of relying
-  // on the fallback. We never default to "worker" because it has stock-write
-  // permissions and would silently elevate unassigned users.
+  // CRITICAL: never silently default to "customer" — that mis-labels admins
+  // as customers and triggers the wrong dashboard / wrong permissions.
+  //   - During load: realRole is null and components should gate on `rolesLoading`.
+  //   - After load with no rows: realRole stays null and `roleResolutionFailed`
+  //     becomes true so the UI can prompt a refresh instead of pretending the
+  //     user is a customer.
+  // CRITICAL: do NOT silently default to "customer" once loading completes —
+  // that mis-labels admins as customers. While loading we still expose
+  // "customer" (least-privileged) for type-safety of consumers, but flag
+  // `roleResolutionFailed` so the app shell can render a refresh prompt
+  // instead of trusting the fallback.
+  const roleResolutionFailed = !!user && !rolesLoading && !matchedRole;
   const realRole: UserRoleType = matchedRole ?? "customer";
 
   // Only admins are allowed to simulate other roles. For everyone else the
@@ -64,8 +75,9 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       isManager: role === "manager",
       isRequestor: role === "requestor",
       rolesLoading,
+      roleResolutionFailed,
     };
-  }, [role, realRole, rolesLoading, user, matchedRole, authRoles.length]);
+  }, [role, realRole, rolesLoading, roleResolutionFailed, user, matchedRole, authRoles.length]);
 
   return <RoleContext.Provider value={value}>{children}</RoleContext.Provider>;
 }
