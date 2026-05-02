@@ -6,12 +6,14 @@ import { OperationsOverviewChart } from "@/components/dashboard/OperationsOvervi
 import { useStockSummary } from "@/hooks/useInventoryData";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/hooks/useAuth";
+import { useMoStats } from "@/hooks/useMoStats";
 
 export function AdminDashboard() {
   const { displayName, user } = useAuth();
   const name = (displayName ?? user?.email?.split("@")[0] ?? "जी").split(" ")[0];
   const { data: summary } = useStockSummary();
   const { data: notifications } = useNotifications();
+  const moStats = useMoStats();
   const pendingApprovals = notifications.filter(
     (n) => n.type === "request_update" || n.type === "po_reminder"
   ).length;
@@ -32,15 +34,15 @@ export function AdminDashboard() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <GradientMetricCard
           variant="blue"
-          label="Today's revenue"
-          value="₹0"
-          sublabel="From dispatch · आज"
+          label="Units today"
+          value={moStats.unitsToday}
+          sublabel="Produced today · आज"
           icon={IndianRupee}
         />
         <GradientMetricCard
           variant="orange"
           label="Active MOs"
-          value={0}
+          value={moStats.activeMOs}
           sublabel="In production"
           icon={Factory}
         />
