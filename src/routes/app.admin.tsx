@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/app/admin")({
   component: AdminLayout,
-  head: () => ({ meta: [{ title: "Admin · YOYO ERP" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Admin · Yoyo" }, { name: "robots", content: "noindex" }] }),
 });
 
 function AdminLayout() {

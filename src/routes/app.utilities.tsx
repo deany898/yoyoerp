@@ -13,7 +13,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/app/utilities")({
   head: () => ({
     meta: [
-      { title: "Utilities · YOYO ERP" },
+      { title: "Utilities · Yoyo" },
       { name: "description", content: "Warehouse utility expenses (electricity, water, tea, etc.)." },
     ],
   }),

@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/app/machines")({
   head: () => ({
     meta: [
-      { title: "Machines · YOYO ERP" },
+      { title: "Machines · Yoyo" },
       { name: "description", content: "Production machines and equipment." },
     ],
   }),

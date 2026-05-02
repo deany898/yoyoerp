@@ -31,7 +31,7 @@ import { AutoCodeField } from "@/components/shared/AutoCodeField";
 
 export const Route = createFileRoute("/app/requests")({
   component: RequestsPage,
-  head: () => ({ meta: [{ title: "Requests · YOYO ERP" }] }),
+  head: () => ({ meta: [{ title: "Requests · Yoyo" }] }),
 });
 
 const STATUS_COLORS: Record<RequestStatusEnum, string> = {

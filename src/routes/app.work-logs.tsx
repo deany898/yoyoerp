@@ -20,7 +20,7 @@ import {
 export const Route = createFileRoute("/app/work-logs")({
   head: () => ({
     meta: [
-      { title: "Work logs · YOYO ERP" },
+      { title: "Work logs · Yoyo" },
       { name: "description", content: "Daily workforce and production logs across all shifts." },
     ],
   }),

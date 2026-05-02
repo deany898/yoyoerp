@@ -22,7 +22,7 @@ export function MobileTopBar() {
       title = getPageTitle("/" + segments.join("/"));
     }
   }
-  if (!title) title = "YOYO ERP";
+  if (!title) title = "Yoyo";
 
   return (
     <header className="flex h-12 shrink-0 items-center justify-between border-b border-border/60 bg-white px-4 md:hidden">

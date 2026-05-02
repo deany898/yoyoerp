@@ -17,7 +17,7 @@ import type { StockMovement } from "@/types/inventory";
 
 export const Route = createFileRoute("/app/movements")({
   component: MovementsPage,
-  head: () => ({ meta: [{ title: "Movements — YOYO ERP" }] }),
+  head: () => ({ meta: [{ title: "Movements — Yoyo" }] }),
   validateSearch: (search: Record<string, unknown>) => ({
     item: typeof search.item === "string" ? search.item : undefined,
   }),

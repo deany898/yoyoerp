@@ -12,7 +12,7 @@ export const FAQ_DATA: FaqCategory[] = [
   {
     title: "Getting Started",
     items: [
-      { question: "What is YOYO ERP?", answer: "YOYO ERP is an inventory management system that helps you track stock levels, manage suppliers, create purchase orders, and gain insights through analytics." },
+      { question: "What is Yoyo?", answer: "Yoyo is an inventory management system that helps you track stock levels, manage suppliers, create purchase orders, and gain insights through analytics." },
       { question: "How do I sign in?", answer: "Visit the sign-in page and use your email, username or mobile with the password your administrator provided. Google sign-in is also supported." },
       { question: "How do I navigate the app?", answer: "Use the sidebar (desktop) or bottom navigation bar (mobile) to switch between sections. Press CMD+K to open the command palette for quick search." },
       { question: "How do I update my profile?", answer: "Tap your name in the sidebar to open Profile, where you can update your display name, contact details and password." },

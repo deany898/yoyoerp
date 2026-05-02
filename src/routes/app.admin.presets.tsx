@@ -6,7 +6,7 @@ import { FormBuilderPanel } from "@/components/settings/FormBuilderPanel";
 
 export const Route = createFileRoute("/app/admin/presets")({
   component: AdminPresetsPage,
-  head: () => ({ meta: [{ title: "Presets · Admin · YOYO ERP" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Presets · Admin · Yoyo" }, { name: "robots", content: "noindex" }] }),
 });
 
 function AdminPresetsPage() {

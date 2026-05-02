@@ -7,7 +7,7 @@ import { UomManager } from "@/components/settings/UomManager";
 
 export const Route = createFileRoute("/app/admin/system")({
   component: AdminSystemPage,
-  head: () => ({ meta: [{ title: "System config · Admin · YOYO ERP" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "System config · Admin · Yoyo" }, { name: "robots", content: "noindex" }] }),
 });
 
 function AdminSystemPage() {

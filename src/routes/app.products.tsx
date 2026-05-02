@@ -25,7 +25,7 @@ import { usePermissions, PermissionGate } from "@/hooks/usePermissions";
 export const Route = createFileRoute("/app/products")({
   head: () => ({
     meta: [
-      { title: "Products · YOYO ERP" },
+      { title: "Products · Yoyo" },
       { name: "description", content: "Product master, variants, packaging, and tier pricing." },
     ],
   }),

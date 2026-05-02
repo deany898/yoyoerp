@@ -22,7 +22,7 @@ export function POPrintView({ purchaseOrder, supplier, items }: POPrintViewProps
       {/* Header */}
       <div className="mb-6 flex items-start justify-between border-b border-black pb-4">
         <div>
-          <h1 className="text-2xl font-bold">YOYO ERP</h1>
+          <h1 className="text-2xl font-bold">Yoyo</h1>
           <p className="text-sm text-gray-600">Purchase Order</p>
         </div>
         <div className="text-right">
@@ -122,7 +122,7 @@ export function POPrintView({ purchaseOrder, supplier, items }: POPrintViewProps
 
       {/* Footer */}
       <div className="mt-8 border-t border-black pt-2 text-center text-xs text-gray-500">
-        Printed from YOYO ERP · {format(new Date(), "MMM d, yyyy h:mm a")}
+        Printed from Yoyo · {format(new Date(), "MMM d, yyyy h:mm a")}
       </div>
     </div>
   );

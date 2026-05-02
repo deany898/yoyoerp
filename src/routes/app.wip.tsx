@@ -13,7 +13,7 @@ import { HandoffSheet } from "@/components/manufacturing/HandoffSheet";
 export const Route = createFileRoute("/app/wip")({
   head: () => ({
     meta: [
-      { title: "Stage WIP · YOYO ERP" },
+      { title: "Stage WIP · Yoyo" },
       { name: "description", content: "Track semi-finished stock and stage handoffs." },
     ],
   }),

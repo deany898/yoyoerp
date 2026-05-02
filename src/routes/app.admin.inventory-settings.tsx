@@ -5,7 +5,7 @@ import { TrackInventoryToggle } from "@/components/settings/TrackInventoryToggle
 
 export const Route = createFileRoute("/app/admin/inventory-settings")({
   component: AdminInventorySettingsPage,
-  head: () => ({ meta: [{ title: "Inventory settings · Admin · YOYO ERP" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Inventory settings · Admin · Yoyo" }, { name: "robots", content: "noindex" }] }),
 });
 
 function AdminInventorySettingsPage() {

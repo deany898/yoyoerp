@@ -102,7 +102,7 @@ export async function enrollBiometric(userId: string, userName: string): Promise
   const cred = (await navigator.credentials.create({
     publicKey: {
       challenge,
-      rp: { name: "YOYO ERP" },
+      rp: { name: "Yoyo" },
       user: { id: userIdBytes, name: userName, displayName: userName },
       pubKeyCredParams: [
         { type: "public-key", alg: -7 },

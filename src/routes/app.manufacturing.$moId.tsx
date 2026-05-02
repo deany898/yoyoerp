@@ -17,7 +17,7 @@ import { FLAGS } from "@/lib/feature-flags";
 import { getMoDetail } from "@/server/manufacturing.functions";
 
 export const Route = createFileRoute("/app/manufacturing/$moId")({
-  head: () => ({ meta: [{ title: "Production log · YOYO ERP" }] }),
+  head: () => ({ meta: [{ title: "Production log · Yoyo" }] }),
   component: MoDetailPage,
 });
 

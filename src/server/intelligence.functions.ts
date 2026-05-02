@@ -142,7 +142,7 @@ export const getStrategicBriefing = createServerFn({ method: "POST" })
       return { briefing: "AI gateway not configured", model: "none", error: "missing_key" };
     }
 
-    const system = `You are the Chief of Staff for YOYO Industries, a plastics manufacturer.
+    const system = `You are the Chief of Staff for Yoyo, a plastics manufacturer.
 Read the operational signals JSON and produce a crisp daily briefing.
 Format strictly:
 

@@ -19,7 +19,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/app/warehouses")({
   head: () => ({
     meta: [
-      { title: "Warehouses · YOYO ERP" },
+      { title: "Warehouses · Yoyo" },
       { name: "description", content: "Multi-warehouse and zone configuration." },
     ],
   }),

@@ -20,7 +20,7 @@ type MOStatus = Database["public"]["Enums"]["mo_status"];
 export const Route = createFileRoute("/app/manufacturing")({
   head: () => ({
     meta: [
-      { title: "Manufacturing · YOYO ERP" },
+      { title: "Manufacturing · Yoyo" },
       { name: "description", content: "Active production logs, planned orders, and floor progress." },
     ],
   }),

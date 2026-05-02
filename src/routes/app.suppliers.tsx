@@ -25,7 +25,7 @@ import {
 
 export const Route = createFileRoute("/app/suppliers")({
   component: SuppliersPage,
-  head: () => ({ meta: [{ title: "Suppliers · YOYO ERP" }] }),
+  head: () => ({ meta: [{ title: "Suppliers · Yoyo" }] }),
 });
 
 const EMPTY: Partial<SupplierRow> = {

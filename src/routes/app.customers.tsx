@@ -25,7 +25,7 @@ import { AutoCodeField } from "@/components/shared/AutoCodeField";
 
 export const Route = createFileRoute("/app/customers")({
   component: CustomersPage,
-  head: () => ({ meta: [{ title: "Customers · YOYO ERP" }] }),
+  head: () => ({ meta: [{ title: "Customers · Yoyo" }] }),
 });
 
 interface CustomerRow {

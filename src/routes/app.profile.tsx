@@ -18,7 +18,7 @@ import { LockSettingsCard } from "@/components/lock/LockSettingsCard";
 
 export const Route = createFileRoute("/app/profile")({
   component: ProfilePage,
-  head: () => ({ meta: [{ title: "Profile · YOYO ERP" }] }),
+  head: () => ({ meta: [{ title: "Profile · Yoyo" }] }),
 });
 
 const ROLE_LABEL: Record<string, string> = {

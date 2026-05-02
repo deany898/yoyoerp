@@ -61,7 +61,7 @@ const MATRIX_ROLES: AppRole[] = [
 
 export const Route = createFileRoute("/app/settings/users")({
   component: SettingsUsersPage,
-  head: () => ({ meta: [{ title: "User management · YOYO ERP" }] }),
+  head: () => ({ meta: [{ title: "User management · Yoyo" }] }),
 });
 
 function SettingsUsersPage() {

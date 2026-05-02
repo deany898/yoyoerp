@@ -14,7 +14,7 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
   head: () => ({
     meta: [
-      { title: "Staff sign in — YOYO Industries" },
+      { title: "Staff sign in — Yoyo" },
       { name: "description", content: "Authorised staff access only." },
       { name: "robots", content: "noindex" },
     ],
@@ -163,7 +163,7 @@ function AuthPage() {
       <main className="w-full max-w-md">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-medium tracking-tight text-foreground" style={{ fontWeight: 500 }}>
-            YOYO Industries
+            Yoyo
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Staff portal · authorised access only
@@ -239,7 +239,7 @@ function AuthPage() {
         </div>
 
         <footer className="mt-8 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} YOYO Industries · All rights reserved.
+          © {new Date().getFullYear()} Yoyo · All rights reserved.
         </footer>
       </main>
     </div>

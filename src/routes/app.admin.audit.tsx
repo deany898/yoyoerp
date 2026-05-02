@@ -9,7 +9,7 @@ import { notify } from "@/lib/notify";
 
 export const Route = createFileRoute("/app/admin/audit")({
   component: AdminAuditPage,
-  head: () => ({ meta: [{ title: "Audit log · Admin · YOYO ERP" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Audit log · Admin · Yoyo" }, { name: "robots", content: "noindex" }] }),
 });
 
 interface AuditRow {

@@ -12,7 +12,7 @@ import { FAQ_DATA } from "@/lib/faq-data";
 
 export const Route = createFileRoute("/app/help")({
   component: HelpPage,
-  head: () => ({ meta: [{ title: "Help Center — YOYO ERP" }] }),
+  head: () => ({ meta: [{ title: "Help Center — Yoyo" }] }),
 });
 
 function HelpPage() {
@@ -37,7 +37,7 @@ function HelpPage() {
         <HelpCircle className="h-7 w-7 text-primary shrink-0" />
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Help Center</h1>
-          <p className="text-sm text-muted-foreground">Find answers to common questions about YOYO ERP.</p>
+          <p className="text-sm text-muted-foreground">Find answers to common questions about Yoyo.</p>
         </div>
       </div>
 
