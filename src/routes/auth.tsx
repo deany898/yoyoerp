@@ -96,6 +96,14 @@ function AuthPage() {
     } catch {
       realEmail = null;
     }
+
+    // Fallback: if the user typed an actual email address into the mobile
+    // field, use it directly. Lets staff with real-email auth records
+    // (e.g. Gmail) sign in even if mobile-→-email resolution fails.
+    if (!realEmail && cleaned.includes("@")) {
+      realEmail = cleaned;
+    }
+
     if (!realEmail) {
       await fail(false);
       return;
