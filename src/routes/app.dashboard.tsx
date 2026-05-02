@@ -5,6 +5,8 @@ import { RoleDashboard } from "@/components/dashboard/RoleDashboard";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { useAlertGenerator } from "@/hooks/useStockAlertGenerator";
 import { useRole } from "@/hooks/useRole";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding, type TourStep } from "@/hooks/useOnboarding";
 
 const TOUR_STEPS: TourStep[] = [
@@ -23,7 +25,27 @@ export const Route = createFileRoute("/app/dashboard")({
 
 function DashboardPage() {
   const { role } = useRole();
+  const { user } = useAuth();
   useAlertGenerator();
+
+  // DEV-only: log what the authenticated session actually sees, so we can
+  // diagnose role/permission mismatches reported by users.
+  useEffect(() => {
+    if (!import.meta.env.DEV || !user) return;
+    (async () => {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id);
+      // eslint-disable-next-line no-console
+      console.log("[dashboard:auth-debug]", {
+        userId: user.id,
+        email: user.email,
+        rolesFromDb: data,
+        rolesError: error?.message ?? null,
+      });
+    })();
+  }, [user]);
 
   const tour = useOnboarding("dashboard");
 
