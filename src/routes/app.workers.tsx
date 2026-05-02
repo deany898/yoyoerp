@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { HardHat, Plus, Pencil, Search, Phone, MessageCircle } from "lucide-react";
+import { HardHat, Plus, Pencil, Search, Phone, MessageCircle, CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,7 @@ import { useWorkers, type WorkerRow } from "@/hooks/useMfgData";
 import { useAppConfig } from "@/contexts/AppConfigContext";
 import { FLAGS } from "@/lib/feature-flags";
 import { WorkerFormSheet } from "@/components/workers/WorkerFormSheet";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export const Route = createFileRoute("/app/workers")({
   head: () => ({
@@ -31,6 +33,7 @@ function normalizeMobile(p?: string | null) {
 }
 
 function WorkersPage() {
+  const { t } = useLanguage();
   const { workers, loading, refresh } = useWorkers();
   const { isEnabled } = useAppConfig();
   const showPayroll = isEnabled(FLAGS.workforce.payroll, true);
@@ -61,6 +64,9 @@ function WorkersPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button asChild variant="default" className="gap-2 bg-emerald-600 hover:bg-emerald-700">
+            <Link to="/app/workers/attendance"><CalendarCheck className="h-4 w-4" /> {t("attendance_quick_link")}</Link>
+          </Button>
           <ImportButton
             table="workers"
             entityName="team"
