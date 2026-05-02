@@ -14,9 +14,18 @@ export const recomputeVariantCost = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    const { data: result, error } = await supabase.rpc("recompute_variant_cost", {
-      _variant_id: data.variantId,
-    });
-    if (error) throw new Error(error.message || "Failed to recompute cost");
-    return { ok: true, result };
+    try {
+      const { data: result, error } = await supabase.rpc("recompute_variant_cost", {
+        _variant_id: data.variantId,
+      });
+      if (error) {
+        console.error("recompute_variant_cost RPC error:", error);
+        return { ok: false as const, error: error.message || "Failed to recompute cost" };
+      }
+      return { ok: true as const, result };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Unexpected error during recompute";
+      console.error("recomputeVariantCost handler exception:", e);
+      return { ok: false as const, error: msg };
+    }
   });
