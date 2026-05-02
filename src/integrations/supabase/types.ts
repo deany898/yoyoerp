@@ -959,6 +959,7 @@ export type Database = {
           qty_scrapped: number
           source_do_id: string | null
           status: Database["public"]["Enums"]["mo_status"]
+          supervisor_id: string | null
           updated_at: string
           variant_id: string
           warehouse_id: string | null
@@ -978,6 +979,7 @@ export type Database = {
           qty_scrapped?: number
           source_do_id?: string | null
           status?: Database["public"]["Enums"]["mo_status"]
+          supervisor_id?: string | null
           updated_at?: string
           variant_id: string
           warehouse_id?: string | null
@@ -997,6 +999,7 @@ export type Database = {
           qty_scrapped?: number
           source_do_id?: string | null
           status?: Database["public"]["Enums"]["mo_status"]
+          supervisor_id?: string | null
           updated_at?: string
           variant_id?: string
           warehouse_id?: string | null
@@ -1007,6 +1010,13 @@ export type Database = {
             columns: ["source_do_id"]
             isOneToOne: false
             referencedRelation: "dispatch_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manufacturing_orders_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
