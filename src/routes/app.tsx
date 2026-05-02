@@ -25,7 +25,7 @@ export const Route = createFileRoute("/app")({
 });
 
 function AppLayout() {
-  const { role, rolesLoading } = useRole();
+  const { role, realRole, rolesLoading } = useRole();
   const { user, loading: authLoading, displayName, signOut, roles } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -84,10 +84,10 @@ function AppLayout() {
   useEffect(() => {
     if (authLoading || !user || rolesLoading) return;
     if (roles.length === 0) return;
-    if (role === "customer" && location.pathname.startsWith("/app")) {
+    if (realRole === "customer" && location.pathname.startsWith("/app")) {
       if (typeof window !== "undefined") window.location.assign("/store");
     }
-  }, [authLoading, user, rolesLoading, role, roles.length, location.pathname]);
+  }, [authLoading, user, rolesLoading, realRole, roles.length, location.pathname]);
 
   // Initial-page-load default: non-customer users who reload directly onto
   // /app/quick-order should land on the dashboard instead. Only fires once
