@@ -23,16 +23,7 @@ export const Route = createFileRoute("/auth")({
 
 const ACCESS_DENIED = "Access denied. Contact your administrator.";
 
-type Role =
-  | "admin"
-  | "manager"
-  | "accountant"
-  | "supervisor"
-  | "sales"
-  | "dispatch"
-  | "driver"
-  | "customer"
-  | string;
+type Role = "admin" | "manager" | "accountant" | "supervisor" | "sales" | "dispatch" | "driver" | "customer" | string;
 
 function destinationForRole(role: Role | null | undefined): string {
   switch (role) {
@@ -56,16 +47,7 @@ function destinationForRole(role: Role | null | undefined): string {
 
 function resolveHighestRole(roleRows: { role: string }[] | null | undefined): Role | null {
   const roleList = (roleRows ?? []).map((r) => r.role as Role);
-  const priority: Role[] = [
-    "admin",
-    "manager",
-    "accountant",
-    "supervisor",
-    "sales",
-    "dispatch",
-    "driver",
-    "customer",
-  ];
+  const priority: Role[] = ["admin", "manager", "accountant", "supervisor", "sales", "dispatch", "driver", "customer"];
   return priority.find((p) => roleList.includes(p)) ?? roleList[0] ?? null;
 }
 
@@ -124,7 +106,6 @@ function AuthPage() {
       return;
     }
 
-    // Step 1-3: resolve real auth email from mobile via service-role server fn.
     let realEmail: string | null = null;
     try {
       const res = await resolveLoginEmail({ data: { mobile: input } });
@@ -133,19 +114,11 @@ function AuthPage() {
       realEmail = null;
     }
 
-    // Fallback: if the user typed an actual email address into the mobile
-    // field, use it directly. Lets staff with real-email auth records
-    // (e.g. Gmail) sign in even if mobile-→-email resolution fails.
-    if (!realEmail && input.includes("@")) {
-      realEmail = input;
-    }
-
     if (!realEmail) {
       await fail(false);
       return;
     }
 
-    // Step 4: actually sign in.
     const { data: authData, error } = await supabase.auth.signInWithPassword({
       email: realEmail,
       password,
@@ -158,7 +131,6 @@ function AuthPage() {
 
     const userId = authData.user.id;
 
-    // Step 5: check active status. profiles row keyed by user_id.
     const { data: profile, error: profileErr } = await supabase
       .from("profiles")
       .select("admin_locked")
@@ -170,7 +142,6 @@ function AuthPage() {
       return;
     }
 
-    // Step 6: resolve role with priority order.
     const roleRows = await getUserRole({ data: { userId } });
     const role = resolveHighestRole(roleRows);
 
