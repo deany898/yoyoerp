@@ -498,6 +498,41 @@ export const translations = {
   rpw_title: { en: "Reset password", hi: "पासवर्ड रीसेट करें" },
   rpw_desc: { en: "Set a new password. They must use it on next sign in. No email is sent.", hi: "नया पासवर्ड सेट करें। अगली बार साइन इन में इस्तेमाल होगा। कोई ईमेल नहीं भेजा जाएगा।" },
   rpw_new_password: { en: "New password", hi: "नया पासवर्ड" },
+
+  // Page titles · breadcrumbs
+  page_warehouses: { en: "Warehouses", hi: "गोदाम" },
+  page_movements: { en: "Movements", hi: "मूवमेंट्स" },
+  page_requests: { en: "Requests", hi: "अनुरोध" },
+  page_purchase_orders: { en: "Purchase orders", hi: "खरीद आदेश" },
+  page_work_logs: { en: "Work logs", hi: "कार्य लॉग" },
+  page_wip: { en: "Stage WIP", hi: "स्टेज WIP" },
+  page_analytics: { en: "Analytics", hi: "विश्लेषण" },
+  page_ai_insights: { en: "AI insights", hi: "AI जानकारी" },
+  page_command_center: { en: "Command center", hi: "कमांड सेंटर" },
+  page_admin: { en: "Admin", hi: "एडमिन" },
+  page_admin_system: { en: "System config", hi: "सिस्टम सेटिंग" },
+  page_admin_presets: { en: "Presets", hi: "प्रीसेट" },
+  page_admin_inventory_settings: { en: "Inventory settings", hi: "इन्वेंट्री सेटिंग" },
+  page_admin_audit: { en: "Audit log", hi: "ऑडिट लॉग" },
+
+  // Layout / shell
+  shell_account: { en: "Account", hi: "खाता" },
+  shell_open_profile: { en: "Open profile", hi: "प्रोफाइल खोलें" },
+  shell_open_menu: { en: "Open menu", hi: "मेनू खोलें" },
+  shell_navigation: { en: "Navigation", hi: "नेविगेशन" },
+  shell_search: { en: "Search", hi: "खोजें" },
+  shell_search_placeholder: { en: "Search products, orders, MOs...", hi: "उत्पाद, ऑर्डर, MO खोजें..." },
+  shell_breadcrumb_home: { en: "Home", hi: "होम" },
+
+  // Role labels
+  role_admin: { en: "Admin", hi: "एडमिन" },
+  role_manager: { en: "Manager", hi: "मैनेजर" },
+  role_supervisor: { en: "Supervisor", hi: "सुपरवाइज़र" },
+  role_worker: { en: "Worker", hi: "कारीगर" },
+  role_dispatch: { en: "Dispatch", hi: "डिस्पैच" },
+  role_sales: { en: "Sales", hi: "बिक्री" },
+  role_customer: { en: "Customer", hi: "ग्राहक" },
+  role_requestor: { en: "Requestor", hi: "अनुरोधकर्ता" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
