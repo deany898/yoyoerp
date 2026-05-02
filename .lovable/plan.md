@@ -1,84 +1,87 @@
-## Goals
+## Goal
 
-1. **Utilities · Recent entries** display as a clean 3-column row: `WH | Kind | Cost`.
-2. **Machines list**: remove the "Volume" column from the table (keep the field on the form, since it controls cost share).
-3. **Auto-derive machine hourly cost from utilities** and let production stages reference a machine + mould so per-unit machine + mould cost flow into product cost automatically.
+Match the uploaded mockup on the Products page:
+- Wide horizontal card with image · variant selector · Price/DP on the left, and a "BULK BUY" tier price table on the right.
+- Layout: **1 column on mobile**, **2 columns on desktop** (replacing the current desktop table entirely).
+- Add a **horizontally scrollable category chip filter** under the search bar.
 
----
+## Changes
 
-## 1 · Utilities page (`src/routes/app.utilities.tsx`)
+### 1. `src/components/products/ProductCard.tsx` — rewrite as the new wide card
 
-Replace the "Recent entries" list with a structured 3-column layout:
-
-```text
-WAREHOUSE        |  KIND          |  COST
-SR1              |  Electricity   |  ₹ 18,400.00
-SR1              |  Labor         |  ₹ 42,000.00
-```
-
-- Header row: `WH · Kind · Cost` (uppercase, muted, mono cost).
-- Rows: warehouse name, kind (capitalized + optional label suffix), right-aligned mono `₹` amount.
-- Keep the small delete (trash) button at the right, no period column.
-- Mobile (≤640px): stack as label/value pairs inside a card.
-
-No DB change here.
-
-## 2 · Machines list (`src/routes/app.machines.tsx`)
-
-- Remove the `Volume` column from the `columns=[...]` array (the `usage_volume` field stays in the **form** so admins can still set the share — only the table column is removed).
-- Add a new derived **"Hourly ₹/h"** column populated from the calculation in §3 so the user immediately sees the effective cost per machine.
-
-## 3 · Costing chain: Utilities → Machine → Mould → Product
-
-### 3a · DB migration
-
-Add link columns + a SECURITY DEFINER helper:
-
-```sql
-ALTER TABLE public.production_stages
-  ADD COLUMN IF NOT EXISTS machine_id uuid REFERENCES public.machines(id),
-  ADD COLUMN IF NOT EXISTS mould_id   uuid REFERENCES public.moulds(id),
-  ADD COLUMN IF NOT EXISTS machine_hours_per_unit numeric NOT NULL DEFAULT 0;
--- (mould cost-per-unit comes from cavity_count: 1 / cavity_count of one machine cycle)
-```
-
-New helper `public.machine_hourly_rate(_machine_id uuid)`:
-
-1. Sum `warehouse_utilities.amount` for the machine's `warehouse_id` over the **last 30 days** → `monthly_total`.
-2. `daily_avg = monthly_total / 30`.
-3. Sum `usage_volume` of all **active** machines in that warehouse → `total_volume`.
-4. `machine_daily = daily_avg × (machine.usage_volume / total_volume)`.
-5. Assume **8-hour** working day (constant for now) → `hourly = machine_daily / 8`.
-6. Return `hourly` (₹/h).
-
-Update `recalc_variant_cost()` so for each `production_stage` row that has a `machine_id`:
+New layout (single component used at every breakpoint):
 
 ```text
-auto_machine_cost = machine_hourly_rate(machine_id) × machine_hours_per_unit
-auto_mould_cost   = (manual mould_cost) OR
-                    if mould_id set: machine_hourly_rate × machine_hours_per_unit / cavity_count
-                    (covers tooling-share-per-cycle; falls back to stored mould_cost if cavity_count is null)
+┌──────────────────────────────────────────────────────────┐
+│ [image]   Product Title          ┌─── BULK BUY ────────┐ │
+│ 96x96     Variant [Regular  v]   │ 10 Box (100 unit) ₹ │ │
+│           Price: ₹25.00          │ 20 Box (200 unit) ₹ │ │
+│           DP:    ₹22.00          │ 60 Box (600 unit) ₹ │ │
+└──────────────────────────────────────────────────────────┘
 ```
 
-These auto values **override** `machine_cost` / `mould_cost` only when `machine_id` / `mould_id` are set; otherwise existing manual values keep working — fully backward compatible. Stage cost rolls up into the existing waterfall (already sums labour + machine + utility + mould + overhead + qc with rejection).
+- **Image**: 96×96 rounded square. Use `product_images` primary if present (fetched via hook update, see step 4); fallback to a `Package` lucide icon on muted background.
+- **Title**: product name in primary blue (`text-primary`), bold.
+- **Variant selector**: native `Select` of `product.variants` (label = `variant_label || sku || "Default"`). Selecting a variant updates the prices/tiers shown. Hidden if only one variant.
+- **Price**: from selected variant's `last_cost` (sale) — same field already used; if 0 fall back to effective_cost.
+- **DP** (Dealer Price): from `product_pricing_tiers` row where `tier_name = 'dealer'` and `min_qty = 1`, else 90% of price (existing fallback).
+- **BULK BUY table**: small bordered table on the right (hidden on very narrow screens · shown ≥sm). Renders up to 3 tier rows from `product_pricing_tiers` for the selected variant where `min_qty > 1`, sorted ascending. Each row: `{min_qty} {uom_pack_name} ({min_qty × units_per_pack} unit)` and price. If no bulk tiers exist, show a muted "No bulk pricing" placeholder.
+- Card chrome: `rounded-xl border bg-card p-4` with subtle hover shadow; whole card clickable to open edit sheet (existing behavior). Variant `<select>` stops propagation.
+- Keep type Badge (non-raw) as a small pill in the top-right of the title block.
+- Keep margin pill + active/inactive pill in a tiny footer row.
 
-### 3b · UI changes
+Component remains under 250 lines; props extended with `tierMap: TierPriceMap` and `images: Record<productId, url>`.
 
-- **`AddStageSheet.tsx`**: when `stage_kind = moulding`, show two new selectors — Machine (lists active machines) and Mould (lists active moulds, displays cavity count). Machine cost / Mould cost inputs collapse to read-only "auto from machine ₹X/h × hours" once a machine is picked.
-- Add a **"Machine hours per unit"** numeric input next to the rejection field.
-- **`app.machines.tsx`**: new "Hourly ₹/h" column calls a tiny RPC `machine_hourly_rate(machine_id)` (one call batched per page load) and renders the value mono-style.
+### 2. `src/routes/app.products.tsx` — switch to 2-col grid + chip filter
 
-## Out of scope
+- **Remove the desktop `<Table>` block entirely.** Use a single grid for all breakpoints:
+  ```tsx
+  <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+    {filtered.map(p => <ProductCard ... />)}
+  </div>
+  ```
+  (We use `lg:` so on the user's 1687px viewport you get 2 columns; on tablets stay 1-col for readability of the wide card. Could be `md:grid-cols-2` if user prefers — defaulting to `lg`.)
+- **Search bar**: keep as-is.
+- **Category filter chips**: new horizontally-scrollable row under the search input:
+  ```tsx
+  <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1
+                  [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <Chip active={cat==="all"}>All</Chip>
+    {categories.map(c => <Chip active={cat===c.id}>{c.name}</Chip>)}
+  </div>
+  ```
+  Each chip: pill button, `rounded-full border px-3 py-1.5 text-xs`, active state uses `bg-primary text-primary-foreground border-primary`. Snap scrolling, no visible scrollbar, swipeable on mobile.
+- Add `categoryFilter` state and include in the `filtered` memo (filters by `p.category_id`).
+- Drop the existing **type filter dropdown** (kept simple) OR keep it — recommendation: keep type filter to the right of the search; chips stay dedicated to categories.
 
-- Service worker / offline (already deferred).
-- Editing the existing 30-day rolling card (it stays — it now matches the new RPC).
+### 3. New helper hook for tier prices (one fetch, shared)
 
----
+Add `useProductTiers()` in `src/hooks/useErpData.ts`:
+- Calls `loadTierPrices()` from `src/lib/quick-order-pricing.ts` (already exists).
+- React-query keyed `["erp","tiers"]`, master-data freshness.
+- Returns `{ tierMap, loading }`.
 
-## Technical changes (files)
+Products page passes `tierMap` to each `ProductCard`. Card resolves Price (`tier:standard:1`), DP (`tier:dealer:1`), and bulk rows (`tier:bulk_*` or any tier with `min_qty > 1`).
 
-- **Migration**: add columns + `machine_hourly_rate()` + update `recalc_variant_cost()`.
-- **Edited**: `src/routes/app.utilities.tsx` (recent table redesign), `src/routes/app.machines.tsx` (drop Volume col, add Hourly col), `src/components/manufacturing/AddStageSheet.tsx` (machine + mould pickers, hours/unit field).
-- **Touched**: `src/integrations/supabase/types.ts` (regenerated automatically by migration).
+### 4. New helper hook for product cover images
 
-Shall I proceed?
+Add `useProductImages()` in `src/hooks/useErpData.ts`:
+- Selects `product_id, url, is_primary, sort_order` from `product_images`.
+- Returns map `{ [product_id]: url }` choosing primary (or lowest sort_order).
+- Master-data cache.
+
+Cards render `<img>` if URL present, else the placeholder icon.
+
+### 5. Files touched
+
+- `src/components/products/ProductCard.tsx` — rewritten (new layout, ≤200 lines).
+- `src/routes/app.products.tsx` — remove table, add chip row, use grid, wire new hooks.
+- `src/hooks/useErpData.ts` — add `useProductTiers` + `useProductImages` (~40 lines added).
+
+No DB migrations. No changes to costing or backend functions. Existing edit sheet, permission gating, import/export, and type filter all preserved.
+
+## Notes & open choices
+
+- "DP" label in the mockup = Dealer Price. We map it to `tier_name = 'dealer'`. If you use a different tier name, tell me and I'll switch.
+- Bulk rows use `units_per_pack` from the product's primary `product_packaging` row when computing the "(X unit)" subtitle. If no packaging is configured, we just show the `min_qty` without the parenthetical.
+- Desktop breakpoint for 2 columns: defaulting to `lg` (≥1024px). Say "use md" if you want 2-up starting at 768px.

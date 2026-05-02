@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { loadTierPrices, type TierPriceMap } from "@/lib/quick-order-pricing";
 
 // Tiered cache freshness (overrides the global 5-min default).
 // Master-data tables rarely change — keep them in cache until explicitly refreshed.
@@ -68,6 +69,50 @@ export function useCategories() {
     [qc],
   );
   return { categories: q.data ?? [], loading: q.isLoading, refresh };
+}
+
+/** Pricing tiers across all variants — single fetch, cached. */
+export function useProductTiers() {
+  const qc = useQueryClient();
+  const q = useQuery<TierPriceMap>({
+    queryKey: ["erp", "tiers"],
+    staleTime: MASTER_DATA_STALE,
+    gcTime: MASTER_DATA_GC,
+    queryFn: () => loadTierPrices(),
+  });
+  const refresh = useCallback(
+    () => qc.invalidateQueries({ queryKey: ["erp", "tiers"] }),
+    [qc],
+  );
+  return { tierMap: q.data ?? {}, loading: q.isLoading, refresh };
+}
+
+/** Primary cover image per product. */
+export function useProductImages() {
+  const qc = useQueryClient();
+  const q = useQuery<Record<string, string>>({
+    queryKey: ["erp", "product-images"],
+    staleTime: MASTER_DATA_STALE,
+    gcTime: MASTER_DATA_GC,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("product_images")
+        .select("product_id,url,is_primary,sort_order")
+        .order("is_primary", { ascending: false })
+        .order("sort_order", { ascending: true });
+      if (error) return {};
+      const map: Record<string, string> = {};
+      for (const r of (data ?? []) as Array<{ product_id: string; url: string }>) {
+        if (!map[r.product_id]) map[r.product_id] = r.url;
+      }
+      return map;
+    },
+  });
+  const refresh = useCallback(
+    () => qc.invalidateQueries({ queryKey: ["erp", "product-images"] }),
+    [qc],
+  );
+  return { imageMap: q.data ?? {}, loading: q.isLoading, refresh };
 }
 
 export interface WarehouseWithZones extends WarehouseRow {
