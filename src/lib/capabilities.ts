@@ -1,5 +1,5 @@
 /**
- * Capability identifiers for the YOYO ERP permissions system.
+ * Capability identifiers for the Yoyo permissions system.
  * Format: `<module>.<verb>` (e.g. `products.view`).
  * Mirrors the seed data in the 20260501 permissions migration.
  */

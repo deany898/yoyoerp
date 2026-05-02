@@ -16,7 +16,7 @@ export const Route = createFileRoute("/app/command-center")({
   component: CommandCenterPage,
   head: () => ({
     meta: [
-      { title: "Command Center · YOYO ERP" },
+      { title: "Command Center · Yoyo" },
       { name: "description", content: "Live operational command center with AI strategist." },
       { name: "robots", content: "noindex" },
     ],

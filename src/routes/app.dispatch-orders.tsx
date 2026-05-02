@@ -29,7 +29,7 @@ import {
 
 export const Route = createFileRoute("/app/dispatch-orders")({
   component: DispatchOrdersPage,
-  head: () => ({ meta: [{ title: "Dispatch orders · YOYO ERP" }] }),
+  head: () => ({ meta: [{ title: "Dispatch orders · Yoyo" }] }),
 });
 
 type DispatchStatus =

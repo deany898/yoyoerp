@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 export const Route = createFileRoute("/app/moulds")({
   head: () => ({
     meta: [
-      { title: "Moulds · YOYO ERP" },
+      { title: "Moulds · Yoyo" },
       { name: "description", content: "Tooling registry with cavity count and life cycles." },
     ],
   }),

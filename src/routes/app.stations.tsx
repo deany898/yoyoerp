@@ -6,7 +6,7 @@ import { useStations } from "@/hooks/useMfgData";
 export const Route = createFileRoute("/app/stations")({
   head: () => ({
     meta: [
-      { title: "Stations · YOYO ERP" },
+      { title: "Stations · Yoyo" },
       { name: "description", content: "Production stations and work centers." },
     ],
   }),

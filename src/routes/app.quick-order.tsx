@@ -25,7 +25,7 @@ import {
 
 export const Route = createFileRoute("/app/quick-order")({
   component: QuickOrderPage,
-  head: () => ({ meta: [{ title: "Quick Order · YOYO ERP" }] }),
+  head: () => ({ meta: [{ title: "Quick Order · Yoyo" }] }),
 });
 
 function newLine(): DraftLine {

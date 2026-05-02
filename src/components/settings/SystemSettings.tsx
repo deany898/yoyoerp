@@ -17,7 +17,7 @@ export function SystemSettings() {
             <dt className="text-muted-foreground">Version</dt>
             <dd className="font-medium">1.0.0</dd>
             <dt className="text-muted-foreground">Platform</dt>
-            <dd className="font-medium">YOYO ERP</dd>
+            <dd className="font-medium">Yoyo</dd>
           </dl>
         </CardContent>
       </Card>

@@ -32,7 +32,7 @@ interface UserRow {
 
 export const Route = createFileRoute("/app/users")({
   component: UserManagementPage,
-  head: () => ({ meta: [{ title: "User management · YOYO ERP" }] }),
+  head: () => ({ meta: [{ title: "User management · Yoyo" }] }),
 });
 
 function UserManagementPage() {

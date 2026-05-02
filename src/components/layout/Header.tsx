@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Menu, Wifi, WifiOff } from "lucide-react";
+import { Search, Menu } from "lucide-react";
 import { Breadcrumbs } from "@/components/shell/Breadcrumbs";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { NotificationPreferences } from "@/components/notifications/NotificationPreferences";
@@ -11,6 +11,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Sidebar } from "./Sidebar";
+import { LiveIndicator } from "./LiveIndicator";
 import { CommandPalette } from "@/components/command/CommandPalette";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { useRole } from "@/hooks/useRole";
@@ -42,7 +43,6 @@ export function Header() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [prefsOpen, setPrefsOpen] = useState(false);
-  const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
 
   const { role } = useRole();
 
@@ -56,18 +56,6 @@ export function Header() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, []);
-
-  // Online / sync indicator.
-  useEffect(() => {
-    const up = () => setOnline(true);
-    const down = () => setOnline(false);
-    window.addEventListener("online", up);
-    window.addEventListener("offline", down);
-    return () => {
-      window.removeEventListener("online", up);
-      window.removeEventListener("offline", down);
-    };
   }, []);
 
   return (
@@ -88,18 +76,7 @@ export function Header() {
         <kbd className="ml-auto hidden rounded-md border border-border bg-card px-1.5 py-0.5 font-mono text-[10px] font-medium md:inline-block">⌘K</kbd>
       </button>
 
-      <span
-        className={`hidden items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide md:inline-flex ${
-          online
-            ? "border-emerald-500/30 bg-emerald-50 text-emerald-700"
-            : "border-amber-500/30 bg-amber-50 text-amber-700"
-        }`}
-        aria-label={online ? "Synced" : "Offline"}
-        title={online ? "Synced" : "Offline · changes will retry"}
-      >
-        {online ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
-        {online ? "Live" : "Offline"}
-      </span>
+      <LiveIndicator />
 
       <Badge
         variant="outline"

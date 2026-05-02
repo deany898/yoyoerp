@@ -32,7 +32,7 @@ import { FLAGS } from "@/lib/feature-flags";
 
 export const Route = createFileRoute("/app/goods-returns")({
   component: GoodsReturnsPage,
-  head: () => ({ meta: [{ title: "Goods returns · YOYO ERP" }] }),
+  head: () => ({ meta: [{ title: "Goods returns · Yoyo" }] }),
 });
 
 type GRReason = "damaged" | "wrong_item" | "excess" | "quality_issue" | "expired" | "other";

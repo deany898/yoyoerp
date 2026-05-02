@@ -17,7 +17,7 @@ import { ExportButton } from "@/components/shared/ExportButton";
 export const Route = createFileRoute("/app/inventory")({
   head: () => ({
     meta: [
-      { title: "Inventory · YOYO ERP" },
+      { title: "Inventory · Yoyo" },
       { name: "description", content: "Real-time stock balances by zone with cost and reorder signals." },
     ],
   }),

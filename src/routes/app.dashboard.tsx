@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding, type TourStep } from "@/hooks/useOnboarding";
 
 const TOUR_STEPS: TourStep[] = [
-  { title: "Welcome to YOYO ERP!", description: "Let's take a quick tour of the key features. This will only take a minute." },
+  { title: "Welcome to Yoyo!", description: "Let's take a quick tour of the key features. This will only take a minute." },
   { target: "sidebar", title: "Navigation", description: "Use the sidebar to switch between sections — catalog, movements, suppliers, and more." },
   { target: "metrics", title: "Stock health", description: "Your inventory health at a glance — total SKUs, in-stock, low-stock, and out-of-stock counts." },
   { target: "needs-attention", title: "Needs attention", description: "Items that need action appear here — low stock, overdue POs, and pending requests." },
@@ -20,7 +20,7 @@ const TOUR_STEPS: TourStep[] = [
 
 export const Route = createFileRoute("/app/dashboard")({
   component: DashboardPage,
-  head: () => ({ meta: [{ title: "Dashboard — YOYO ERP" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — Yoyo" }] }),
 });
 
 function DashboardPage() {
@@ -79,7 +79,7 @@ function DashboardPage() {
         <div className="pointer-events-none absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
         <div className="pointer-events-none absolute -bottom-20 -right-8 h-40 w-40 rounded-full bg-accent/30 blur-3xl" />
         <div className="relative">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">YOYO ERP · Control panel</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">Yoyo · Control panel</p>
           <h1 className="mt-1.5 text-2xl font-semibold tracking-tight md:text-[28px]">Hi, welcome back!</h1>
           <p className="mt-1 max-w-2xl text-sm text-white/80">{greeting}</p>
         </div>

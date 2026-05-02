@@ -18,7 +18,7 @@ type Worker = Database["public"]["Tables"]["workers"]["Row"];
 type WorkLog = Database["public"]["Tables"]["work_logs"]["Row"];
 
 export const Route = createFileRoute("/app/workers/$id")({
-  head: () => ({ meta: [{ title: "Team member · YOYO ERP" }] }),
+  head: () => ({ meta: [{ title: "Team member · Yoyo" }] }),
   component: WorkerDetailPage,
 });
 

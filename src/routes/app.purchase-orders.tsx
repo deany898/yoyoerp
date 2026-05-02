@@ -27,7 +27,7 @@ import { ExportButton } from "@/components/shared/ExportButton";
 
 export const Route = createFileRoute("/app/purchase-orders")({
   component: POPage,
-  head: () => ({ meta: [{ title: "Purchase orders · YOYO ERP" }] }),
+  head: () => ({ meta: [{ title: "Purchase orders · Yoyo" }] }),
 });
 
 const STATUS_COLORS: Record<POStatus, string> = {

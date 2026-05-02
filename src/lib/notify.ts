@@ -1,7 +1,7 @@
 import { toast, type ExternalToast } from "sonner";
 
 /**
- * Unified notification helpers for YOYO ERP.
+ * Unified notification helpers for Yoyo.
  *
  * Use these instead of calling `toast.*` directly so we keep a single
  * tone of voice, consistent durations, and a single place to swap the

@@ -22,7 +22,7 @@ const STATUS_TONE: Record<string, string> = {
 };
 
 export const Route = createFileRoute("/app/machines/$id")({
-  head: () => ({ meta: [{ title: "Machine · YOYO ERP" }] }),
+  head: () => ({ meta: [{ title: "Machine · Yoyo" }] }),
   component: MachineDetailPage,
 });
 

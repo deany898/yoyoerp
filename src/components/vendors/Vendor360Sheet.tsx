@@ -19,7 +19,7 @@ interface Props {
 }
 
 /**
- * Simplified supplier detail · YOYO ERP V1 is a price-memory + sales ERP,
+ * Simplified supplier detail · Yoyo V1 is a price-memory + sales ERP,
  * not a procurement accounting system. Payments + scorecard removed.
  */
 export function Vendor360Sheet({ supplier, open, onOpenChange, canManage }: Props) {

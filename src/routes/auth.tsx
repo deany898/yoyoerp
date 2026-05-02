@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, Sun, Moon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -9,12 +9,13 @@ import { Label } from "@/components/ui/label";
 import { notify } from "@/lib/notify";
 import { resolveLoginEmail } from "@/server/auth-resolve.functions";
 import { getUserRole } from "@/server/get-user-role.functions";
+import { GoogleIcon } from "@/components/auth/GoogleIcon";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
   head: () => ({
     meta: [
-      { title: "Staff sign in — YOYO Industries" },
+      { title: "Staff sign in — Yoyo" },
       { name: "description", content: "Authorised staff access only." },
       { name: "robots", content: "noindex" },
     ],
@@ -58,6 +59,27 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [lang, setLang] = useState<"en" | "hi">(() => {
+    if (typeof window === "undefined") return "en";
+    return ((window.localStorage.getItem("yoyo_lang") as "en" | "hi") ?? "en");
+  });
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("yoyo_theme") === "dark";
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("yoyo_lang", lang);
+  }, [lang]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.documentElement.setAttribute("data-theme", darkMode ? "dark" : "light");
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("yoyo_theme", darkMode ? "dark" : "light");
+    }
+  }, [darkMode]);
 
   useEffect(() => {
     if (!loading && user) {
@@ -150,6 +172,21 @@ function AuthPage() {
     navigate({ to: destinationForRole(role) });
   };
 
+  const signInWithGoogle = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: typeof window !== "undefined" ? `${window.location.origin}/app/dashboard` : undefined,
+      },
+    });
+    if (error) {
+      notify.error(error.message);
+      setSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -160,13 +197,51 @@ function AuthPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-background to-cyan-50/40 px-4 py-10">
+      {/* Top-right toggles */}
+      <div className="fixed right-4 top-4 z-10 flex items-center gap-2">
+        <div className="inline-flex items-center overflow-hidden rounded-full border border-border bg-card text-[11px] font-semibold shadow-sm">
+          <button
+            type="button"
+            onClick={() => setLang("en")}
+            className={`px-3 py-1 transition-colors ${lang === "en" ? "bg-[#1E3A6E] text-white" : "text-muted-foreground hover:bg-muted"}`}
+            aria-pressed={lang === "en"}
+          >
+            EN
+          </button>
+          <button
+            type="button"
+            onClick={() => setLang("hi")}
+            className={`px-3 py-1 transition-colors ${lang === "hi" ? "bg-[#1E3A6E] text-white" : "text-muted-foreground hover:bg-muted"}`}
+            aria-pressed={lang === "hi"}
+          >
+            हिं
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={() => setDarkMode((d) => !d)}
+          aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground"
+        >
+          {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </button>
+      </div>
+
       <main className="w-full max-w-md">
-        <div className="mb-6 text-center">
-          <h1 className="text-2xl font-medium tracking-tight text-foreground" style={{ fontWeight: 500 }}>
-            YOYO Industries
+        <div className="mb-6 flex flex-col items-center text-center">
+          <img
+            src="/LOGO.png"
+            alt="Yoyo"
+            style={{ width: 72, height: 72, borderRadius: 8, objectFit: "contain" }}
+          />
+          <h1
+            className="mt-3 tracking-tight text-foreground"
+            style={{ fontWeight: 800, fontSize: 28, lineHeight: 1.1 }}
+          >
+            Yoyo
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Staff portal · authorised access only
+          <p className="mt-2 text-sm text-muted-foreground">
+            Staff portal · केवल अधिकृत कर्मचारी
           </p>
         </div>
 
@@ -174,13 +249,13 @@ function AuthPage() {
           <form onSubmit={handleSignIn} className="space-y-4" noValidate>
             <div className="space-y-1.5">
               <Label htmlFor="mobile-number" className="text-sm font-medium">
-                Mobile number or email
+                Mobile or Email · मोबाइल या ईमेल
               </Label>
               <Input
                 id="mobile-number"
                 type="text"
                 autoComplete="username"
-                placeholder="Mobile number or email · मोबाइल या ईमेल"
+                placeholder="98765 43210 or email@example.com"
                 value={mobile}
                 onChange={(e) => setMobile(e.target.value)}
                 disabled={submitting}
@@ -235,11 +310,30 @@ function AuthPage() {
             <p className="pt-2 text-center text-xs text-muted-foreground">
               Access is for authorised staff only. Contact your administrator for access.
             </p>
+
+            <div className="relative my-1 flex items-center">
+              <div className="h-px flex-1 bg-border" />
+              <span className="px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                or
+              </span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={signInWithGoogle}
+              disabled={submitting}
+              className="h-11 w-full justify-center gap-2 text-sm font-medium"
+            >
+              <GoogleIcon className="h-4 w-4" />
+              Continue with Google
+            </Button>
           </form>
         </div>
 
         <footer className="mt-8 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} YOYO Industries · All rights reserved.
+          © {new Date().getFullYear()} Yoyo · All rights reserved.
         </footer>
       </main>
     </div>

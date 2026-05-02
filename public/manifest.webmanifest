@@ -1,7 +1,7 @@
 {
-  "name": "YOYO ERP — Industrial Operations Platform",
-  "short_name": "YOYO ERP",
-  "description": "YOYO ERP · industrial-grade inventory, suppliers, purchase orders, and AI reorder intelligence.",
+  "name": "Yoyo",
+  "short_name": "Yoyo",
+  "description": "Yoyo · industrial-grade inventory, suppliers, purchase orders, and AI reorder intelligence.",
   "start_url": "/app/dashboard",
   "scope": "/",
   "display": "standalone",

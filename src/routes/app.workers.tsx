@@ -17,7 +17,7 @@ import { WorkerFormSheet } from "@/components/workers/WorkerFormSheet";
 export const Route = createFileRoute("/app/workers")({
   head: () => ({
     meta: [
-      { title: "Team · YOYO ERP" },
+      { title: "Team · Yoyo" },
       { name: "description", content: "Team registry · attendance, payroll, advances." },
     ],
   }),

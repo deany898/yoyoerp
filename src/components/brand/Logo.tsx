@@ -9,7 +9,7 @@ interface LogoProps {
 }
 
 /**
- * YOYO ERP brand mark.
+ * Yoyo brand mark.
  * The logo always sits on a white tile so the multi-color mark stays legible
  * on dark navy sidebars and light surfaces alike.
  */
@@ -30,7 +30,7 @@ export function Logo({
       >
         <img
           src={yoyoLogo}
-          alt="YOYO ERP"
+          alt="Yoyo"
           width={size}
           height={size}
           className="object-contain"
@@ -44,7 +44,7 @@ export function Logo({
           )}
           style={{ fontSize: Math.round(size * 0.5) }}
         >
-          YOYO <span className="font-light opacity-80">ERP</span>
+          Yoyo
         </span>
       )}
     </div>
