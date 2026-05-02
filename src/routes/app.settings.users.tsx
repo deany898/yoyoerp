@@ -94,8 +94,10 @@ function SettingsUsersPage() {
     setLoading(true);
     try {
       const res = await listFn();
-      setRows(res.users as UserRow[]);
+      const list = Array.isArray(res?.users) ? (res.users as UserRow[]) : [];
+      setRows(list);
     } catch (err) {
+      setRows([]);
       toast.error(err instanceof Error ? err.message : "Failed to load users");
     } finally {
       setLoading(false);
