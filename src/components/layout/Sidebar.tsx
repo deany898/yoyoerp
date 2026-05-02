@@ -101,12 +101,12 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                     "relative flex items-center gap-3 rounded-lg pl-4 pr-3 py-2.5 text-[13.5px] font-medium transition-colors",
                     active
                       ? "bg-[#1E3A6E] text-white border-l-[3px] border-[#3B82F6]"
-                      : "text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white border-l-[3px] border-transparent",
+                      : "text-[#F1F5F9] hover:bg-[#1E293B] hover:text-white border-l-[3px] border-transparent",
                   )}
                 >
                   <item.icon
                     className="h-[18px] w-[18px] shrink-0"
-                    style={{ color: active ? "#FFFFFF" : "#CBD5E1", opacity: 1 }}
+                    style={{ color: active ? "#FFFFFF" : "#F1F5F9", opacity: 1 }}
                   />
                   <span className="truncate">
                     {t(NAV_LABEL_KEY[item.label] ?? "", item.label)}
@@ -123,9 +123,9 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         <Link
           to="/app/help"
           onClick={onNavigate}
-          className="mb-2 flex items-center gap-3 rounded-lg pl-4 pr-3 py-2 text-[13px] font-medium text-[#CBD5E1] transition-colors hover:bg-[#1E293B] hover:text-white"
+          className="mb-2 flex items-center gap-3 rounded-lg pl-4 pr-3 py-2 text-[13px] font-medium text-[#F1F5F9] transition-colors hover:bg-[#1E293B] hover:text-white"
         >
-          <HelpCircle className="h-[18px] w-[18px] shrink-0" style={{ color: "#CBD5E1" }} />
+          <HelpCircle className="h-[18px] w-[18px] shrink-0" style={{ color: "#F1F5F9" }} />
           <span>Help · सहायता</span>
         </Link>
         <div className="flex items-center gap-2 rounded-xl bg-white/5 px-2 py-2">
