@@ -9,24 +9,24 @@ import { navForRole, ROLE_LABELS } from "./shellNav";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const NAV_LABEL_KEY: Record<string, string> = {
-  Dashboard: "nav.dashboard",
-  Manufacturing: "nav.manufacturing",
-  Orders: "nav.orders",
-  Dispatch: "nav.dispatch",
-  Users: "nav.users",
-  Settings: "nav.settings",
-  "My floor": "nav.my_floor",
-  "My MOs": "nav.my_mos",
-  Handoffs: "nav.handoffs",
-  "New order": "nav.new_order",
-  "My orders": "nav.my_orders",
-  Customers: "nav.customers",
-  Products: "nav.products",
-  Today: "nav.today",
-  "Dispatch orders": "nav.dispatch_orders",
-  Delivered: "nav.delivered",
-  Inventory: "nav.inventory",
-  Requests: "nav.requests",
+  Dashboard: "nav_dashboard",
+  Manufacturing: "nav_manufacturing",
+  Orders: "nav_orders",
+  Dispatch: "nav_dispatch",
+  Users: "nav_users",
+  Settings: "nav_settings",
+  "My floor": "nav_floor",
+  "My MOs": "nav_my_mos",
+  Handoffs: "nav_handoffs",
+  "New order": "nav_new_order",
+  "My orders": "nav_my_orders",
+  Customers: "nav_customers",
+  Products: "nav_products",
+  Today: "nav_today",
+  "Dispatch orders": "nav_dispatch_orders",
+  Delivered: "nav_delivered",
+  Inventory: "nav_inventory",
+  Requests: "nav_dispatch_orders",
 };
 
 interface SidebarProps {
@@ -38,7 +38,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const { role } = useRole();
   const { user, displayName: authDisplayName, signOut } = useAuth();
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, lang, setLang } = useLanguage();
 
   const displayName = authDisplayName ?? user?.email?.split("@")[0] ?? "Account";
   const initial = displayName.trim().charAt(0).toUpperCase() || "U";
@@ -107,7 +107,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                       active ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
                     )}
                   />
-                  <span className="lucide lucide-factory h-[18px] w-[18px] shrink-0 text-slate-800">
+                  <span className="truncate">
                     {t(NAV_LABEL_KEY[item.label] ?? "", item.label)}
                   </span>
                 </Link>
@@ -119,13 +119,44 @@ export function Sidebar({ onNavigate }: SidebarProps) {
 
       {/* User block at bottom */}
       <div className="border-t border-sidebar-border/60 px-3 py-3">
+        {/* Language toggle pill */}
+        <div className="mb-2 flex items-center justify-end px-1">
+          <div
+            role="group"
+            aria-label="Toggle language"
+            className="inline-flex items-center overflow-hidden rounded-full border border-white/10 bg-white/5 text-[11px] font-semibold"
+          >
+            <button
+              type="button"
+              onClick={() => setLang("en")}
+              aria-pressed={lang === "en"}
+              className={cn(
+                "h-7 px-3 transition-colors",
+                lang === "en" ? "bg-primary text-primary-foreground" : "text-sidebar-foreground/70 hover:text-sidebar-foreground",
+              )}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              onClick={() => setLang("hi")}
+              aria-pressed={lang === "hi"}
+              className={cn(
+                "h-7 px-3 transition-colors",
+                lang === "hi" ? "bg-primary text-primary-foreground" : "text-sidebar-foreground/70 hover:text-sidebar-foreground",
+              )}
+            >
+              हिं
+            </button>
+          </div>
+        </div>
         <Link
           to="/app/help"
           onClick={onNavigate}
           className="mb-2 flex items-center gap-3 rounded-lg pl-3 pr-3 py-2 text-[13.5px] font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         >
           <HelpCircle className="h-[18px] w-[18px] shrink-0" />
-          <span>Help · सहायता</span>
+          <span>{t("nav_help")}</span>
         </Link>
         <div className="flex items-center gap-2 rounded-xl bg-white/5 px-2 py-2">
           <Link

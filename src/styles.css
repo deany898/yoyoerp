@@ -212,6 +212,16 @@
     font-family: var(--font-sans);
     overflow-x: hidden;
   }
+
+  /* Hindi (Devanagari) — apply Noto Sans Devanagari when html.lang-hi */
+  html.lang-hi,
+  html.lang-hi body,
+  html.lang-hi button,
+  html.lang-hi input,
+  html.lang-hi textarea,
+  html.lang-hi select {
+    font-family: "Noto Sans Devanagari", var(--font-sans);
+  }
 }
 
 /* Print styles — hide app chrome, show print view */
