@@ -54,6 +54,9 @@ export const ROUTE_META: Record<string, RouteMeta> = {
   "/app/admin/audit": { label: "Audit log", titleKey: "page_admin_audit", icon: Settings, group: "Admin" },
   "/app/admin/staffing": { label: "Staffing rules", titleKey: "page_admin_staffing", icon: Users, group: "Admin" },
   "/app/staffing/daily": { label: "Daily staffing", titleKey: "page_daily_staffing", icon: Users, group: "Operations" },
+  "/app/vehicles": { label: "Vehicles", titleKey: "nav_vehicles", icon: Truck, group: "Operations" },
+  "/app/rate-card": { label: "Rate card", titleKey: "nav_rate_card", icon: ClipboardList, group: "Admin" },
+  "/app/workers/attendance": { label: "Attendance", titleKey: "attendance_title", icon: ClipboardCheck, group: "Operations" },
   "/app/help": { label: "Help", titleKey: "nav_help", icon: HelpCircle, group: "Support" },
 };
 
