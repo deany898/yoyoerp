@@ -4,7 +4,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 // perceived nav lag; PageTransition now cross-fades in place without it.
 import { Sidebar } from "@/components/layout/Sidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
-import { MobileTopBar } from "@/components/layout/MobileTopBar";
+import { AppTopBar } from "@/components/layout/AppTopBar";
 import { DevRolePill } from "@/components/layout/DevRolePill";
 import { ShortcutsHelpDialog } from "@/components/command/ShortcutsHelpDialog";
 import { GlobalSearchPalette } from "@/components/command/GlobalSearchPalette";
@@ -199,7 +199,7 @@ function AppLayout() {
 
       {/* Main column */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        <MobileTopBar />
+        <AppTopBar onSearchOpen={() => setGlobalSearchOpen(true)} />
         <main className="relative flex-1 overflow-y-auto px-4 pt-3 pb-20 md:px-6 md:pt-6 md:pb-4">
           <RouteProgressBar />
           <PageTransition routeKey={location.pathname}>
