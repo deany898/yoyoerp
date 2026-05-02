@@ -56,9 +56,13 @@ export function CostEnginePanel({ variantId, productUom }: Props) {
     if (!variantId) return;
     setBusy(true);
     try {
-      await recompute({ data: { variantId } });
-      toast.success("Cost recomputed");
-      await load();
+      const res = await recompute({ data: { variantId } });
+      if (res && res.ok === false) {
+        toast.error(res.error || "Recompute failed");
+      } else {
+        toast.success("Cost recomputed");
+        await load();
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Recompute failed");
     } finally {
