@@ -26,7 +26,7 @@ export const Route = createFileRoute("/app")({
 });
 
 function AppLayout() {
-  const { role, realRole, rolesLoading } = useRole();
+  const { role, realRole, rolesLoading, roleResolutionFailed } = useRole();
   const { user, loading: authLoading, displayName, signOut, roles } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
