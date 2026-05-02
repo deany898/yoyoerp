@@ -1883,7 +1883,10 @@ export type Database = {
           id: string
           labour_cost: number
           machine_cost: number
+          machine_hours_per_unit: number
+          machine_id: string | null
           mould_cost: number
+          mould_id: string | null
           notes: string | null
           overhead_cost: number
           pay_mode: Database["public"]["Enums"]["stage_pay_mode"]
@@ -1901,7 +1904,10 @@ export type Database = {
           id?: string
           labour_cost?: number
           machine_cost?: number
+          machine_hours_per_unit?: number
+          machine_id?: string | null
           mould_cost?: number
+          mould_id?: string | null
           notes?: string | null
           overhead_cost?: number
           pay_mode?: Database["public"]["Enums"]["stage_pay_mode"]
@@ -1919,7 +1925,10 @@ export type Database = {
           id?: string
           labour_cost?: number
           machine_cost?: number
+          machine_hours_per_unit?: number
+          machine_id?: string | null
           mould_cost?: number
+          mould_id?: string | null
           notes?: string | null
           overhead_cost?: number
           pay_mode?: Database["public"]["Enums"]["stage_pay_mode"]
@@ -1933,6 +1942,27 @@ export type Database = {
           variant_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "production_stages_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machine_effective_rate"
+            referencedColumns: ["machine_id"]
+          },
+          {
+            foreignKeyName: "production_stages_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_stages_mould_id_fkey"
+            columns: ["mould_id"]
+            isOneToOne: false
+            referencedRelation: "moulds"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "production_stages_variant_id_fkey"
             columns: ["variant_id"]
@@ -3981,6 +4011,7 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      machine_hourly_rate: { Args: { _machine_id: string }; Returns: number }
       next_doc_number: { Args: { _doc_type: string }; Returns: string }
       next_master_code: { Args: { _prefix: string }; Returns: string }
       recalc_product_type: {

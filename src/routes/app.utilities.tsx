@@ -191,26 +191,40 @@ function UtilitiesPage() {
 
       <Card>
         <CardHeader><CardTitle className="text-base">Recent entries</CardTitle></CardHeader>
-        <CardContent>
+        <CardContent className="px-0 sm:px-6">
           {loading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <p className="px-6 text-sm text-muted-foreground">Loading…</p>
           ) : rows.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No utility entries yet.</p>
+            <p className="px-6 text-sm text-muted-foreground">No utility entries yet.</p>
           ) : (
-            <div className="divide-y divide-border">
-              {rows.map((r) => (
-                <div key={r.id} className="flex items-center gap-3 py-2 text-sm">
-                  <div className="w-24 font-mono text-xs text-muted-foreground">{r.period_month.slice(0, 7)}</div>
-                  <div className="flex-1 truncate">
-                    <span className="font-medium">{whName(r.warehouse_id)}</span>{" "}
-                    <span className="text-muted-foreground">· {r.kind}{r.label ? ` · ${r.label}` : ""}</span>
-                  </div>
-                  <div className="font-mono tabular-nums">₹{Number(r.amount).toFixed(2)}</div>
-                  <Button variant="ghost" size="icon" onClick={() => remove(r.id)} aria-label="Delete">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
+            <div className="overflow-hidden">
+              <div className="grid grid-cols-[1.2fr_1fr_auto_40px] items-center gap-3 border-b border-border px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-0">
+                <div>WH</div>
+                <div>Kind</div>
+                <div className="text-right">Cost</div>
+                <div />
+              </div>
+              <div className="divide-y divide-border">
+                {rows.map((r) => {
+                  const kindLabel = r.kind.charAt(0).toUpperCase() + r.kind.slice(1);
+                  return (
+                    <div
+                      key={r.id}
+                      className="grid grid-cols-[1.2fr_1fr_auto_40px] items-center gap-3 px-4 py-2.5 text-sm sm:px-0"
+                    >
+                      <div className="truncate font-medium">{whName(r.warehouse_id)}</div>
+                      <div className="truncate text-muted-foreground">
+                        {kindLabel}
+                        {r.label ? <span className="text-muted-foreground/70"> · {r.label}</span> : null}
+                      </div>
+                      <div className="text-right font-mono tabular-nums">₹{Number(r.amount).toFixed(2)}</div>
+                      <Button variant="ghost" size="icon" onClick={() => remove(r.id)} aria-label="Delete">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </CardContent>

@@ -16,6 +16,8 @@ type PayMode = "salary" | "per_unit";
 
 type Product = { id: string; code: string; name: string };
 type Variant = { id: string; product_id: string; sku: string; variant_name: string };
+type MachineOpt = { id: string; name: string; code: string; warehouse_id: string | null };
+type MouldOpt = { id: string; name: string; code: string; cavity_count: number | null };
 
 interface Props {
   open: boolean;
@@ -40,6 +42,12 @@ const STAGE_KINDS: { value: StageKind; label: string }[] = [
 export function AddStageSheet({ open, onClose, mode, groupId, defaultProductId, onSaved }: Props) {
   const [products, setProducts] = useState<Product[]>([]);
   const [variants, setVariants] = useState<Variant[]>([]);
+  const [machines, setMachines] = useState<MachineOpt[]>([]);
+  const [moulds, setMoulds] = useState<MouldOpt[]>([]);
+  const [machineId, setMachineId] = useState<string | null>(null);
+  const [mouldId, setMouldId] = useState<string | null>(null);
+  const [hoursPerUnit, setHoursPerUnit] = useState<string>("");
+  const [machineRate, setMachineRate] = useState<number | null>(null);
   const [productId, setProductId] = useState<string | null>(defaultProductId ?? null);
   const [variantIds, setVariantIds] = useState<string[]>([]);
   const [stageName, setStageName] = useState("");
@@ -56,12 +64,16 @@ export function AddStageSheet({ open, onClose, mode, groupId, defaultProductId, 
   useEffect(() => {
     if (!open) return;
     (async () => {
-      const [{ data: p }, { data: v }] = await Promise.all([
+      const [{ data: p }, { data: v }, { data: m }, { data: md }] = await Promise.all([
         supabase.from("products").select("id, code, name").eq("is_active", true).order("name"),
         supabase.from("product_variants").select("id, product_id, sku, variant_name").eq("is_active", true).order("variant_name"),
+        supabase.from("machines").select("id, name, code, warehouse_id").eq("is_active", true).order("name"),
+        supabase.from("moulds").select("id, name, code, cavity_count").eq("is_active", true).order("name"),
       ]);
       setProducts((p ?? []) as Product[]);
       setVariants((v ?? []) as Variant[]);
+      setMachines((m ?? []) as MachineOpt[]);
+      setMoulds((md ?? []) as MouldOpt[]);
     })();
   }, [open]);
 
@@ -78,7 +90,32 @@ export function AddStageSheet({ open, onClose, mode, groupId, defaultProductId, 
     setMachineCost("");
     setOverheadCost("");
     setRejectionPct("");
+    setMachineId(null);
+    setMouldId(null);
+    setHoursPerUnit("");
+    setMachineRate(null);
   }, [open, defaultProductId]);
+
+  // Fetch live machine hourly rate when a machine is picked
+  useEffect(() => {
+    if (!machineId) { setMachineRate(null); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.rpc("machine_hourly_rate", { _machine_id: machineId });
+      if (!cancelled) setMachineRate(Number(data ?? 0));
+    })();
+    return () => { cancelled = true; };
+  }, [machineId]);
+
+  const selectedMould = moulds.find((m) => m.id === mouldId) ?? null;
+  const autoMachineCost =
+    machineId && machineRate !== null && hoursPerUnit
+      ? machineRate * Number(hoursPerUnit || 0)
+      : null;
+  const autoMouldCost =
+    autoMachineCost !== null && selectedMould?.cavity_count
+      ? autoMachineCost / selectedMould.cavity_count
+      : null;
 
   const productOptions = useMemo(
     () => products.map((p) => ({ value: p.id, label: p.name, hint: p.code })),
@@ -108,9 +145,14 @@ export function AddStageSheet({ open, onClose, mode, groupId, defaultProductId, 
         pay_mode: payMode,
         unit_cost: payMode === "per_unit" ? Number(unitCost || 0) : 0,
         labour_cost: payMode === "salary" ? Number(labourCost || 0) : Number(unitCost || 0),
-        machine_cost: Number(machineCost || 0),
+        machine_cost: machineId ? 0 : Number(machineCost || 0),
         overhead_cost: Number(overheadCost || 0),
         rejection_pct: Number(rejectionPct || 0),
+      };
+      const stageExtras = {
+        machine_id: machineId,
+        mould_id: mouldId,
+        machine_hours_per_unit: Number(hoursPerUnit || 0),
       };
 
       if (mode === "group") {
@@ -140,7 +182,7 @@ export function AddStageSheet({ open, onClose, mode, groupId, defaultProductId, 
               .order("sequence", { ascending: false })
               .limit(1)
               .maybeSingle();
-            return { ...base, variant_id: vid, sequence: (last?.sequence ?? 0) + 1 };
+            return { ...base, ...stageExtras, variant_id: vid, sequence: (last?.sequence ?? 0) + 1 };
           }),
         );
         const { error } = await supabase.from("production_stages").insert(rows);
@@ -276,7 +318,15 @@ export function AddStageSheet({ open, onClose, mode, groupId, defaultProductId, 
               )}
               <div className="space-y-1.5">
                 <Label htmlFor="machine-cost" className="text-xs">Machine cost (₹)</Label>
-                <Input id="machine-cost" type="number" step="0.01" min="0" value={machineCost} onChange={(e) => setMachineCost(e.target.value)} placeholder="0.00" />
+                {machineId ? (
+                  <div className="rounded-md border border-dashed border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                    {autoMachineCost !== null
+                      ? <>Auto · ₹{autoMachineCost.toFixed(4)} <span className="opacity-70">({machineRate?.toFixed(2)} ₹/h × {hoursPerUnit || 0} h)</span></>
+                      : "Set hours/unit below"}
+                  </div>
+                ) : (
+                  <Input id="machine-cost" type="number" step="0.01" min="0" value={machineCost} onChange={(e) => setMachineCost(e.target.value)} placeholder="0.00" />
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="overhead-cost" className="text-xs">Overhead (₹)</Label>
@@ -288,6 +338,49 @@ export function AddStageSheet({ open, onClose, mode, groupId, defaultProductId, 
               </div>
             </div>
           </section>
+
+          {mode === "product" && (
+            <section className="space-y-3">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                4 · Machine & mould (optional)
+              </Label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Machine</Label>
+                  <SmartSelect
+                    options={machines.map((m) => ({ value: m.id, label: m.name, hint: m.code }))}
+                    value={machineId}
+                    onChange={(v) => setMachineId(v)}
+                    placeholder="Pick machine (auto ₹/h)"
+                    emptyText="No active machines"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Mould</Label>
+                  <SmartSelect
+                    options={moulds.map((m) => ({ value: m.id, label: m.name, hint: `${m.code}${m.cavity_count ? ` · ${m.cavity_count} cav` : ""}` }))}
+                    value={mouldId}
+                    onChange={(v) => setMouldId(v)}
+                    placeholder="Pick mould (splits by cavities)"
+                    emptyText="No active moulds"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="hpu" className="text-xs">Machine hours per unit</Label>
+                  <Input id="hpu" type="number" step="0.0001" min="0" value={hoursPerUnit}
+                         onChange={(e) => setHoursPerUnit(e.target.value)} placeholder="0.0000" />
+                </div>
+                {autoMouldCost !== null && (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Auto mould cost (₹/unit)</Label>
+                    <div className="rounded-md border border-dashed border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                      ₹{autoMouldCost.toFixed(4)} <span className="opacity-70">(machine cost ÷ {selectedMould?.cavity_count} cavities)</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
 
           {mode === "product" && variantIds.length > 0 && (
             <div className="rounded-lg border border-dashed border-border p-3 text-xs text-muted-foreground">

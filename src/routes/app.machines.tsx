@@ -67,6 +67,23 @@ function MachinesPage() {
 
   const liveStatus = (id: string) => (liveOnline.has(id) ? "online" : "offline");
 
+  // Hourly ₹/h derived from warehouse utilities (last 30d) apportioned by usage_volume.
+  const [hourly, setHourly] = useState<Record<string, number>>({});
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const entries = await Promise.all(
+        machines.map(async (m) => {
+          const { data } = await supabase.rpc("machine_hourly_rate", { _machine_id: m.id });
+          return [m.id, Number(data ?? 0)] as const;
+        }),
+      );
+      if (cancelled) return;
+      setHourly(Object.fromEntries(entries));
+    })();
+    return () => { cancelled = true; };
+  }, [machines]);
+
   return (
     <MasterListPage
       title="Machines"
@@ -128,7 +145,16 @@ function MachinesPage() {
             );
           },
         },
-        { key: "usage_volume", label: "Volume", className: "font-mono text-right tabular-nums", render: (r) => Number(r.usage_volume ?? 1).toFixed(2) },
+        {
+          key: "hourly_rate",
+          label: "₹/h",
+          className: "font-mono text-right tabular-nums",
+          render: (r) => {
+            const h = hourly[r.id];
+            if (h === undefined) return <span className="text-muted-foreground">…</span>;
+            return h > 0 ? `₹${h.toFixed(2)}` : <span className="text-muted-foreground">—</span>;
+          },
+        },
         { key: "is_active", label: "", render: (r) => <Badge variant={r.is_active ? "secondary" : "outline"} className="text-[10px]">{r.is_active ? "Active" : "Inactive"}</Badge> },
       ]}
     />
