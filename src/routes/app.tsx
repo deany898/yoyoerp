@@ -12,6 +12,8 @@ import { PageTransition } from "@/components/shared/PageTransition";
 import { RouteProgressBar } from "@/components/shared/RouteProgressBar";
 import { RouteSkeleton } from "@/components/shared/RouteSkeleton";
 import { BackButton } from "@/components/shared/BackButton";
+import { SplashScreen } from "@/components/shared/SplashScreen";
+import { InstallBanner } from "@/components/shared/InstallBanner";
 import { useRole } from "@/hooks/useRole";
 import { useAuth } from "@/hooks/useAuth";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
@@ -116,20 +118,12 @@ function AppLayout() {
 
   // Initial-mount spinner: only before the first successful auth resolution.
   if (!hasResolvedOnceRef.current && (authLoading || !user)) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground" />
-      </div>
-    );
+    return <SplashScreen />;
   }
   // After logout, user becomes null. Show the spinner while we navigate to
   // /auth instead of leaving the stale layout (with stale role) on screen.
   if (!user) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground" />
-      </div>
-    );
+    return <SplashScreen />;
   }
 
   // Role resolution recovery: signed in, roles loading finished, but no role
@@ -219,6 +213,7 @@ function AppLayout() {
 
       <BottomNav />
       <DevRolePill />
+      <InstallBanner />
       <ShortcutsHelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
       <GlobalSearchPalette open={globalSearchOpen} onOpenChange={setGlobalSearchOpen} />
     </div>
