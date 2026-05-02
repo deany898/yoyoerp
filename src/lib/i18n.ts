@@ -599,6 +599,7 @@ export const translations = {
   nav_operations: { en: "Operations", hi: "ऑपरेशंस" },
   nav_staffing_rules: { en: "Staffing rules", hi: "स्टाफिंग नियम" },
   nav_daily_staffing: { en: "Daily staffing", hi: "आज की टीम" },
+  nav_staffing: { en: "Daily staffing", hi: "आज की टीम" },
   nav_vehicles: { en: "Vehicles", hi: "गाड़ियाँ" },
   nav_rate_card: { en: "Rate card", hi: "रेट कार्ड" },
 
