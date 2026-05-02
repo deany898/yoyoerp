@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Suspense, lazy } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileTab } from "@/components/settings/tabs/ProfileTab";
 import { SecurityTab } from "@/components/settings/tabs/SecurityTab";
@@ -24,26 +25,27 @@ export const Route = createFileRoute("/app/profile")({
 function SettingsPage() {
   const { user } = useAuth();
   const { role } = useRole();
+  const { t } = useLanguage();
   const isAdmin = role === "admin";
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-4 md:p-6">
       <header>
         <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-          Settings
+          {t("settings_label")}
         </p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-3xl">My settings</h1>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-3xl">{t("settings_my")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{user?.email}</p>
       </header>
 
       <Tabs defaultValue="profile" className="w-full">
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 bg-muted/50 p-1">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="language">Language · भाषा</TabsTrigger>
-          <TabsTrigger value="appearance">Appearance · थीम</TabsTrigger>
-          {isAdmin && <TabsTrigger value="modules">Modules</TabsTrigger>}
-          {isAdmin && <TabsTrigger value="permissions">Permissions</TabsTrigger>}
+          <TabsTrigger value="profile">{t("settings_profile")}</TabsTrigger>
+          <TabsTrigger value="security">{t("settings_security")}</TabsTrigger>
+          <TabsTrigger value="language">{t("settings_language")}</TabsTrigger>
+          <TabsTrigger value="appearance">{t("settings_appearance")}</TabsTrigger>
+          {isAdmin && <TabsTrigger value="modules">{t("settings_modules")}</TabsTrigger>}
+          {isAdmin && <TabsTrigger value="permissions">{t("settings_permissions")}</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="profile" className="mt-6">
@@ -75,17 +77,17 @@ function SettingsPage() {
       </Tabs>
 
       <section className="rounded-xl border border-border bg-card p-5 text-sm shadow-sm">
-        <h2 className="text-sm font-semibold">About</h2>
+        <h2 className="text-sm font-semibold">{t("settings_about")}</h2>
         <dl className="mt-3 grid grid-cols-2 gap-2">
-          <dt className="text-muted-foreground">Version</dt>
+          <dt className="text-muted-foreground">{t("settings_version")}</dt>
           <dd className="font-medium">1.0.0</dd>
-          <dt className="text-muted-foreground">Platform</dt>
+          <dt className="text-muted-foreground">{t("settings_platform")}</dt>
           <dd className="font-medium">Yoyo</dd>
         </dl>
         <div className="mt-4 text-xs text-muted-foreground">
-          Want to see how modules connect?{" "}
+          {t("settings_modules_link")}{" "}
           <Link to="/app/about" className="font-semibold text-primary hover:underline">
-            View the platform blueprint →
+            {t("settings_blueprint")}
           </Link>
         </div>
       </section>
@@ -94,5 +96,5 @@ function SettingsPage() {
 }
 
 function TabFallback() {
-  return <div className="py-12 text-center text-sm text-muted-foreground">Loading…</div>;
+  return <div className="py-12 text-center text-sm text-muted-foreground">…</div>;
 }
