@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { translations as I18N, type TranslationKey } from "@/lib/i18n";
+import { translations as I18N } from "@/lib/i18n";
 
 export type Lang = "en" | "hi";
 
