@@ -23,7 +23,8 @@ export const getMoDetail = createServerFn({ method: "GET" })
         `*,
          variant:product_variants(id, sku, variant_name, product_id),
          warehouse:warehouses(id, name, code),
-         source_do:dispatch_orders(id, do_number)`,
+         source_do:dispatch_orders(id, do_number),
+         supervisor:profiles!manufacturing_orders_supervisor_id_fkey(id, display_name)`,
       )
       .eq("id", moId)
       .maybeSingle();
