@@ -69,14 +69,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     })();
     return () => { cancelled = true; };
-  }, [user]);
+    // Only re-run when the user *id* changes. Supabase emits multiple
+    // auth events (INITIAL_SESSION, SIGNED_IN, TOKEN_REFRESHED) that each
+    // produce a new `user` object reference for the same person, which
+    // would otherwise re-fetch profile + roles 3× on every reload.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   // ─── Subscribe to auth state ─────────────────────────
   useEffect(() => {
     // CRITICAL: set listener BEFORE getSession
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
-      setUser(newSession?.user ?? null);
+      const newUser = newSession?.user ?? null;
+      // Avoid setting a fresh user object reference if it's the same id —
+      // prevents downstream effects (role load, permissions query) from
+      // re-running on TOKEN_REFRESHED events.
+      setUser((prev) => (prev?.id === newUser?.id ? prev : newUser));
       if (!newSession?.user) {
         // Hard reset on sign-out so no stale per-user state lingers.
         setRoles([]);
@@ -88,7 +97,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
-      setUser(data.session?.user ?? null);
+      const initialUser = data.session?.user ?? null;
+      setUser((prev) => (prev?.id === initialUser?.id ? prev : initialUser));
       setLoading(false);
     });
 
