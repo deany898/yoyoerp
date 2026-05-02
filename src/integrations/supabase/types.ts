@@ -2870,6 +2870,80 @@ export type Database = {
           },
         ]
       }
+      stage_rate_card: {
+        Row: {
+          circuit_code: string | null
+          created_at: string | null
+          created_by: string | null
+          effective_from: string | null
+          id: string
+          is_active: boolean | null
+          notes: string | null
+          slab1_qty_from: number
+          slab1_qty_to: number | null
+          slab1_rate: number
+          slab2_qty_from: number | null
+          slab2_qty_to: number | null
+          slab2_rate: number | null
+          slab3_qty_from: number | null
+          slab3_qty_to: number | null
+          slab3_rate: number | null
+          stage_category: string
+          stage_name: string
+          variant_label: string
+        }
+        Insert: {
+          circuit_code?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          effective_from?: string | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          slab1_qty_from?: number
+          slab1_qty_to?: number | null
+          slab1_rate: number
+          slab2_qty_from?: number | null
+          slab2_qty_to?: number | null
+          slab2_rate?: number | null
+          slab3_qty_from?: number | null
+          slab3_qty_to?: number | null
+          slab3_rate?: number | null
+          stage_category: string
+          stage_name: string
+          variant_label?: string
+        }
+        Update: {
+          circuit_code?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          effective_from?: string | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          slab1_qty_from?: number
+          slab1_qty_to?: number | null
+          slab1_rate?: number
+          slab2_qty_from?: number | null
+          slab2_qty_to?: number | null
+          slab2_rate?: number | null
+          slab3_qty_from?: number | null
+          slab3_qty_to?: number | null
+          slab3_rate?: number | null
+          stage_category?: string
+          stage_name?: string
+          variant_label?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stage_rate_card_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       stations: {
         Row: {
           code: string
@@ -4232,6 +4306,10 @@ export type Database = {
       }
     }
     Functions: {
+      get_piece_rate: {
+        Args: { p_qty: number; p_rate_card_id: string }
+        Returns: number
+      }
       has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]
