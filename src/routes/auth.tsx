@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { notify } from "@/lib/notify";
 import { resolveLoginEmail } from "@/server/auth-resolve.functions";
+import { getUserRole } from "@/server/get-user-role.functions";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -33,7 +34,7 @@ type Role =
   | "customer"
   | string;
 
-function destinationForRole(role: Role | null): string {
+function destinationForRole(role: Role | null | undefined): string {
   switch (role) {
     case "admin":
     case "manager":
@@ -51,6 +52,21 @@ function destinationForRole(role: Role | null): string {
     default:
       return "/app/dashboard";
   }
+}
+
+function resolveHighestRole(roleRows: { role: string }[] | null | undefined): Role | null {
+  const roleList = (roleRows ?? []).map((r) => r.role as Role);
+  const priority: Role[] = [
+    "admin",
+    "manager",
+    "accountant",
+    "supervisor",
+    "sales",
+    "dispatch",
+    "driver",
+    "customer",
+  ];
+  return priority.find((p) => roleList.includes(p)) ?? roleList[0] ?? null;
 }
 
 function AuthPage() {
@@ -80,18 +96,38 @@ function AuthPage() {
     e.preventDefault();
     if (submitting) return;
 
-    const cleaned = mobile.trim();
-    if (!cleaned || !password) {
+    const input = mobile.trim();
+    if (!input || !password) {
       notify.error(ACCESS_DENIED);
       return;
     }
 
     setSubmitting(true);
 
+    if (input.includes("@")) {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: input,
+        password,
+      });
+
+      if (data?.user && !error) {
+        const roleRows = await getUserRole({ data: { userId: data.user.id } });
+        const role = resolveHighestRole(roleRows);
+        setSubmitting(false);
+        notify.success("Welcome back");
+        navigate({ to: destinationForRole(role) });
+        return;
+      }
+
+      notify.error(ACCESS_DENIED);
+      setSubmitting(false);
+      return;
+    }
+
     // Step 1-3: resolve real auth email from mobile via service-role server fn.
     let realEmail: string | null = null;
     try {
-      const res = await resolveLoginEmail({ data: { mobile: cleaned } });
+      const res = await resolveLoginEmail({ data: { mobile: input } });
       realEmail = res?.email ?? null;
     } catch {
       realEmail = null;
@@ -100,8 +136,8 @@ function AuthPage() {
     // Fallback: if the user typed an actual email address into the mobile
     // field, use it directly. Lets staff with real-email auth records
     // (e.g. Gmail) sign in even if mobile-→-email resolution fails.
-    if (!realEmail && cleaned.includes("@")) {
-      realEmail = cleaned;
+    if (!realEmail && input.includes("@")) {
+      realEmail = input;
     }
 
     if (!realEmail) {
@@ -135,23 +171,8 @@ function AuthPage() {
     }
 
     // Step 6: resolve role with priority order.
-    const { data: roleRows } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
-
-    const roleList = (roleRows ?? []).map((r) => r.role as Role);
-    const priority: Role[] = [
-      "admin",
-      "manager",
-      "accountant",
-      "supervisor",
-      "sales",
-      "dispatch",
-      "driver",
-      "customer",
-    ];
-    const role = priority.find((p) => roleList.includes(p)) ?? roleList[0] ?? null;
+    const roleRows = await getUserRole({ data: { userId } });
+    const role = resolveHighestRole(roleRows);
 
     setSubmitting(false);
     notify.success("Welcome back");
@@ -186,10 +207,9 @@ function AuthPage() {
               </Label>
               <Input
                 id="mobile-number"
-                type="tel"
-                inputMode="numeric"
-                autoComplete="tel"
-                placeholder="Enter your mobile number"
+                type="text"
+                autoComplete="username"
+                placeholder="Mobile number or email · मोबाइल या ईमेल"
                 value={mobile}
                 onChange={(e) => setMobile(e.target.value)}
                 disabled={submitting}
