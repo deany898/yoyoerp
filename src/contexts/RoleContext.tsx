@@ -14,7 +14,6 @@ export interface RoleContextValue {
   permissions: RolePermissions;
   isAdmin: boolean;
   isManager: boolean;
-  isRequestor: boolean;
   rolesLoading: boolean;
   /** True once loading is complete AND no role was resolved. Use to render
    *  the "Could not load your role" recovery screen. */
@@ -28,7 +27,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const { simulatedRole } = useRoleSimulator();
 
   // Real-auth: pick the highest privilege role the user holds.
-  // Order: admin > manager > supervisor > sales > dispatch > worker > customer > requestor (legacy).
+  // Order: admin > manager > supervisor > sales > dispatch > worker > customer.
   const ROLE_PRIORITY: UserRoleType[] = [
     "admin",
     "manager",
@@ -37,7 +36,6 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     "dispatch",
     "worker",
     "customer",
-    "requestor",
   ];
   const matchedRole = ROLE_PRIORITY.find((r) => authRoles.includes(r));
   useEffect(() => {
@@ -73,7 +71,6 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       permissions,
       isAdmin: role === "admin",
       isManager: role === "manager",
-      isRequestor: role === "requestor",
       rolesLoading,
       roleResolutionFailed,
     };

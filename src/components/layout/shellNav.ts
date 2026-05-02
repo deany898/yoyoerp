@@ -60,10 +60,6 @@ export const ROLE_NAV: Record<UserRoleType, ShellNavItem[]> = {
     { label: "Inventory", href: "/app/inventory", icon: Layers },
   ],
   customer: [],
-  requestor: [
-    { label: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard },
-    { label: "Requests", href: "/app/requests", icon: ClipboardList },
-  ],
 };
 
 export const ROLE_LABELS: Record<string, string> = {
@@ -74,7 +70,6 @@ export const ROLE_LABELS: Record<string, string> = {
   dispatch: "Driver",
   sales: "Sales",
   customer: "Customer",
-  requestor: "Requestor",
 };
 
 export function navForRole(role: UserRoleType): ShellNavItem[] {
@@ -119,10 +114,6 @@ export const BOTTOM_NAV: Record<UserRoleType, ShellNavItem[]> = {
     { label: "Inventory", href: "/app/inventory", icon: Layers },
   ],
   customer: [],
-  requestor: [
-    { label: "Home", href: "/app/dashboard", icon: LayoutDashboard },
-    { label: "Requests", href: "/app/requests", icon: ClipboardList },
-  ],
 };
 
 export function bottomNavForRole(role: UserRoleType): ShellNavItem[] {
@@ -149,5 +140,4 @@ export const MORE_OVERFLOW: Record<UserRoleType, ShellNavItem[]> = {
   dispatch: [],
   worker: [],
   customer: [],
-  requestor: [],
 };

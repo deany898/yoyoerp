@@ -1,5 +1,7 @@
 import type { UserRoleType } from "./roles";
 
+const COMMON_ROUTES = ["/app/profile", "/app/about", "/app/help"];
+
 /**
  * Strict per-role navigation visibility.
  * Worker / dispatch / sales see only what they operate on.
@@ -32,7 +34,15 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     "/app/admin/presets",
     "/app/admin/inventory-settings",
     "/app/admin/audit",
-    "/app/help",
+    "/app/manufacturing",
+    "/app/wip",
+    "/app/stations",
+    "/app/analytics",
+    "/app/ai-insights",
+    "/app/command-center",
+    "/app/settings/users",
+    "/app/floor",
+    ...COMMON_ROUTES,
   ],
   manager: [
     "/app/dashboard",
@@ -59,7 +69,14 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     "/app/admin/presets",
     "/app/admin/inventory-settings",
     "/app/admin/audit",
-    "/app/help",
+    "/app/manufacturing",
+    "/app/wip",
+    "/app/stations",
+    "/app/analytics",
+    "/app/ai-insights",
+    "/app/command-center",
+    "/app/floor",
+    ...COMMON_ROUTES,
   ],
   supervisor: [
     "/app/dashboard",
@@ -70,14 +87,17 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     "/app/work-logs",
     "/app/workers",
     "/app/utilities",
-    "/app/help",
+    "/app/manufacturing",
+    "/app/wip",
+    "/app/floor",
+    ...COMMON_ROUTES,
   ],
   worker: [
     "/app/dashboard",
     "/app/inventory",
     "/app/movements",
     "/app/work-logs",
-    "/app/help",
+    ...COMMON_ROUTES,
   ],
   dispatch: [
     "/app/dashboard",
@@ -87,7 +107,7 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     "/app/dispatch-orders",
     "/app/quick-order",
     "/app/goods-returns",
-    "/app/help",
+    ...COMMON_ROUTES,
   ],
   sales: [
     "/app/dashboard",
@@ -97,10 +117,9 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     "/app/quick-order",
     "/app/customers",
     "/app/goods-returns",
-    "/app/help",
+    ...COMMON_ROUTES,
   ],
-  customer: ["/app/quick-order", "/app/products", "/app/help"],
-  requestor: ["/app/dashboard", "/app/requests", "/app/help"],
+  customer: ["/app/quick-order", "/app/products", ...COMMON_ROUTES],
 };
 
 export function isRouteVisibleToRole(href: string, role: UserRoleType): boolean {
@@ -119,7 +138,6 @@ const ROLE_BOTTOM_NAV: Record<UserRoleType, string[]> = {
   dispatch: ["/app/dashboard", "/app/dispatch-orders", "/app/movements", "/app/inventory"],
   sales: ["/app/dashboard", "/app/dispatch-orders", "/app/customers", "/app/products"],
   customer: ["/app/quick-order", "/app/products", "/app/help"],
-  requestor: ["/app/dashboard", "/app/requests", "/app/help"],
 };
 
 export function getBottomNavRoutes(role: UserRoleType): string[] {
