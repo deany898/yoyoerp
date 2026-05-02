@@ -191,9 +191,11 @@ function ProductsPage() {
                   <TableRow key={p.id} className="cursor-pointer" onClick={() => can("edit_item") && openEdit(p)}>
                     <TableCell className="font-medium">{p.name}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={`ring-1 ${TYPE_TONE[p.product_type] ?? ""}`}>
-                        {TYPE_LABEL[p.product_type] ?? p.product_type}
-                      </Badge>
+                      {p.product_type !== "raw_material" && (
+                        <Badge variant="outline" className={`ring-1 ${TYPE_TONE[p.product_type] ?? ""}`}>
+                          {TYPE_LABEL[p.product_type] ?? p.product_type}
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{p.category?.name ?? "—"}</TableCell>
                     <TableCell className="text-right">
