@@ -17,12 +17,14 @@ import { Route as AppWorkersRouteImport } from './routes/app.workers'
 import { Route as AppWorkLogsRouteImport } from './routes/app.work-logs'
 import { Route as AppWipRouteImport } from './routes/app.wip'
 import { Route as AppWarehousesRouteImport } from './routes/app.warehouses'
+import { Route as AppVehiclesRouteImport } from './routes/app.vehicles'
 import { Route as AppUtilitiesRouteImport } from './routes/app.utilities'
 import { Route as AppUsersRouteImport } from './routes/app.users'
 import { Route as AppSuppliersRouteImport } from './routes/app.suppliers'
 import { Route as AppStationsRouteImport } from './routes/app.stations'
 import { Route as AppStagesRouteImport } from './routes/app.stages'
 import { Route as AppRequestsRouteImport } from './routes/app.requests'
+import { Route as AppRateCardRouteImport } from './routes/app.rate-card'
 import { Route as AppQuickOrderRouteImport } from './routes/app.quick-order'
 import { Route as AppPurchaseOrdersRouteImport } from './routes/app.purchase-orders'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
@@ -94,6 +96,11 @@ const AppWarehousesRoute = AppWarehousesRouteImport.update({
   path: '/warehouses',
   getParentRoute: () => AppRoute,
 } as any)
+const AppVehiclesRoute = AppVehiclesRouteImport.update({
+  id: '/vehicles',
+  path: '/vehicles',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppUtilitiesRoute = AppUtilitiesRouteImport.update({
   id: '/utilities',
   path: '/utilities',
@@ -122,6 +129,11 @@ const AppStagesRoute = AppStagesRouteImport.update({
 const AppRequestsRoute = AppRequestsRouteImport.update({
   id: '/requests',
   path: '/requests',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRateCardRoute = AppRateCardRouteImport.update({
+  id: '/rate-card',
+  path: '/rate-card',
   getParentRoute: () => AppRoute,
 } as any)
 const AppQuickOrderRoute = AppQuickOrderRouteImport.update({
@@ -300,12 +312,14 @@ export interface FileRoutesByFullPath {
   '/app/profile': typeof AppProfileRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
   '/app/quick-order': typeof AppQuickOrderRoute
+  '/app/rate-card': typeof AppRateCardRoute
   '/app/requests': typeof AppRequestsRoute
   '/app/stages': typeof AppStagesRoute
   '/app/stations': typeof AppStationsRoute
   '/app/suppliers': typeof AppSuppliersRoute
   '/app/users': typeof AppUsersRoute
   '/app/utilities': typeof AppUtilitiesRoute
+  '/app/vehicles': typeof AppVehiclesRoute
   '/app/warehouses': typeof AppWarehousesRoute
   '/app/wip': typeof AppWipRoute
   '/app/work-logs': typeof AppWorkLogsRoute
@@ -345,12 +359,14 @@ export interface FileRoutesByTo {
   '/app/profile': typeof AppProfileRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
   '/app/quick-order': typeof AppQuickOrderRoute
+  '/app/rate-card': typeof AppRateCardRoute
   '/app/requests': typeof AppRequestsRoute
   '/app/stages': typeof AppStagesRoute
   '/app/stations': typeof AppStationsRoute
   '/app/suppliers': typeof AppSuppliersRoute
   '/app/users': typeof AppUsersRoute
   '/app/utilities': typeof AppUtilitiesRoute
+  '/app/vehicles': typeof AppVehiclesRoute
   '/app/warehouses': typeof AppWarehousesRoute
   '/app/wip': typeof AppWipRoute
   '/app/work-logs': typeof AppWorkLogsRoute
@@ -392,12 +408,14 @@ export interface FileRoutesById {
   '/app/profile': typeof AppProfileRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
   '/app/quick-order': typeof AppQuickOrderRoute
+  '/app/rate-card': typeof AppRateCardRoute
   '/app/requests': typeof AppRequestsRoute
   '/app/stages': typeof AppStagesRoute
   '/app/stations': typeof AppStationsRoute
   '/app/suppliers': typeof AppSuppliersRoute
   '/app/users': typeof AppUsersRoute
   '/app/utilities': typeof AppUtilitiesRoute
+  '/app/vehicles': typeof AppVehiclesRoute
   '/app/warehouses': typeof AppWarehousesRoute
   '/app/wip': typeof AppWipRoute
   '/app/work-logs': typeof AppWorkLogsRoute
@@ -440,12 +458,14 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/purchase-orders'
     | '/app/quick-order'
+    | '/app/rate-card'
     | '/app/requests'
     | '/app/stages'
     | '/app/stations'
     | '/app/suppliers'
     | '/app/users'
     | '/app/utilities'
+    | '/app/vehicles'
     | '/app/warehouses'
     | '/app/wip'
     | '/app/work-logs'
@@ -485,12 +505,14 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/purchase-orders'
     | '/app/quick-order'
+    | '/app/rate-card'
     | '/app/requests'
     | '/app/stages'
     | '/app/stations'
     | '/app/suppliers'
     | '/app/users'
     | '/app/utilities'
+    | '/app/vehicles'
     | '/app/warehouses'
     | '/app/wip'
     | '/app/work-logs'
@@ -531,12 +553,14 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/purchase-orders'
     | '/app/quick-order'
+    | '/app/rate-card'
     | '/app/requests'
     | '/app/stages'
     | '/app/stations'
     | '/app/suppliers'
     | '/app/users'
     | '/app/utilities'
+    | '/app/vehicles'
     | '/app/warehouses'
     | '/app/wip'
     | '/app/work-logs'
@@ -618,6 +642,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWarehousesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/vehicles': {
+      id: '/app/vehicles'
+      path: '/vehicles'
+      fullPath: '/app/vehicles'
+      preLoaderRoute: typeof AppVehiclesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/utilities': {
       id: '/app/utilities'
       path: '/utilities'
@@ -658,6 +689,13 @@ declare module '@tanstack/react-router' {
       path: '/requests'
       fullPath: '/app/requests'
       preLoaderRoute: typeof AppRequestsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/rate-card': {
+      id: '/app/rate-card'
+      path: '/rate-card'
+      fullPath: '/app/rate-card'
+      preLoaderRoute: typeof AppRateCardRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/quick-order': {
@@ -949,12 +987,14 @@ interface AppRouteChildren {
   AppProfileRoute: typeof AppProfileRoute
   AppPurchaseOrdersRoute: typeof AppPurchaseOrdersRoute
   AppQuickOrderRoute: typeof AppQuickOrderRoute
+  AppRateCardRoute: typeof AppRateCardRoute
   AppRequestsRoute: typeof AppRequestsRoute
   AppStagesRoute: typeof AppStagesRoute
   AppStationsRoute: typeof AppStationsRoute
   AppSuppliersRoute: typeof AppSuppliersRoute
   AppUsersRoute: typeof AppUsersRoute
   AppUtilitiesRoute: typeof AppUtilitiesRoute
+  AppVehiclesRoute: typeof AppVehiclesRoute
   AppWarehousesRoute: typeof AppWarehousesRoute
   AppWipRoute: typeof AppWipRoute
   AppWorkLogsRoute: typeof AppWorkLogsRoute
@@ -985,12 +1025,14 @@ const AppRouteChildren: AppRouteChildren = {
   AppProfileRoute: AppProfileRoute,
   AppPurchaseOrdersRoute: AppPurchaseOrdersRoute,
   AppQuickOrderRoute: AppQuickOrderRoute,
+  AppRateCardRoute: AppRateCardRoute,
   AppRequestsRoute: AppRequestsRoute,
   AppStagesRoute: AppStagesRoute,
   AppStationsRoute: AppStationsRoute,
   AppSuppliersRoute: AppSuppliersRoute,
   AppUsersRoute: AppUsersRoute,
   AppUtilitiesRoute: AppUtilitiesRoute,
+  AppVehiclesRoute: AppVehiclesRoute,
   AppWarehousesRoute: AppWarehousesRoute,
   AppWipRoute: AppWipRoute,
   AppWorkLogsRoute: AppWorkLogsRoute,
