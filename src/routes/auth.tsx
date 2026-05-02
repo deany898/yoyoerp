@@ -85,7 +85,7 @@ function AuthPage() {
     if (signOut) {
       try { await supabase.auth.signOut(); } catch { /* noop */ }
     }
-    notify.error(ACCESS_DENIED);
+    notify.error(t("err_access_denied", ACCESS_DENIED));
     setSubmitting(false);
   };
 
@@ -95,7 +95,7 @@ function AuthPage() {
 
     const input = mobile.trim();
     if (!input || !password) {
-      notify.error(ACCESS_DENIED);
+      notify.error(t("err_access_denied", ACCESS_DENIED));
       return;
     }
 
@@ -116,7 +116,7 @@ function AuthPage() {
         return;
       }
 
-      notify.error(ACCESS_DENIED);
+      notify.error(t("err_access_denied", ACCESS_DENIED));
       setSubmitting(false);
       return;
     }
