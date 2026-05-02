@@ -1,22 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Plus, Search, Package, Pencil, Boxes } from "lucide-react";
+import { Plus, Search, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
 import { SmartSelect } from "@/components/forms/SmartSelect";
 import { TableSkeleton } from "@/components/shared/skeletons";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { useProducts, useCategories, type ProductWithVariants } from "@/hooks/useErpData";
+import {
+  useProducts,
+  useCategories,
+  useProductTiers,
+  useProductImages,
+  type ProductWithVariants,
+} from "@/hooks/useErpData";
 import { useRole } from "@/hooks/useRole";
 import { ExportButton } from "@/components/shared/ExportButton";
 import { ImportButton } from "@/components/shared/ImportButton";
 import { ProductFormSheet } from "@/components/products/ProductFormSheet";
 import { ProductCard } from "@/components/products/ProductCard";
 import { usePermissions, PermissionGate } from "@/hooks/usePermissions";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/products")({
   head: () => ({
@@ -45,11 +48,14 @@ const TYPE_TONE: Record<string, string> = {
 function ProductsPage() {
   const { products, loading, refresh } = useProducts();
   const { categories } = useCategories();
+  const { tierMap } = useProductTiers();
+  const { imageMap } = useProductImages();
   const { can } = usePermissions();
   const { role } = useRole();
   const isAdmin = role === "admin";
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<ProductWithVariants | null>(null);
 
@@ -57,11 +63,12 @@ function ProductsPage() {
     const q = query.trim().toLowerCase();
     return products.filter((p) => {
       if (typeFilter !== "all" && p.product_type !== typeFilter) return false;
+      if (categoryFilter !== "all" && p.category_id !== categoryFilter) return false;
       if (!q) return true;
       const hay = `${p.code} ${p.name} ${p.description ?? ""} ${p.variants.map((v) => v.sku).join(" ")}`.toLowerCase();
       return hay.includes(q);
     });
-  }, [products, query, typeFilter]);
+  }, [products, query, typeFilter, categoryFilter]);
 
   const openCreate = () => { setEditing(null); setFormOpen(true); };
   const openEdit = (p: ProductWithVariants) => { setEditing(p); setFormOpen(true); };
@@ -144,14 +151,33 @@ function ProductsPage() {
         </div>
       </div>
 
+      {/* Horizontally scrollable category chip filter */}
+      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <CategoryChip
+          label="All categories"
+          active={categoryFilter === "all"}
+          onClick={() => setCategoryFilter("all")}
+        />
+        {categories.map((c) => (
+          <CategoryChip
+            key={c.id}
+            label={c.name}
+            active={categoryFilter === c.id}
+            onClick={() => setCategoryFilter(c.id)}
+          />
+        ))}
+      </div>
+
       <p className="text-xs text-muted-foreground">
         Type is set automatically: <span className="font-medium">Raw</span> · no BOM produces it. <span className="font-medium">Semi-finished</span> · produced by a BOM and used inside another BOM. <span className="font-medium">Finished good</span> · produced by a BOM and not consumed elsewhere.
       </p>
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        {loading ? (
-          <TableSkeleton rows={6} columns={6} />
-        ) : filtered.length === 0 ? (
+      {loading ? (
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
+          <TableSkeleton rows={6} columns={4} />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
           <EmptyState
             icon={Package}
             title={products.length === 0 ? "No products yet" : "No matching products"}
@@ -159,64 +185,21 @@ function ProductsPage() {
             actionLabel={products.length === 0 && can("create_item") ? "New product" : undefined}
             onAction={products.length === 0 && can("create_item") ? openCreate : undefined}
           />
-        ) : (
-          <>
-          {/* Mobile cards · <md */}
-          <div className="grid grid-cols-1 gap-2.5 p-2.5 sm:grid-cols-2 md:hidden">
-            {filtered.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                showCost={isAdmin}
-                onClick={() => can("edit_item") && openEdit(p)}
-              />
-            ))}
-          </div>
-          {/* Desktop table · md+ */}
-          <Table className="hidden md:table">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead className="text-right">Variants</TableHead>
-                <TableHead className="text-right">Avg cost</TableHead>
-                <TableHead className="w-12"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((p) => {
-                const v0 = p.variants[0];
-                return (
-                  <TableRow key={p.id} className="cursor-pointer" onClick={() => can("edit_item") && openEdit(p)}>
-                    <TableCell className="font-medium">{p.name}</TableCell>
-                    <TableCell>
-                      {p.product_type !== "raw_material" && (
-                        <Badge variant="outline" className={`ring-1 ${TYPE_TONE[p.product_type] ?? ""}`}>
-                          {TYPE_LABEL[p.product_type] ?? p.product_type}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{p.category?.name ?? "—"}</TableCell>
-                    <TableCell className="text-right">
-                      <span className="inline-flex items-center gap-1 text-sm">
-                        <Boxes className="h-3.5 w-3.5 text-muted-foreground" />{p.variants.length}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-xs">
-                      {v0 ? `₹${Number(v0.avg_cost).toFixed(2)}` : "—"}
-                    </TableCell>
-                    <TableCell>
-                      {can("edit_item") && <Pencil className="h-3.5 w-3.5 text-muted-foreground" />}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-          </>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+          {filtered.map((p) => (
+            <ProductCard
+              key={p.id}
+              product={p}
+              showCost={isAdmin}
+              tierMap={tierMap}
+              imageUrl={imageMap[p.id]}
+              onClick={() => can("edit_item") && openEdit(p)}
+            />
+          ))}
+        </div>
+      )}
 
       <ProductFormSheet
         open={formOpen}
@@ -226,5 +209,22 @@ function ProductsPage() {
         onSaved={refresh}
       />
     </div>
+  );
+}
+
+function CategoryChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition",
+        active
+          ? "border-primary bg-primary text-primary-foreground shadow-sm"
+          : "border-border bg-card text-foreground hover:bg-muted/60",
+      )}
+    >
+      {label}
+    </button>
   );
 }
