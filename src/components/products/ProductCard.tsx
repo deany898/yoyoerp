@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { ProductWithVariants } from "@/hooks/useErpData";
 import type { TierPriceMap } from "@/lib/quick-order-pricing";
+import type { TierRow } from "@/lib/quick-order-pricing";
+import { isBulkTier, RESERVED_TIERS } from "@/lib/quick-order-pricing";
 
 const TYPE_LABEL: Record<string, string> = {
   raw_material: "Raw",
@@ -23,26 +25,28 @@ interface Props {
   product: ProductWithVariants;
   showCost: boolean;
   tierMap: TierPriceMap;
+  tierRows?: TierRow[];
   imageUrl?: string;
   onClick?: () => void;
 }
 
 interface BulkRow {
   minQty: number;
-  tierName: string;
+  label: string;
   price: number;
 }
 
 function variantLabel(v: ProductWithVariants["variants"][number]) {
-  const vl = (v as unknown as { variant_label?: string }).variant_label;
-  return vl?.trim() || v.sku || "Default";
+  // Wholesale model: variant_name is THE label ("Regular", "Premium", "Box", "Carton", …).
+  return v.variant_name?.trim() || "Default";
 }
 
 /**
- * Wide product card · 1-col mobile, 2-col desktop.
- * Image · Variant select · Price/DP on the left, BULK BUY tier table on the right.
+ * Wholesale product card · 1-col mobile, 2-col desktop.
+ *   IMG · (Title + Variant select + Price + DP) · BULK BUY table
+ * No SKU, no product code — wholesale buyers don't need them on the card.
  */
-export function ProductCard({ product, showCost, tierMap, imageUrl, onClick }: Props) {
+export function ProductCard({ product, showCost, tierMap, tierRows, imageUrl, onClick }: Props) {
   const [variantId, setVariantId] = useState<string>(() => product.variants[0]?.id ?? "");
   const variant = product.variants.find((v) => v.id === variantId) ?? product.variants[0];
 
@@ -50,27 +54,35 @@ export function ProductCard({ product, showCost, tierMap, imageUrl, onClick }: P
     if (!variant) return { price: 0, dp: 0, bulk: [] as BulkRow[], margin: null as number | null };
     const v = variant;
     const cost = Number(v.manual_purchase_cost ?? v.purchase_cost ?? v.avg_cost ?? 0);
-    const standard = tierMap[`${v.id}:standard`] ?? Number(v.last_cost ?? 0) ?? 0;
-    const dealer = tierMap[`${v.id}:dealer`] ?? (standard > 0 ? standard * 0.9 : 0);
-    // Bulk rows: every tier where min_qty > 1
-    const rows: BulkRow[] = [];
-    for (const key of Object.keys(tierMap)) {
-      if (!key.startsWith(`${v.id}:`)) continue;
-      const tierName = key.slice(v.id.length + 1);
-      if (tierName === "standard" || tierName === "dealer") continue;
-      // We can't read min_qty from map directly; tier_name encodes the bulk break.
-      // Convention: bulk tiers named like "bulk_10", "bulk_20" or numeric.
-      const m = /(\d+)/.exec(tierName);
-      if (!m) continue;
-      rows.push({ minQty: Number(m[1]), tierName, price: tierMap[key] });
+    const standard = tierMap[`${v.id}:${RESERVED_TIERS.standard}`] ?? Number(v.last_cost ?? 0) ?? 0;
+    const dealer = tierMap[`${v.id}:${RESERVED_TIERS.dealer}`] ?? (standard > 0 ? standard * 0.9 : 0);
+
+    // Build bulk slabs from raw rows when available — preserves the admin's label ("10 Box (100 unit)").
+    let rows: BulkRow[] = [];
+    if (tierRows && tierRows.length > 0) {
+      rows = tierRows
+        .filter((r) => r.variant_id === v.id && isBulkTier(r.tier_name))
+        .map((r) => ({ minQty: Number(r.min_qty || 0), label: r.tier_name, price: Number(r.price) }));
+    } else {
+      // Fallback: derive from tierMap (no labels, parse digits).
+      for (const key of Object.keys(tierMap)) {
+        if (!key.startsWith(`${v.id}:`)) continue;
+        const tierName = key.slice(v.id.length + 1);
+        if (!isBulkTier(tierName)) continue;
+        const m = /(\d+)/.exec(tierName);
+        const qty = m ? Number(m[1]) : 0;
+        rows.push({ minQty: qty, label: tierName, price: tierMap[key] });
+      }
     }
     rows.sort((a, b) => a.minQty - b.minQty);
-    const m =
-      standard > 0 && cost > 0 ? ((standard - cost) / standard) * 100 : null;
-    return { price: standard, dp: dealer, bulk: rows.slice(0, 3), margin: m };
-  }, [variant, tierMap]);
+
+    const m = standard > 0 && cost > 0 ? ((standard - cost) / standard) * 100 : null;
+    return { price: standard, dp: dealer, bulk: rows.slice(0, 4), margin: m };
+  }, [variant, tierMap, tierRows]);
 
   const lowMargin = margin !== null && margin < 15;
+  const variants = product.variants;
+  const useChips = variants.length > 1 && variants.length <= 3;
 
   return (
     <div
@@ -83,14 +95,14 @@ export function ProductCard({ product, showCost, tierMap, imageUrl, onClick }: P
           onClick?.();
         }
       }}
-      className="group flex w-full cursor-pointer flex-col gap-3 rounded-xl border border-border bg-card p-4 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:shadow-[0_6px_20px_-10px_rgba(15,23,42,0.22)] sm:flex-row sm:items-stretch sm:gap-4"
+      className="group flex w-full cursor-pointer flex-col gap-4 rounded-2xl border border-border bg-card p-4 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:shadow-[0_8px_24px_-12px_rgba(15,23,42,0.22)] sm:flex-row sm:items-stretch"
     >
       {/* Image */}
-      <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted/40 sm:h-28 sm:w-28">
+      <div className="flex aspect-square h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/40 sm:h-36 sm:w-36">
         {imageUrl ? (
           <img src={imageUrl} alt={product.name} className="h-full w-full object-cover" />
         ) : (
-          <Package className="h-8 w-8 text-muted-foreground/60" />
+          <Package className="h-10 w-10 text-muted-foreground/60" />
         )}
       </div>
 
@@ -98,13 +110,14 @@ export function ProductCard({ product, showCost, tierMap, imageUrl, onClick }: P
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <div className="truncate text-base font-bold leading-tight text-primary">
+            <div className="truncate text-lg font-bold leading-tight text-primary">
               {product.name}
             </div>
-            <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <span className="font-mono">{product.code}</span>
-              {product.category?.name && <span>· {product.category.name}</span>}
-            </div>
+            {product.category?.name && (
+              <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                {product.category.name}
+              </div>
+            )}
           </div>
           {product.product_type !== "raw_material" && (
             <Badge className={cn("shrink-0 text-[10px]", TYPE_TONE[product.product_type] ?? "")}>
@@ -113,11 +126,39 @@ export function ProductCard({ product, showCost, tierMap, imageUrl, onClick }: P
           )}
         </div>
 
-        {product.variants.length > 1 ? (
-          <div className="mt-2">
-            <label className="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Variant
-            </label>
+        <div className="mt-2">
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Variant
+          </div>
+          {variants.length <= 1 ? (
+            <div className="mt-1 inline-flex h-9 items-center rounded-md border border-border bg-background px-3 text-sm font-medium">
+              {variant ? variantLabel(variant) : "Default"}
+            </div>
+          ) : useChips ? (
+            <div className="mt-1 flex flex-wrap gap-1.5">
+              {variants.map((v) => {
+                const isActive = v.id === variantId;
+                return (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setVariantId(v.id);
+                    }}
+                    className={cn(
+                      "rounded-full border px-3 py-1 text-xs font-semibold transition",
+                      isActive
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-card text-foreground hover:border-primary/50",
+                    )}
+                  >
+                    {variantLabel(v)}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
             <select
               value={variantId}
               onClick={(e) => e.stopPropagation()}
@@ -125,22 +166,18 @@ export function ProductCard({ product, showCost, tierMap, imageUrl, onClick }: P
                 e.stopPropagation();
                 setVariantId(e.target.value);
               }}
-              className="w-full max-w-[180px] rounded-md border border-border bg-background px-2 py-1 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="mt-1 h-9 w-full max-w-[200px] rounded-md border border-border bg-background px-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
-              {product.variants.map((v) => (
+              {variants.map((v) => (
                 <option key={v.id} value={v.id}>
                   {variantLabel(v)}
                 </option>
               ))}
             </select>
-          </div>
-        ) : (
-          <div className="mt-2 text-xs text-muted-foreground">
-            Variant: <span className="font-medium text-foreground">{variant ? variantLabel(variant) : "—"}</span>
-          </div>
-        )}
+          )}
+        </div>
 
-        <div className="mt-2 space-y-0.5 text-sm">
+        <div className="mt-3 space-y-0.5 text-sm">
           <div className="flex items-baseline gap-1.5">
             <span className="text-muted-foreground">Price:</span>
             <span className="font-mono font-semibold text-foreground">
@@ -170,24 +207,23 @@ export function ProductCard({ product, showCost, tierMap, imageUrl, onClick }: P
       </div>
 
       {/* Right: BULK BUY */}
-      <div className="hidden w-48 shrink-0 overflow-hidden rounded-lg border border-border sm:block">
-        <div className="border-b border-border bg-muted/40 px-3 py-1.5 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-foreground">
+      <div className="w-full shrink-0 overflow-hidden rounded-xl border border-border sm:w-56">
+        <div className="border-b border-border bg-muted/40 px-3 py-2 text-center text-[12px] font-bold uppercase tracking-[0.22em] text-primary">
           Bulk buy
         </div>
         {bulk.length === 0 ? (
-          <div className="flex h-[calc(100%-30px)] min-h-[80px] items-center justify-center px-2 py-3 text-center text-[11px] text-muted-foreground">
+          <div className="flex min-h-[88px] items-center justify-center px-2 py-3 text-center text-[11px] text-muted-foreground">
             No bulk pricing
           </div>
         ) : (
-          <table className="w-full text-[11px]">
+          <table className="w-full text-[12px]">
             <tbody>
               {bulk.map((b) => (
-                <tr key={b.tierName} className="border-b border-border last:border-b-0">
-                  <td className="px-2 py-1.5">
-                    <span className="font-semibold text-foreground">{b.minQty}</span>
-                    <span className="ml-1 text-muted-foreground">{b.tierName.replace(/[_\d]+/g, " ").trim() || "qty"}</span>
+                <tr key={b.label} className="border-b border-border last:border-b-0">
+                  <td className="px-3 py-1.5 text-foreground">
+                    <span className="font-semibold">{b.label}</span>
                   </td>
-                  <td className="px-2 py-1.5 text-right font-mono font-semibold text-foreground">
+                  <td className="whitespace-nowrap px-3 py-1.5 text-right font-mono font-semibold text-foreground">
                     ₹{b.price.toFixed(2)}
                   </td>
                 </tr>
