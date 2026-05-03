@@ -229,8 +229,8 @@ function AuthPage() {
           >
             {(
               [
-                { value: "en" as const, label: "English", flag: "🇬🇧" },
-                { value: "hi" as const, label: "हिंदी", flag: "🇮🇳" },
+                { value: "en" as const, label: "English" },
+                { value: "hi" as const, label: "हिंदी" },
               ]
             ).map((opt) => {
               const active = lang === opt.value;
@@ -247,7 +247,6 @@ function AuthPage() {
                       : "border-[#E5E7EB] bg-white text-[#6B7280] hover:bg-muted/40")
                   }
                 >
-                  <span aria-hidden className="text-base leading-none">{opt.flag}</span>
                   <span>{opt.label}</span>
                 </button>
               );
