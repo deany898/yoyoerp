@@ -8,25 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { notify } from "@/lib/notify";
 import { Loader2 } from "lucide-react";
-
-interface RunCtx {
-  runId: string;
-  moId: string;
-  machineId: string;
-  machineName: string;
-  mouldId: string;
-  mouldName: string;
-  variantId: string;
-  variantName: string;
-  workerId: string;
-  workerName: string;
-  startedAt: string;
-  cavityCount: number;
-  cavityWeightG: number | null;
-  runnerWeightG: number | null;
-  pieceRate: number;
-  paymentType: string;
-}
+import type { RunCtx } from "@/lib/run-context";
 
 interface Props {
   open: boolean;
