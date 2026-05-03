@@ -23,6 +23,9 @@ type LogRow = Database["public"]["Tables"]["machine_daily_log"]["Row"] & {
   mould?: { id: string; name: string } | null;
   mo?: { id: string; mo_number: string } | null;
   supervisor?: { id: string; name: string; code: string } | null;
+  qty_good?: number;
+  qty_rej?: number;
+  rej_reasons?: string | null;
 };
 
 const STATUS_TONE: Record<string, string> = {
@@ -58,7 +61,32 @@ function ProductionLogsPage() {
         .order("started_at", { ascending: false })
         .limit(200);
       if (error) notify.error("Failed to load logs", { description: error.message });
-      setRows((data as unknown as LogRow[]) ?? []);
+      const base = (data as unknown as LogRow[]) ?? [];
+
+      // Aggregate qty_good / qty_rej / reasons from mo_stage_runs matching each log
+      const machineIds = Array.from(new Set(base.map((r) => r.machine_id))).filter(Boolean);
+      let runs: Array<{ machine_id: string | null; mo_id: string | null; started_at: string | null; shots_good: number | null; shots_scrap: number | null; notes: string | null }> = [];
+      if (machineIds.length > 0) {
+        const { data: rs } = await supabase
+          .from("mo_stage_runs")
+          .select("machine_id, mo_id, started_at, shots_good, shots_scrap, notes")
+          .in("machine_id", machineIds)
+          .eq("stage_kind", "moulding");
+        runs = rs ?? [];
+      }
+      const enriched = base.map((r) => {
+        const matches = runs.filter(
+          (x) => x.machine_id === r.machine_id && x.mo_id === r.mo_id && x.started_at === r.started_at,
+        );
+        const qty_good = matches.reduce((s, x) => s + (x.shots_good ?? 0), 0);
+        const qty_rej = matches.reduce((s, x) => s + (x.shots_scrap ?? 0), 0);
+        const reasons = matches
+          .map((x) => (x.notes ?? "").trim())
+          .filter((n) => n.length > 0)
+          .join(" · ");
+        return { ...r, qty_good, qty_rej, rej_reasons: reasons || null };
+      });
+      setRows(enriched);
       setLoading(false);
     })();
   }, []);
