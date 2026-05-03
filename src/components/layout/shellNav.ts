@@ -49,6 +49,7 @@ export const ROLE_NAV: Record<UserRoleType, ShellNavItem[]> = {
   supervisor: [
     { label: "My floor", href: "/app/manufacturing", icon: Layers },
     { label: "My MOs", href: "/app/manufacturing", icon: Factory },
+    { label: "Production logs", href: "/app/production-logs", icon: ClipboardList },
     { label: "Handoffs", href: "/app/wip", icon: ArrowLeftRight },
     { label: "Daily staffing", href: "/app/staffing/daily", icon: Users },
   ],
@@ -135,6 +136,7 @@ export const MORE_OVERFLOW: Record<UserRoleType, ShellNavItem[]> = {
     { label: "Inventory", href: "/app/inventory", icon: Boxes },
     { label: "Customers", href: "/app/customers", icon: Users },
     { label: "Products", href: "/app/products", icon: Layers },
+    { label: "Production logs", href: "/app/production-logs", icon: ClipboardList },
     { label: "Users", href: "/app/settings/users", icon: ShieldCheck },
     { label: "Settings", href: "/app/admin/system", icon: Settings },
   ],
@@ -142,6 +144,7 @@ export const MORE_OVERFLOW: Record<UserRoleType, ShellNavItem[]> = {
     { label: "Inventory", href: "/app/inventory", icon: Boxes },
     { label: "Customers", href: "/app/customers", icon: Users },
     { label: "Products", href: "/app/products", icon: Layers },
+    { label: "Production logs", href: "/app/production-logs", icon: ClipboardList },
     { label: "Settings", href: "/app/admin/system", icon: Settings },
   ],
   supervisor: [],
