@@ -1,14 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { SmartSelect } from "@/components/forms/SmartSelect";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { notify } from "@/lib/notify";
-import { Loader2, Play } from "lucide-react";
+import { Loader2, Search, ArrowRight, Play, AlertCircle } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -18,108 +16,151 @@ interface Props {
   onStarted?: () => void;
 }
 
-interface MouldOpt { id: string; name: string; code: string }
-interface MOOpt { id: string; mo_number: string; variant_id: string; qty_planned: number; qty_produced: number }
+interface Variant { id: string; variant_name: string; sku: string }
+interface Worker { id: string; name: string; code: string; department: string | null; pay_cycle: string | null; payment_type: string | null; present?: boolean }
+interface MouldInfo { id: string; name: string; cavity_count: number }
 
 export function StartProductionSheet({ open, onClose, machineId, machineName, onStarted }: Props) {
   const { user } = useAuth();
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [moulds, setMoulds] = useState<MouldOpt[]>([]);
-  const [mos, setMos] = useState<MOOpt[]>([]);
-  const [mouldId, setMouldId] = useState<string | null>(null);
-  const [moId, setMoId] = useState<string | null>(null);
-  const [startShot, setStartShot] = useState<string>("0");
-  const [notes, setNotes] = useState("");
-  const [existingId, setExistingId] = useState<string | null>(null);
 
-  const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-  const todayStr = today.toISOString().slice(0, 10);
+  const [mould, setMould] = useState<MouldInfo | null>(null);
+  const [mouldError, setMouldError] = useState<string | null>(null);
 
-  // Load compatible moulds + today's existing log
+  const [variants, setVariants] = useState<Variant[]>([]);
+  const [variantId, setVariantId] = useState<string | null>(null);
+  const [variantSearch, setVariantSearch] = useState("");
+
+  const [workers, setWorkers] = useState<Worker[]>([]);
+  const [workerId, setWorkerId] = useState<string | null>(null);
+  const [workerSearch, setWorkerSearch] = useState("");
+
+  const todayStr = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+    .toISOString().slice(0, 10);
+
+  // Step 1: find mould + variants
   useEffect(() => {
     if (!open) return;
+    setStep(1); setVariantId(null); setWorkerId(null); setMould(null); setMouldError(null);
     (async () => {
       setLoading(true);
-      const [compRes, logRes] = await Promise.all([
-        supabase
-          .from("mould_machine_compat")
-          .select("mould:moulds(id, name, code)")
-          .eq("machine_id", machineId),
-        supabase
-          .from("machine_daily_log")
-          .select("*")
-          .eq("machine_id", machineId)
-          .eq("log_date", todayStr)
-          .maybeSingle(),
-      ]);
-      const ms = (compRes.data ?? [])
-        .map((r) => (r as { mould: MouldOpt | null }).mould)
-        .filter((m): m is MouldOpt => !!m);
-      setMoulds(ms);
-      if (logRes.data) {
-        setExistingId(logRes.data.id);
-        setMouldId(logRes.data.mould_id);
-        setMoId(logRes.data.mo_id);
-        setStartShot(String(logRes.data.start_shot_count ?? 0));
-        setNotes(logRes.data.notes ?? "");
-      } else {
-        setExistingId(null);
-        setMouldId(null);
-        setMoId(null);
-        setStartShot("0");
-        setNotes("");
+      // a) most recent machine_daily_log today
+      let mouldId: string | null = null;
+      const log = await supabase.from("machine_daily_log").select("mould_id")
+        .eq("machine_id", machineId).eq("log_date", todayStr)
+        .order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (log.data?.mould_id) mouldId = log.data.mould_id;
+
+      // b) moulds.current_machine_id
+      if (!mouldId) {
+        const m = await supabase.from("moulds").select("id").eq("current_machine_id", machineId).limit(1).maybeSingle();
+        if (m.data?.id) mouldId = m.data.id;
       }
+
+      if (!mouldId) {
+        setMouldError("No mould assigned to this machine today. Ask your manager to assign a mould first.");
+        setLoading(false);
+        return;
+      }
+      const mInfo = await supabase.from("moulds").select("id, name, cavity_count").eq("id", mouldId).single();
+      if (mInfo.data) setMould(mInfo.data as MouldInfo);
+
+      const compat = await supabase.from("mould_compatible_variants")
+        .select("variant:product_variants(id, variant_name, sku)").eq("mould_id", mouldId);
+      const vs = (compat.data ?? []).map((r) => (r as { variant: Variant | null }).variant).filter((v): v is Variant => !!v);
+      setVariants(vs);
+      if (vs.length === 1) setVariantId(vs[0].id);
       setLoading(false);
     })();
   }, [open, machineId, todayStr]);
 
-  // Load eligible MOs once mould is chosen (variants compatible with this mould, MO not done/cancelled)
+  // Load workers when entering step 2
   useEffect(() => {
-    if (!mouldId) { setMos([]); return; }
+    if (!open || step !== 2) return;
     (async () => {
-      const compat = await supabase
-        .from("mould_compatible_variants")
-        .select("variant_id")
-        .eq("mould_id", mouldId);
-      const variantIds = (compat.data ?? []).map((r) => r.variant_id);
-      if (!variantIds.length) { setMos([]); return; }
-      const moRes = await supabase
-        .from("manufacturing_orders")
-        .select("id, mo_number, variant_id, qty_planned, qty_produced")
-        .in("variant_id", variantIds)
-        .not("status", "in", "(done,cancelled)")
-        .order("created_at", { ascending: false });
-      setMos((moRes.data ?? []) as MOOpt[]);
+      const [wRes, aRes] = await Promise.all([
+        supabase.from("workers").select("id, name, code, department, pay_cycle, payment_type")
+          .eq("is_active", true).order("name"),
+        supabase.from("worker_attendance").select("worker_id").eq("date", todayStr).eq("status", "present"),
+      ]);
+      const presentSet = new Set((aRes.data ?? []).map((r) => r.worker_id));
+      const ws = ((wRes.data ?? []) as Worker[]).map((w) => ({ ...w, present: presentSet.has(w.id) }));
+      ws.sort((a, b) => Number(b.present) - Number(a.present) || a.name.localeCompare(b.name));
+      setWorkers(ws);
     })();
-  }, [mouldId]);
+  }, [open, step, todayStr]);
 
-  const canSave = !!mouldId && !!moId && !saving;
+  const filteredVariants = useMemo(() => {
+    const q = variantSearch.trim().toLowerCase();
+    return q ? variants.filter((v) => v.variant_name.toLowerCase().includes(q) || v.sku.toLowerCase().includes(q)) : variants;
+  }, [variants, variantSearch]);
+  const filteredWorkers = useMemo(() => {
+    const q = workerSearch.trim().toLowerCase();
+    return q ? workers.filter((w) => w.name.toLowerCase().includes(q) || w.code.toLowerCase().includes(q)) : workers;
+  }, [workers, workerSearch]);
 
-  const start = async () => {
-    if (!canSave || !user) return;
+  const selectedVariant = variants.find((v) => v.id === variantId);
+  const selectedWorker = workers.find((w) => w.id === workerId);
+
+  const startRun = async () => {
+    if (!user || !mould || !variantId || !workerId) return;
     setSaving(true);
-    const payload = {
-      machine_id: machineId,
-      log_date: todayStr,
-      mould_id: mouldId,
-      mo_id: moId,
-      supervisor_id: user.id,
-      status: "running" as const,
-      start_shot_count: Number(startShot) || 0,
-      started_at: new Date().toISOString(),
-      notes: notes.trim() || null,
-      created_by: user.id,
-    };
-    const res = existingId
-      ? await supabase.from("machine_daily_log").update(payload).eq("id", existingId)
-      : await supabase.from("machine_daily_log").insert(payload);
-    setSaving(false);
-    if (res.error) {
-      notify.error("Could not start production", { description: res.error.message });
-      return;
+
+    // 1) Find or create in-progress MO for this variant + supervisor today
+    const dayStart = new Date(); dayStart.setHours(0,0,0,0);
+    const moExisting = await supabase.from("manufacturing_orders")
+      .select("id").eq("variant_id", variantId).eq("supervisor_id", user.id)
+      .eq("status", "in_progress").gte("created_at", dayStart.toISOString())
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+
+    let moId = moExisting.data?.id ?? null;
+    if (!moId) {
+      const num = await supabase.rpc("next_doc_number", { _doc_type: "MO" });
+      if (num.error) { setSaving(false); notify.error("Could not generate MO #", { description: num.error.message }); return; }
+      const ins = await supabase.from("manufacturing_orders").insert({
+        mo_number: num.data as string,
+        variant_id: variantId,
+        status: "in_progress",
+        supervisor_id: user.id,
+        qty_planned: 0,
+        qty_produced: 0,
+        created_by: user.id,
+        actual_start: new Date().toISOString(),
+      }).select("id").single();
+      if (ins.error || !ins.data) { setSaving(false); notify.error("Could not create MO", { description: ins.error?.message }); return; }
+      moId = ins.data.id;
     }
-    notify.success(`Production started on ${machineName}`);
+
+    // 2) Insert mo_stage_runs
+    const run = await supabase.from("mo_stage_runs").insert({
+      mo_id: moId,
+      machine_id: machineId,
+      mould_id: mould.id,
+      worker_id: workerId,
+      stage_kind: "moulding",
+      started_at: new Date().toISOString(),
+      status: "in_progress",
+    });
+    if (run.error) { setSaving(false); notify.error("Could not start run", { description: run.error.message }); return; }
+
+    // 3) Upsert machine_daily_log
+    const existing = await supabase.from("machine_daily_log").select("id").eq("machine_id", machineId).eq("log_date", todayStr).maybeSingle();
+    const payload = {
+      machine_id: machineId, log_date: todayStr, mould_id: mould.id, mo_id: moId,
+      supervisor_id: user.id, status: "running" as const,
+      started_at: new Date().toISOString(), created_by: user.id,
+    };
+    const mdl = existing.data?.id
+      ? await supabase.from("machine_daily_log").update(payload).eq("id", existing.data.id)
+      : await supabase.from("machine_daily_log").insert(payload);
+    if (mdl.error) { setSaving(false); notify.error("Could not update machine log", { description: mdl.error.message }); return; }
+
+    setSaving(false);
+    notify.success(`✓ उत्पादन शुरू हुआ · Production started`, {
+      description: `${selectedVariant?.variant_name} · Worker: ${selectedWorker?.name}`,
+    });
     onStarted?.();
     onClose();
   };
@@ -128,83 +169,122 @@ export function StartProductionSheet({ open, onClose, machineId, machineName, on
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
       <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-2xl">
         <SheetHeader className="text-left">
-          <SheetTitle className="text-base">Start production · {machineName}</SheetTitle>
+          <SheetTitle className="text-base">
+            {step === 1 && "कौनसा उत्पाद? · Select product"}
+            {step === 2 && "मजदूर चुनें · Select worker"}
+            {step === 3 && "Confirm · पुष्टि करें"}
+          </SheetTitle>
+          <div className="flex gap-1 pt-1">
+            {[1,2,3].map((n) => (
+              <div key={n} className={`h-1 flex-1 rounded-full ${step >= n ? "bg-sky-500" : "bg-slate-200"}`} />
+            ))}
+          </div>
         </SheetHeader>
 
         {loading ? (
           <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading…
           </div>
+        ) : mouldError ? (
+          <div className="space-y-4 py-4">
+            <div className="flex gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <p>{mouldError}</p>
+            </div>
+            <Button variant="outline" onClick={onClose} className="w-full h-12">Close</Button>
+          </div>
+        ) : step === 1 ? (
+          <div className="space-y-3 py-4">
+            {variants.length === 0 ? (
+              <div className="flex gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <p>No products linked to this mould. Ask admin to connect products in Moulds settings.</p>
+              </div>
+            ) : variants.length === 1 ? (
+              <div className="rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs">
+                <span className="text-muted-foreground">Product · </span>
+                <span className="font-semibold text-sky-900">{variants[0].variant_name}</span>
+                <span className="ml-1 font-mono text-[10px] text-muted-foreground">{variants[0].sku}</span>
+              </div>
+            ) : (
+              <>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input value={variantSearch} onChange={(e) => setVariantSearch(e.target.value)} placeholder="Search products" className="h-11 pl-9" />
+                </div>
+                <div className="space-y-2 max-h-[40vh] overflow-y-auto">
+                  {filteredVariants.map((v) => (
+                    <button key={v.id} onClick={() => setVariantId(v.id)}
+                      className={`w-full text-left rounded-lg border p-3 transition ${variantId === v.id ? "border-sky-500 bg-sky-50" : "border-slate-200 bg-white"}`}>
+                      <div className="text-[15px] font-semibold">{v.variant_name}</div>
+                      <div className="font-mono text-[11px] text-muted-foreground">{v.sku}</div>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            <Button onClick={() => setStep(2)} disabled={!variantId} className="w-full h-12 gap-1.5">
+              Next <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : step === 2 ? (
+          <div className="space-y-3 py-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input value={workerSearch} onChange={(e) => setWorkerSearch(e.target.value)} placeholder="Search workers" className="h-11 pl-9" />
+            </div>
+            <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+              {filteredWorkers.map((w) => (
+                <button key={w.id} onClick={() => setWorkerId(w.id)}
+                  className={`w-full min-h-[56px] text-left rounded-lg border p-3 transition flex items-center gap-3 ${workerId === w.id ? "border-sky-500 bg-sky-50" : "border-slate-200 bg-white"}`}>
+                  <span className={`h-2.5 w-2.5 rounded-full ${w.present ? "bg-emerald-500" : "bg-slate-300"}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[15px] font-semibold truncate">{w.name}</div>
+                    <div className="flex gap-1.5 mt-0.5 flex-wrap">
+                      {w.department && <Badge variant="outline" className="text-[10px]">{w.department}</Badge>}
+                      {(w.pay_cycle || w.payment_type) && <Badge variant="secondary" className="text-[10px] capitalize">{w.pay_cycle || w.payment_type}</Badge>}
+                    </div>
+                  </div>
+                </button>
+              ))}
+              {filteredWorkers.length === 0 && (
+                <p className="text-center text-xs text-muted-foreground py-6">No workers found</p>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setStep(1)} className="flex-1 h-12">Back</Button>
+              <Button onClick={() => setStep(3)} disabled={!workerId} className="flex-1 h-12 gap-1.5">
+                Next <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         ) : (
           <div className="space-y-4 py-4">
-            {moulds.length === 0 && (
-              <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
-                No mould assigned. Contact manager.
-              </p>
-            )}
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Mould</Label>
-              <SmartSelect
-                options={moulds.map((m) => ({
-                  value: m.id,
-                  label: m.name,
-                  hint: m.code,
-                }))}
-                value={mouldId}
-                onChange={(v) => { setMouldId(v); setMoId(null); }}
-                placeholder="Pick a mould"
-                emptyText="No compatible moulds"
-              />
+            <div className="rounded-xl bg-[#0B1733] p-4 text-white space-y-2 text-[13px]">
+              <Row label="Machine" value={machineName} />
+              <Row label="Mould" value={`${mould?.name} · ${mould?.cavity_count} cavities`} />
+              <Row label="Product" value={selectedVariant?.variant_name ?? "—"} />
+              <Row label="Worker" value={`${selectedWorker?.name} · ${selectedWorker?.pay_cycle ?? selectedWorker?.payment_type ?? ""}`} />
             </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Manufacturing order</Label>
-              <SmartSelect
-                options={mos.map((m) => ({
-                  value: m.id,
-                  label: m.mo_number,
-                  hint: `${m.qty_produced ?? 0} / ${m.qty_planned}`,
-                }))}
-                value={moId}
-                onChange={(v) => setMoId(v)}
-                placeholder={mouldId ? "Pick an MO" : "Choose mould first"}
-                emptyText="No active MOs for this mould"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Start shot count</Label>
-              <Input
-                type="number"
-                inputMode="numeric"
-                min={0}
-                value={startShot}
-                onChange={(e) => setStartShot(e.target.value)}
-                className="h-12 text-base"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Notes (optional)</Label>
-              <Textarea
-                rows={2}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Any setup remarks…"
-              />
-            </div>
-
-            <div className="flex gap-2 pt-2">
-              <Button variant="outline" onClick={onClose} className="flex-1 h-12">Cancel</Button>
-              <Button onClick={start} disabled={!canSave} className="flex-1 h-12 gap-1.5">
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setStep(2)} className="flex-1 h-14">Back</Button>
+              <Button onClick={startRun} disabled={saving} className="flex-1 h-14 gap-1.5 bg-teal-600 hover:bg-teal-700 text-white text-base">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-                Start
+                शुरू करें · Start run
               </Button>
             </div>
           </div>
         )}
       </SheetContent>
     </Sheet>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-3">
+      <span className="text-white/60">{label}</span>
+      <span className="font-medium text-right">{value}</span>
+    </div>
   );
 }
