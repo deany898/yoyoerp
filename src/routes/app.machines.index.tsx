@@ -1,12 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Cpu } from "lucide-react";
+import { Cpu, Replace } from "lucide-react";
 import { MasterListPage } from "@/components/manufacturing/MasterListPage";
 import { useMachines } from "@/hooks/useMfgData";
 import { useWarehouses } from "@/hooks/useErpData";
 import { SmartSelect } from "@/components/forms/SmartSelect";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { AssignMouldSheet } from "@/components/machines/AssignMouldSheet";
+import { useRole } from "@/hooks/useRole";
 
 export const Route = createFileRoute("/app/machines/")({
   head: () => ({
@@ -26,6 +29,26 @@ const STATUS_TONE: Record<string, string> = {
 function MachinesPage() {
   const { machines, loading, refresh } = useMachines();
   const { warehouses } = useWarehouses();
+  const { role } = useRole();
+  const canAssign = role === "admin" || role === "manager";
+  const [assignFor, setAssignFor] = useState<{ id: string; name: string } | null>(null);
+  const [todayMoulds, setTodayMoulds] = useState<Record<string, { id: string; name: string }>>({});
+
+  const todayStr = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+    .toISOString().slice(0, 10);
+
+  const loadTodayMoulds = async () => {
+    const { data } = await supabase.from("machine_daily_log")
+      .select("machine_id, mould:moulds(id, name)").eq("log_date", todayStr);
+    const map: Record<string, { id: string; name: string }> = {};
+    (data ?? []).forEach((r) => {
+      const m = (r as { mould: { id: string; name: string } | null }).mould;
+      if (m) map[r.machine_id] = m;
+    });
+    setTodayMoulds(map);
+  };
+  useEffect(() => { loadTodayMoulds(); }, [machines.length, todayStr]);
+
   const warehouseOpts = warehouses.map((w) => ({ value: w.id, label: w.name, hint: w.code }));
   const warehouseName = (id: string | null | undefined) =>
     warehouses.find((w) => w.id === id)?.name ?? "—";
@@ -85,6 +108,16 @@ function MachinesPage() {
   }, [machines]);
 
   return (
+    <>
+    {assignFor && (
+      <AssignMouldSheet
+        open={!!assignFor}
+        onClose={() => setAssignFor(null)}
+        machineId={assignFor.id}
+        machineName={assignFor.name}
+        onAssigned={loadTodayMoulds}
+      />
+    )}
     <MasterListPage
       title="Machines"
       entityLabel="Machine"
@@ -134,6 +167,27 @@ function MachinesPage() {
         { key: "type", label: "Type", render: (r) => (r as { type?: string | null }).type ?? "—" },
         { key: "warehouse_id", label: "Warehouse", render: (r) => warehouseName(r.warehouse_id) },
         {
+          key: "today_mould",
+          label: "Today's mould",
+          render: (r) => {
+            const m = todayMoulds[r.id];
+            return (
+              <div className="flex items-center gap-2">
+                <span className={m ? "text-xs font-medium" : "text-xs text-muted-foreground"}>
+                  {m ? m.name : "No mould assigned"}
+                </span>
+                {canAssign && (
+                  <Button size="sm" variant="ghost"
+                    onClick={(e) => { e.stopPropagation(); setAssignFor({ id: r.id, name: r.name }); }}
+                    className="h-7 px-2 text-[11px] gap-1">
+                    <Replace className="h-3 w-3" /> Change
+                  </Button>
+                )}
+              </div>
+            );
+          },
+        },
+        {
           key: "live_status",
           label: "Status",
           render: (r) => {
@@ -158,5 +212,6 @@ function MachinesPage() {
         { key: "is_active", label: "", render: (r) => <Badge variant={r.is_active ? "secondary" : "outline"} className="text-[10px]">{r.is_active ? "Active" : "Inactive"}</Badge> },
       ]}
     />
+    </>
   );
 }
