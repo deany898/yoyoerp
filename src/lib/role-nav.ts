@@ -47,6 +47,7 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     "/app/command-center",
     "/app/settings/users",
     "/app/floor",
+    "/app/production-logs",
     ...COMMON_ROUTES,
   ],
   manager: [
@@ -84,6 +85,7 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     "/app/ai-insights",
     "/app/command-center",
     "/app/floor",
+    "/app/production-logs",
     ...COMMON_ROUTES,
   ],
   supervisor: [
@@ -100,6 +102,7 @@ const ROLE_ROUTES: Record<UserRoleType, string[]> = {
     "/app/floor",
     "/app/staffing/daily",
     "/app/workers/attendance",
+    "/app/production-logs",
     ...COMMON_ROUTES,
   ],
   worker: [
