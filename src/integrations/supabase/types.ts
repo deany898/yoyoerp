@@ -4206,52 +4206,88 @@ export type Database = {
       }
       workers: {
         Row: {
+          aadhaar: string | null
+          address: string | null
+          bank_account: string | null
           code: string
           created_at: string
+          daily_rate: number
           department: string | null
+          emergency_contact: string | null
           hourly_rate: number
           id: string
           is_active: boolean
           job_role: string | null
+          joined_date: string | null
+          monthly_salary: number
           name: string
+          notes: string | null
+          pay_cycle: string | null
+          pay_day: number | null
           payment_type: string | null
           phone: string | null
           piece_rate: number | null
           station_id: string | null
           sub_role: string | null
+          total_advance_outstanding: number
           updated_at: string
+          upi_id: string | null
         }
         Insert: {
+          aadhaar?: string | null
+          address?: string | null
+          bank_account?: string | null
           code: string
           created_at?: string
+          daily_rate?: number
           department?: string | null
+          emergency_contact?: string | null
           hourly_rate?: number
           id?: string
           is_active?: boolean
           job_role?: string | null
+          joined_date?: string | null
+          monthly_salary?: number
           name: string
+          notes?: string | null
+          pay_cycle?: string | null
+          pay_day?: number | null
           payment_type?: string | null
           phone?: string | null
           piece_rate?: number | null
           station_id?: string | null
           sub_role?: string | null
+          total_advance_outstanding?: number
           updated_at?: string
+          upi_id?: string | null
         }
         Update: {
+          aadhaar?: string | null
+          address?: string | null
+          bank_account?: string | null
           code?: string
           created_at?: string
+          daily_rate?: number
           department?: string | null
+          emergency_contact?: string | null
           hourly_rate?: number
           id?: string
           is_active?: boolean
           job_role?: string | null
+          joined_date?: string | null
+          monthly_salary?: number
           name?: string
+          notes?: string | null
+          pay_cycle?: string | null
+          pay_day?: number | null
           payment_type?: string | null
           phone?: string | null
           piece_rate?: number | null
           station_id?: string | null
           sub_role?: string | null
+          total_advance_outstanding?: number
           updated_at?: string
+          upi_id?: string | null
         }
         Relationships: [
           {
