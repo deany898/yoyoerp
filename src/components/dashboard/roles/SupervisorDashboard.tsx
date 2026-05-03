@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowLeftRight, Factory, ListChecks, Plus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { PendingProductionEntries } from "@/components/dashboard/PendingProductionEntries";
 
 export function SupervisorDashboard() {
   const { displayName, user } = useAuth();
@@ -20,6 +21,8 @@ export function SupervisorDashboard() {
             {t("dash_shift_started")} · {shiftStart.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </div>
         </div>
+
+        <PendingProductionEntries />
 
         <div className="grid grid-cols-2 gap-3">
           <DarkMetric label={t("dash_units_logged_today")} value={0} accent="#38BDF8" />
