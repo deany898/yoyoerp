@@ -121,7 +121,6 @@ export const BOTTOM_NAV: Record<UserRoleType, ShellNavItem[]> = {
   ],
   worker: [
     { label: "Home", href: "/app/dashboard", icon: LayoutDashboard },
-    { label: "Factory", href: "/app/manufacturing", icon: Factory },
     { label: "MOs", href: "/app/manufacturing", icon: Factory },
     { label: "Inventory", href: "/app/inventory", icon: Layers },
   ],
