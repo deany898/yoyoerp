@@ -13,10 +13,8 @@ import {
   Truck,
   CheckCircle2,
   FileText,
-  Truck as TruckIcon,
   ClipboardCheck,
   History,
-  Package,
   type LucideIcon,
 } from "lucide-react";
 import type { UserRoleType } from "@/lib/roles";
@@ -115,7 +113,7 @@ export const BOTTOM_NAV: Record<UserRoleType, ShellNavItem[]> = {
   ],
   dispatch: [
     { label: "Home", href: "/app/dashboard", icon: LayoutDashboard },
-    { label: "My Loads", href: "/app/dispatch-orders", icon: TruckIcon },
+    { label: "My Loads", href: "/app/dispatch-orders", icon: Truck },
     { label: "Delivered", href: "/app/dispatch-orders", icon: ClipboardCheck },
     { label: "History", href: "/app/dispatch-orders", icon: History },
   ],
