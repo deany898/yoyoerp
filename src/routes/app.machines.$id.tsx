@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { notify } from "@/lib/notify";
 import type { Database } from "@/integrations/supabase/types";
 import { StartProductionSheet } from "@/components/machines/StartProductionSheet";
+import { EndOfDaySheet } from "@/components/machines/EndOfDaySheet";
 import { useRole } from "@/hooks/useRole";
 
 type Machine = Database["public"]["Tables"]["machines"]["Row"];
@@ -41,6 +42,7 @@ function MachineDetailPage() {
   const [rows, setRows] = useState<MouldingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [startOpen, setStartOpen] = useState(false);
+  const [endOpen, setEndOpen] = useState(false);
   const [todayLog, setTodayLog] = useState<Database["public"]["Tables"]["machine_daily_log"]["Row"] | null>(null);
 
   const todayStr = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
@@ -97,13 +99,16 @@ function MachineDetailPage() {
       {canStart && machine && (
         <div className="rounded-xl border border-slate-200 bg-white p-3">
           {todayLog && todayLog.status === "running" ? (
-            <div className="flex items-center justify-between gap-2">
-              <div className="text-xs">
-                <div className="font-semibold text-emerald-700">Running today</div>
-                <div className="text-muted-foreground">Start shots: {todayLog.start_shot_count ?? 0}</div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-xs">
+                  <div className="font-semibold text-emerald-700">Running today</div>
+                  <div className="text-muted-foreground">Start shots: {todayLog.start_shot_count ?? 0}</div>
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => setStartOpen(true)} className="text-xs">Edit setup</Button>
               </div>
-              <Button size="sm" variant="outline" onClick={() => setStartOpen(true)} className="gap-1.5">
-                <Square className="h-4 w-4" /> Edit
+              <Button onClick={() => setEndOpen(true)} className="w-full h-12 gap-1.5" variant="default">
+                <Square className="h-4 w-4" /> End day
               </Button>
             </div>
           ) : (
@@ -115,13 +120,24 @@ function MachineDetailPage() {
       )}
 
       {machine && (
-        <StartProductionSheet
-          open={startOpen}
-          onClose={() => setStartOpen(false)}
-          machineId={machine.id}
-          machineName={machine.name}
-          onStarted={loadTodayLog}
-        />
+        <>
+          <StartProductionSheet
+            open={startOpen}
+            onClose={() => setStartOpen(false)}
+            machineId={machine.id}
+            machineName={machine.name}
+            onStarted={loadTodayLog}
+          />
+          {todayLog && (
+            <EndOfDaySheet
+              open={endOpen}
+              onClose={() => setEndOpen(false)}
+              log={todayLog}
+              machineName={machine.name}
+              onEnded={loadTodayLog}
+            />
+          )}
+        </>
       )}
 
       <header className="rounded-xl border border-slate-200 bg-white p-4">
