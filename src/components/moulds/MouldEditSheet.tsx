@@ -86,7 +86,7 @@ export function MouldEditSheet({ open, onClose, mould, onSaved }: Props) {
         const { error } = await supabase.from("moulds").update(payload).eq("id", mid);
         if (error) throw error;
       } else {
-        const { data, error } = await supabase.from("moulds").insert(payload).select("id").single();
+        const { data, error } = await supabase.from("moulds").insert(payload as never).select("id").single();
         if (error) throw error;
         mid = data.id;
       }
