@@ -115,15 +115,15 @@ export const BOTTOM_NAV: Record<UserRoleType, ShellNavItem[]> = {
   ],
   dispatch: [
     { label: "Home", href: "/app/dashboard", icon: LayoutDashboard },
-    { label: "Pack", href: "/app/dispatch-orders", icon: Package },
-    { label: "Ready", href: "/app/dispatch-orders", icon: CheckCircle2 },
+    { label: "My Loads", href: "/app/dispatch-orders", icon: TruckIcon },
+    { label: "Delivered", href: "/app/dispatch-orders", icon: ClipboardCheck },
     { label: "History", href: "/app/dispatch-orders", icon: History },
   ],
   worker: [
     { label: "Home", href: "/app/dashboard", icon: LayoutDashboard },
-    { label: "My Loads", href: "/app/dispatch-orders", icon: TruckIcon },
-    { label: "Delivered", href: "/app/dispatch-orders", icon: ClipboardCheck },
-    { label: "History", href: "/app/dispatch-orders", icon: History },
+    { label: "Factory", href: "/app/manufacturing", icon: Factory },
+    { label: "MOs", href: "/app/manufacturing", icon: Factory },
+    { label: "Inventory", href: "/app/inventory", icon: Layers },
   ],
   customer: [],
 };
