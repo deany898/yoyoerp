@@ -8,7 +8,7 @@ import { SmartSelect } from "@/components/forms/SmartSelect";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/app/machines")({
+export const Route = createFileRoute("/app/machines/")({
   head: () => ({
     meta: [
       { title: "Machines · Yoyo" },
