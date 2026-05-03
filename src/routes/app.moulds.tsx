@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -137,7 +137,7 @@ function MouldsPage() {
   );
 }
 
-function Spec({ label, value }: { label: string; value: React.ReactNode }) {
+function Spec({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="rounded-md border bg-muted/30 px-2 py-1.5">
       <div className="text-[10px] uppercase text-muted-foreground">{label}</div>
