@@ -1312,10 +1312,15 @@ export type Database = {
       }
       mo_stage_runs: {
         Row: {
+          actual_weight_g: number | null
+          cavity_count: number | null
           cavity_used: number | null
+          cavity_weight_g: number | null
           created_at: string
           ended_at: string | null
+          hours_worked: number | null
           id: string
+          item_weight_g: number | null
           machine_id: string | null
           material_grams: number
           material_variant_id: string | null
@@ -1324,21 +1329,31 @@ export type Database = {
           notes: string | null
           qty_in: number
           qty_out: number
+          qty_rejected: number
           qty_rework: number
           qty_scrap: number
+          rejection_reason: string | null
+          runner_weight_g: number | null
+          shot_count: number | null
           shots_good: number
           shots_scrap: number
           stage_id: string | null
           stage_kind: Database["public"]["Enums"]["stage_kind"]
           started_at: string | null
+          status: string
           units_produced: number
           worker_id: string | null
         }
         Insert: {
+          actual_weight_g?: number | null
+          cavity_count?: number | null
           cavity_used?: number | null
+          cavity_weight_g?: number | null
           created_at?: string
           ended_at?: string | null
+          hours_worked?: number | null
           id?: string
+          item_weight_g?: number | null
           machine_id?: string | null
           material_grams?: number
           material_variant_id?: string | null
@@ -1347,21 +1362,31 @@ export type Database = {
           notes?: string | null
           qty_in?: number
           qty_out?: number
+          qty_rejected?: number
           qty_rework?: number
           qty_scrap?: number
+          rejection_reason?: string | null
+          runner_weight_g?: number | null
+          shot_count?: number | null
           shots_good?: number
           shots_scrap?: number
           stage_id?: string | null
           stage_kind?: Database["public"]["Enums"]["stage_kind"]
           started_at?: string | null
+          status?: string
           units_produced?: number
           worker_id?: string | null
         }
         Update: {
+          actual_weight_g?: number | null
+          cavity_count?: number | null
           cavity_used?: number | null
+          cavity_weight_g?: number | null
           created_at?: string
           ended_at?: string | null
+          hours_worked?: number | null
           id?: string
+          item_weight_g?: number | null
           machine_id?: string | null
           material_grams?: number
           material_variant_id?: string | null
@@ -1370,13 +1395,18 @@ export type Database = {
           notes?: string | null
           qty_in?: number
           qty_out?: number
+          qty_rejected?: number
           qty_rework?: number
           qty_scrap?: number
+          rejection_reason?: string | null
+          runner_weight_g?: number | null
+          shot_count?: number | null
           shots_good?: number
           shots_scrap?: number
           stage_id?: string | null
           stage_kind?: Database["public"]["Enums"]["stage_kind"]
           started_at?: string | null
+          status?: string
           units_produced?: number
           worker_id?: string | null
         }
@@ -1514,6 +1544,8 @@ export type Database = {
           cavity_weight_g: number | null
           code: string
           created_at: string
+          current_machine_id: string | null
+          current_status: string
           est_shots_per_day: number | null
           id: string
           is_active: boolean
@@ -1529,6 +1561,8 @@ export type Database = {
           cavity_weight_g?: number | null
           code: string
           created_at?: string
+          current_machine_id?: string | null
+          current_status?: string
           est_shots_per_day?: number | null
           id?: string
           is_active?: boolean
@@ -1544,6 +1578,8 @@ export type Database = {
           cavity_weight_g?: number | null
           code?: string
           created_at?: string
+          current_machine_id?: string | null
+          current_status?: string
           est_shots_per_day?: number | null
           id?: string
           is_active?: boolean
@@ -1554,7 +1590,22 @@ export type Database = {
           updated_at?: string
           used_cycles?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "moulds_current_machine_id_fkey"
+            columns: ["current_machine_id"]
+            isOneToOne: false
+            referencedRelation: "machine_effective_rate"
+            referencedColumns: ["machine_id"]
+          },
+          {
+            foreignKeyName: "moulds_current_machine_id_fkey"
+            columns: ["current_machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
