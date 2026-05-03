@@ -1,9 +1,7 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/hooks/useRole";
-import { bottomNavForRole, MORE_OVERFLOW } from "./shellNav";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { bottomNavForRole } from "./shellNav";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const BOTTOM_NAV_KEY: Record<string, string> = {
@@ -25,6 +23,13 @@ const BOTTOM_NAV_KEY: Record<string, string> = {
   Products: "nav_products",
   Users: "nav_users",
   Settings: "nav_settings",
+  Workers: "nav_users",
+  Log: "nav_dispatch",
+  Pack: "nav_dispatch",
+  Ready: "nav_dispatch",
+  History: "nav_dispatch",
+  "My Loads": "nav_dispatch",
+  Delivered: "nav_delivered",
 };
 
 /**
@@ -36,18 +41,14 @@ export function BottomNav() {
   const { role } = useRole();
   const { t } = useLanguage();
   const path = location.pathname;
-  const [moreOpen, setMoreOpen] = useState(false);
 
-  const slots = bottomNavForRole(role).slice(0, 5);
+  const slots = bottomNavForRole(role).slice(0, 4);
   if (slots.length === 0) return null;
 
   const isActive = (href: string) =>
-    path === href || (href !== "/app/dashboard" && href !== "__more__" && path.startsWith(href + "/"));
-
-  const overflow = MORE_OVERFLOW[role] ?? [];
+    path === href || (href !== "/app/dashboard" && path.startsWith(href + "/"));
 
   return (
-    <>
       <nav
         className="fixed inset-x-0 bottom-0 z-40 flex items-stretch border-t border-border/60 bg-white md:hidden"
         style={{ height: 60, paddingBottom: "max(env(safe-area-inset-bottom), 0px)" }}
@@ -56,7 +57,6 @@ export function BottomNav() {
         {slots.map((s) => {
           const Icon = s.icon;
           const active = isActive(s.href);
-          const isMore = s.href === "__more__";
           const label = t(BOTTOM_NAV_KEY[s.label] ?? "", s.label);
 
           const inner = (
@@ -73,20 +73,6 @@ export function BottomNav() {
             </>
           );
 
-          if (isMore) {
-            return (
-              <button
-                key={s.label}
-                type="button"
-                onClick={() => setMoreOpen(true)}
-                aria-label={label}
-                className="relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[10.5px] font-medium transition-colors"
-              >
-                {inner}
-              </button>
-            );
-          }
-
           return (
             <Link
               key={`${s.label}-${s.href}`}
@@ -100,31 +86,5 @@ export function BottomNav() {
           );
         })}
       </nav>
-
-      <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-        <SheetContent side="bottom" className="rounded-t-2xl pb-8">
-          <SheetHeader>
-            <SheetTitle>{t("nav_more")}</SheetTitle>
-          </SheetHeader>
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            {overflow.map((s) => {
-              const Icon = s.icon;
-              return (
-                <Link
-                  key={`${s.label}-${s.href}`}
-                  to={s.href}
-                  preload="intent"
-                  onClick={() => setMoreOpen(false)}
-                  className="flex flex-col items-center gap-1.5 rounded-xl bg-muted/40 p-3 text-[11px] font-medium text-foreground hover:bg-muted"
-                >
-                  <Icon className="h-5 w-5 text-primary" />
-                  {t(BOTTOM_NAV_KEY[s.label] ?? "", s.label)}
-                </Link>
-              );
-            })}
-          </div>
-        </SheetContent>
-      </Sheet>
-    </>
   );
 }
