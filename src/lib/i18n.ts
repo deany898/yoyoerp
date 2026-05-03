@@ -314,16 +314,16 @@ export const translations = {
   notif_handoff: { en: "Handoff received", hi: "हैंडऑफ मिला" },
 
   // Auth
-  auth_subtitle: { en: "Staff portal · Authorised access only", hi: "स्टाफ पोर्टल · केवल अधिकृत कर्मचारी" },
+  auth_subtitle: { en: "", hi: "" },
   auth_mobile_label: { en: "Mobile number or Email", hi: "मोबाइल नंबर या ईमेल" },
-  auth_mobile_placeholder: { en: "98765 43210 or email@example.com", hi: "98765 43210 या ईमेल डालें" },
+  auth_mobile_placeholder: { en: "", hi: "" },
   auth_password_label: { en: "Password", hi: "पासवर्ड" },
-  auth_password_placeholder: { en: "Enter your password", hi: "पासवर्ड डालें" },
+  auth_password_placeholder: { en: "", hi: "" },
   auth_signin: { en: "Sign in", hi: "लॉगिन करें" },
   auth_signing_in: { en: "Signing in...", hi: "लॉगिन हो रहा है..." },
   auth_or: { en: "or", hi: "या" },
   auth_continue_google: { en: "Continue with Google", hi: "Google से जारी रखें" },
-  auth_footer_note: { en: "Access is for authorised staff only. Contact your administrator for access.", hi: "केवल अधिकृत स्टाफ के लिए। पहुंच के लिए एडमिन से संपर्क करें।" },
+  auth_footer_note: { en: "", hi: "" },
 
   // Dispatch orders page
   do_subtitle: { en: "Sales · Outbound", hi: "बिक्री · बाहर भेजना" },
