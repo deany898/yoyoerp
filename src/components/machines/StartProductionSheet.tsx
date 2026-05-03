@@ -18,7 +18,7 @@ interface Props {
   onStarted?: () => void;
 }
 
-interface MouldOpt { id: string; name: string; code: string; current_status: string | null }
+interface MouldOpt { id: string; name: string; code: string }
 interface MOOpt { id: string; mo_number: string; variant_id: string; qty_planned: number; qty_produced: number }
 
 export function StartProductionSheet({ open, onClose, machineId, machineName, onStarted }: Props) {
@@ -44,7 +44,7 @@ export function StartProductionSheet({ open, onClose, machineId, machineName, on
       const [compRes, logRes] = await Promise.all([
         supabase
           .from("mould_machine_compat")
-          .select("mould:moulds(id, name, code, current_status)")
+          .select("mould:moulds(id, name, code)")
           .eq("machine_id", machineId),
         supabase
           .from("machine_daily_log")
