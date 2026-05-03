@@ -3,14 +3,13 @@ import { cn } from "@/lib/utils";
 
 interface LangOption {
   value: Lang;
-  flag: string;
   label: string;
   desc: string;
 }
 
 const OPTS: LangOption[] = [
-  { value: "en", flag: "🇬🇧", label: "English", desc: "The full app in English" },
-  { value: "hi", flag: "🇮🇳", label: "हिंदी", desc: "पूरा ऐप हिंदी में" },
+  { value: "en", label: "English", desc: "The full app in English" },
+  { value: "hi", label: "हिंदी", desc: "पूरा ऐप हिंदी में" },
 ];
 
 export function LanguageTab() {
@@ -39,7 +38,6 @@ export function LanguageTab() {
                   : "border-border bg-background hover:bg-muted/40",
               )}
             >
-              <span aria-hidden className="text-2xl leading-none">{o.flag}</span>
               <div className="flex-1">
                 <div className="text-base font-bold">{o.label}</div>
                 <div className="mt-0.5 text-sm text-muted-foreground">{o.desc}</div>
