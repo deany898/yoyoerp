@@ -945,6 +945,89 @@ export type Database = {
           },
         ]
       }
+      machine_daily_log: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          end_shot_count: number | null
+          ended_at: string | null
+          id: string
+          log_date: string
+          machine_id: string
+          mo_id: string | null
+          mould_id: string | null
+          notes: string | null
+          start_shot_count: number | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["machine_log_status"]
+          supervisor_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          end_shot_count?: number | null
+          ended_at?: string | null
+          id?: string
+          log_date?: string
+          machine_id: string
+          mo_id?: string | null
+          mould_id?: string | null
+          notes?: string | null
+          start_shot_count?: number | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["machine_log_status"]
+          supervisor_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          end_shot_count?: number | null
+          ended_at?: string | null
+          id?: string
+          log_date?: string
+          machine_id?: string
+          mo_id?: string | null
+          mould_id?: string | null
+          notes?: string | null
+          start_shot_count?: number | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["machine_log_status"]
+          supervisor_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "machine_daily_log_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machine_effective_rate"
+            referencedColumns: ["machine_id"]
+          },
+          {
+            foreignKeyName: "machine_daily_log_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "machine_daily_log_mo_id_fkey"
+            columns: ["mo_id"]
+            isOneToOne: false
+            referencedRelation: "manufacturing_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "machine_daily_log_mould_id_fkey"
+            columns: ["mould_id"]
+            isOneToOne: false
+            referencedRelation: "moulds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       machines: {
         Row: {
           code: string
@@ -4493,6 +4576,12 @@ export type Database = {
         | "warehouse"
         | "loading"
         | "packing_support"
+      machine_log_status:
+        | "idle"
+        | "running"
+        | "paused"
+        | "maintenance"
+        | "ended"
       machine_status: "idle" | "running" | "maintenance" | "offline"
       mo_status: "draft" | "released" | "in_progress" | "done" | "cancelled"
       movement_reason:
@@ -4785,6 +4874,7 @@ export const Constants = {
         "loading",
         "packing_support",
       ],
+      machine_log_status: ["idle", "running", "paused", "maintenance", "ended"],
       machine_status: ["idle", "running", "maintenance", "offline"],
       mo_status: ["draft", "released", "in_progress", "done", "cancelled"],
       movement_reason: [
