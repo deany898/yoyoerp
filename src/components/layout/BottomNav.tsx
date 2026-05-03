@@ -24,7 +24,7 @@ const BOTTOM_NAV_KEY: Record<string, string> = {
   Users: "nav_users",
   Settings: "nav_settings",
   Workers: "nav_users",
-  Log: "nav_work_logs",
+  Log: "nav_dispatch",
   Pack: "nav_dispatch",
   Ready: "nav_dispatch",
   History: "nav_dispatch",
