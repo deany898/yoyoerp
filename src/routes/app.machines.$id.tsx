@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Cpu, ClipboardCheck } from "lucide-react";
+import { ArrowLeft, Cpu, ClipboardCheck, Play, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TableSkeleton } from "@/components/shared/skeletons";
@@ -8,6 +8,8 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { notify } from "@/lib/notify";
 import type { Database } from "@/integrations/supabase/types";
+import { StartProductionSheet } from "@/components/machines/StartProductionSheet";
+import { useRole } from "@/hooks/useRole";
 
 type Machine = Database["public"]["Tables"]["machines"]["Row"];
 type MouldingRow = Database["public"]["Tables"]["wl_moulding_details"]["Row"] & {
@@ -33,9 +35,26 @@ function fmtDate(iso: string | null) {
 
 function MachineDetailPage() {
   const { id } = Route.useParams();
+  const { role } = useRole();
+  const canStart = ["admin", "manager", "supervisor"].includes(role);
   const [machine, setMachine] = useState<Machine | null>(null);
   const [rows, setRows] = useState<MouldingRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [startOpen, setStartOpen] = useState(false);
+  const [todayLog, setTodayLog] = useState<Database["public"]["Tables"]["machine_daily_log"]["Row"] | null>(null);
+
+  const todayStr = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+    .toISOString().slice(0, 10);
+
+  const loadTodayLog = async () => {
+    const { data } = await supabase
+      .from("machine_daily_log")
+      .select("*")
+      .eq("machine_id", id)
+      .eq("log_date", todayStr)
+      .maybeSingle();
+    setTodayLog(data ?? null);
+  };
 
   useEffect(() => {
     (async () => {
@@ -55,6 +74,8 @@ function MachineDetailPage() {
       setRows((r.data as unknown as MouldingRow[]) ?? []);
       setLoading(false);
     })();
+    loadTodayLog();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const stats = useMemo(() => {
@@ -72,6 +93,36 @@ function MachineDetailPage() {
       <Button asChild variant="ghost" size="sm" className="gap-1.5">
         <Link to="/app/machines"><ArrowLeft className="h-4 w-4" /> Machines</Link>
       </Button>
+
+      {canStart && machine && (
+        <div className="rounded-xl border border-slate-200 bg-white p-3">
+          {todayLog && todayLog.status === "running" ? (
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-xs">
+                <div className="font-semibold text-emerald-700">Running today</div>
+                <div className="text-muted-foreground">Start shots: {todayLog.start_shot_count ?? 0}</div>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => setStartOpen(true)} className="gap-1.5">
+                <Square className="h-4 w-4" /> Edit
+              </Button>
+            </div>
+          ) : (
+            <Button onClick={() => setStartOpen(true)} className="w-full h-12 gap-1.5">
+              <Play className="h-4 w-4" /> Start production
+            </Button>
+          )}
+        </div>
+      )}
+
+      {machine && (
+        <StartProductionSheet
+          open={startOpen}
+          onClose={() => setStartOpen(false)}
+          machineId={machine.id}
+          machineName={machine.name}
+          onStarted={loadTodayLog}
+        />
+      )}
 
       <header className="rounded-xl border border-slate-200 bg-white p-4">
         <div className="flex items-start gap-3">
