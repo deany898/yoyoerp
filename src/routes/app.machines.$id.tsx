@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Cpu, ClipboardCheck, Play, Square } from "lucide-react";
+import { ArrowLeft, Cpu, ClipboardCheck, Play, Square, Pause, Wrench, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TableSkeleton } from "@/components/shared/skeletons";
@@ -58,6 +58,20 @@ function MachineDetailPage() {
     setTodayLog(data ?? null);
   };
 
+  const setLogStatus = async (status: Database["public"]["Enums"]["machine_log_status"]) => {
+    if (!todayLog) return;
+    const { error } = await supabase
+      .from("machine_daily_log")
+      .update({ status })
+      .eq("id", todayLog.id);
+    if (error) {
+      notify.error("Failed to update", { description: error.message });
+      return;
+    }
+    notify.success(`Marked ${status}`);
+    loadTodayLog();
+  };
+
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -98,14 +112,43 @@ function MachineDetailPage() {
 
       {canStart && machine && (
         <div className="rounded-xl border border-slate-200 bg-white p-3">
-          {todayLog && todayLog.status === "running" ? (
+          {todayLog && todayLog.status !== "ended" ? (
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <div className="text-xs">
-                  <div className="font-semibold text-emerald-700">Running today</div>
+                  <div className={
+                    todayLog.status === "running" ? "font-semibold text-emerald-700" :
+                    todayLog.status === "paused" ? "font-semibold text-amber-700" :
+                    todayLog.status === "maintenance" ? "font-semibold text-red-700" :
+                    "font-semibold text-slate-700"
+                  }>
+                    {todayLog.status === "running" ? "Running today" :
+                     todayLog.status === "paused" ? "Paused" :
+                     todayLog.status === "maintenance" ? "In maintenance" : "Idle"}
+                  </div>
                   <div className="text-muted-foreground">Start shots: {todayLog.start_shot_count ?? 0}</div>
                 </div>
                 <Button size="sm" variant="ghost" onClick={() => setStartOpen(true)} className="text-xs">Edit setup</Button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {todayLog.status === "running" ? (
+                  <Button size="sm" variant="outline" onClick={() => setLogStatus("paused")} className="gap-1.5">
+                    <Pause className="h-4 w-4" /> Pause
+                  </Button>
+                ) : (
+                  <Button size="sm" variant="outline" onClick={() => setLogStatus("running")} className="gap-1.5">
+                    <RotateCcw className="h-4 w-4" /> Resume
+                  </Button>
+                )}
+                {todayLog.status === "maintenance" ? (
+                  <Button size="sm" variant="outline" onClick={() => setLogStatus("running")} className="gap-1.5">
+                    <RotateCcw className="h-4 w-4" /> Back to run
+                  </Button>
+                ) : (
+                  <Button size="sm" variant="outline" onClick={() => setLogStatus("maintenance")} className="gap-1.5">
+                    <Wrench className="h-4 w-4" /> Maintenance
+                  </Button>
+                )}
               </div>
               <Button onClick={() => setEndOpen(true)} className="w-full h-12 gap-1.5" variant="default">
                 <Square className="h-4 w-4" /> End day
