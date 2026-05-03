@@ -12,8 +12,11 @@ import {
   Boxes,
   Truck,
   CheckCircle2,
-  MoreHorizontal,
   FileText,
+  Truck as TruckIcon,
+  ClipboardCheck,
+  History,
+  Package,
   type LucideIcon,
 } from "lucide-react";
 import type { UserRoleType } from "@/lib/roles";
@@ -91,19 +94,18 @@ export const BOTTOM_NAV: Record<UserRoleType, ShellNavItem[]> = {
     { label: "Factory", href: "/app/manufacturing", icon: Factory },
     { label: "Orders", href: "/app/quick-order", icon: ClipboardList },
     { label: "Dispatch", href: "/app/dispatch-orders", icon: Send },
-    { label: "More", href: "__more__", icon: MoreHorizontal },
   ],
   manager: [
     { label: "Home", href: "/app/dashboard", icon: LayoutDashboard },
     { label: "Factory", href: "/app/manufacturing", icon: Factory },
     { label: "Orders", href: "/app/quick-order", icon: ClipboardList },
     { label: "Dispatch", href: "/app/dispatch-orders", icon: Send },
-    { label: "More", href: "__more__", icon: MoreHorizontal },
   ],
   supervisor: [
-    { label: "Floor", href: "/app/manufacturing", icon: Layers },
-    { label: "My MOs", href: "/app/manufacturing", icon: Factory },
-    { label: "Handoffs", href: "/app/wip", icon: ArrowLeftRight },
+    { label: "Home", href: "/app/dashboard", icon: LayoutDashboard },
+    { label: "Factory", href: "/app/manufacturing", icon: Factory },
+    { label: "Workers", href: "/app/staffing/daily", icon: Users },
+    { label: "Log", href: "/app/work-logs", icon: ClipboardList },
   ],
   sales: [
     { label: "Home", href: "/app/dashboard", icon: LayoutDashboard },
@@ -112,14 +114,16 @@ export const BOTTOM_NAV: Record<UserRoleType, ShellNavItem[]> = {
     { label: "Customers", href: "/app/customers", icon: Users },
   ],
   dispatch: [
-    { label: "Today", href: "/app/dispatch-orders", icon: Truck },
-    { label: "Orders", href: "/app/dispatch-orders", icon: Send },
-    { label: "Done", href: "/app/dispatch-orders", icon: CheckCircle2 },
+    { label: "Home", href: "/app/dashboard", icon: LayoutDashboard },
+    { label: "Pack", href: "/app/dispatch-orders", icon: Package },
+    { label: "Ready", href: "/app/dispatch-orders", icon: CheckCircle2 },
+    { label: "History", href: "/app/dispatch-orders", icon: History },
   ],
   worker: [
     { label: "Home", href: "/app/dashboard", icon: LayoutDashboard },
-    { label: "MOs", href: "/app/manufacturing", icon: Factory },
-    { label: "Inventory", href: "/app/inventory", icon: Layers },
+    { label: "My Loads", href: "/app/dispatch-orders", icon: TruckIcon },
+    { label: "Delivered", href: "/app/dispatch-orders", icon: ClipboardCheck },
+    { label: "History", href: "/app/dispatch-orders", icon: History },
   ],
   customer: [],
 };
