@@ -29,6 +29,7 @@ import { Route as AppQuickOrderRouteImport } from './routes/app.quick-order'
 import { Route as AppPurchaseOrdersRouteImport } from './routes/app.purchase-orders'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppProductsRouteImport } from './routes/app.products'
+import { Route as AppProductionLogsRouteImport } from './routes/app.production-logs'
 import { Route as AppPeopleRouteImport } from './routes/app.people'
 import { Route as AppMovementsRouteImport } from './routes/app.movements'
 import { Route as AppMouldsRouteImport } from './routes/app.moulds'
@@ -156,6 +157,11 @@ const AppProfileRoute = AppProfileRouteImport.update({
 const AppProductsRoute = AppProductsRouteImport.update({
   id: '/products',
   path: '/products',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProductionLogsRoute = AppProductionLogsRouteImport.update({
+  id: '/production-logs',
+  path: '/production-logs',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPeopleRoute = AppPeopleRouteImport.update({
@@ -321,6 +327,7 @@ export interface FileRoutesByFullPath {
   '/app/moulds': typeof AppMouldsRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/people': typeof AppPeopleRoute
+  '/app/production-logs': typeof AppProductionLogsRoute
   '/app/products': typeof AppProductsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
@@ -370,6 +377,7 @@ export interface FileRoutesByTo {
   '/app/moulds': typeof AppMouldsRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/people': typeof AppPeopleRoute
+  '/app/production-logs': typeof AppProductionLogsRoute
   '/app/products': typeof AppProductsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
@@ -421,6 +429,7 @@ export interface FileRoutesById {
   '/app/moulds': typeof AppMouldsRoute
   '/app/movements': typeof AppMovementsRoute
   '/app/people': typeof AppPeopleRoute
+  '/app/production-logs': typeof AppProductionLogsRoute
   '/app/products': typeof AppProductsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRoute
@@ -473,6 +482,7 @@ export interface FileRouteTypes {
     | '/app/moulds'
     | '/app/movements'
     | '/app/people'
+    | '/app/production-logs'
     | '/app/products'
     | '/app/profile'
     | '/app/purchase-orders'
@@ -522,6 +532,7 @@ export interface FileRouteTypes {
     | '/app/moulds'
     | '/app/movements'
     | '/app/people'
+    | '/app/production-logs'
     | '/app/products'
     | '/app/profile'
     | '/app/purchase-orders'
@@ -572,6 +583,7 @@ export interface FileRouteTypes {
     | '/app/moulds'
     | '/app/movements'
     | '/app/people'
+    | '/app/production-logs'
     | '/app/products'
     | '/app/profile'
     | '/app/purchase-orders'
@@ -748,6 +760,13 @@ declare module '@tanstack/react-router' {
       path: '/products'
       fullPath: '/app/products'
       preLoaderRoute: typeof AppProductsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/production-logs': {
+      id: '/app/production-logs'
+      path: '/production-logs'
+      fullPath: '/app/production-logs'
+      preLoaderRoute: typeof AppProductionLogsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/people': {
@@ -1024,6 +1043,7 @@ interface AppRouteChildren {
   AppMouldsRoute: typeof AppMouldsRoute
   AppMovementsRoute: typeof AppMovementsRoute
   AppPeopleRoute: typeof AppPeopleRoute
+  AppProductionLogsRoute: typeof AppProductionLogsRoute
   AppProductsRoute: typeof AppProductsRoute
   AppProfileRoute: typeof AppProfileRoute
   AppPurchaseOrdersRoute: typeof AppPurchaseOrdersRoute
@@ -1063,6 +1083,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMouldsRoute: AppMouldsRoute,
   AppMovementsRoute: AppMovementsRoute,
   AppPeopleRoute: AppPeopleRoute,
+  AppProductionLogsRoute: AppProductionLogsRoute,
   AppProductsRoute: AppProductsRoute,
   AppProfileRoute: AppProfileRoute,
   AppPurchaseOrdersRoute: AppPurchaseOrdersRoute,
