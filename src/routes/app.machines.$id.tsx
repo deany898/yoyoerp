@@ -9,7 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { notify } from "@/lib/notify";
 import type { Database } from "@/integrations/supabase/types";
 import { StartProductionSheet } from "@/components/machines/StartProductionSheet";
-import { EndOfDaySheet } from "@/components/machines/EndOfDaySheet";
+import { FillProductionDataSheet } from "@/components/machines/FillProductionDataSheet";
+import type { RunCtx } from "@/lib/run-context";
+import { loadRunCtx } from "@/lib/run-context";
 import { useRole } from "@/hooks/useRole";
 
 type Machine = Database["public"]["Tables"]["machines"]["Row"];
@@ -44,6 +46,7 @@ function MachineDetailPage() {
   const [startOpen, setStartOpen] = useState(false);
   const [endOpen, setEndOpen] = useState(false);
   const [todayLog, setTodayLog] = useState<Database["public"]["Tables"]["machine_daily_log"]["Row"] | null>(null);
+  const [runCtx, setRunCtx] = useState<RunCtx | null>(null);
 
   const todayStr = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
     .toISOString().slice(0, 10);
@@ -56,6 +59,8 @@ function MachineDetailPage() {
       .eq("log_date", todayStr)
       .maybeSingle();
     setTodayLog(data ?? null);
+    const ctx = await loadRunCtx({ machineId: id });
+    setRunCtx(ctx);
   };
 
   const setLogStatus = async (status: Database["public"]["Enums"]["machine_log_status"]) => {
@@ -150,8 +155,9 @@ function MachineDetailPage() {
                   </Button>
                 )}
               </div>
-              <Button onClick={() => setEndOpen(true)} className="w-full h-12 gap-1.5" variant="default">
-                <Square className="h-4 w-4" /> End day
+              <Button onClick={() => setEndOpen(true)} disabled={!runCtx}
+                className="w-full h-12 gap-1.5 bg-orange-500 hover:bg-orange-600 text-white">
+                <ClipboardCheck className="h-4 w-4" /> Fill production data · उत्पादन डेटा भरें
               </Button>
             </div>
           ) : (
@@ -171,15 +177,12 @@ function MachineDetailPage() {
             machineName={machine.name}
             onStarted={loadTodayLog}
           />
-          {todayLog && (
-            <EndOfDaySheet
-              open={endOpen}
-              onClose={() => setEndOpen(false)}
-              log={todayLog}
-              machineName={machine.name}
-              onEnded={loadTodayLog}
-            />
-          )}
+          <FillProductionDataSheet
+            open={endOpen}
+            onClose={() => setEndOpen(false)}
+            ctx={runCtx}
+            onSubmitted={loadTodayLog}
+          />
         </>
       )}
 
