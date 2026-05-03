@@ -34,7 +34,6 @@ import { Route as AppPeopleRouteImport } from './routes/app.people'
 import { Route as AppMovementsRouteImport } from './routes/app.movements'
 import { Route as AppMouldsRouteImport } from './routes/app.moulds'
 import { Route as AppManufacturingRouteImport } from './routes/app.manufacturing'
-import { Route as AppMachinesRouteImport } from './routes/app.machines'
 import { Route as AppInventoryRouteImport } from './routes/app.inventory'
 import { Route as AppHelpRouteImport } from './routes/app.help'
 import { Route as AppGoodsReturnsRouteImport } from './routes/app.goods-returns'
@@ -47,6 +46,7 @@ import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
 import { Route as AppAiInsightsRouteImport } from './routes/app.ai-insights'
 import { Route as AppAdminRouteImport } from './routes/app.admin'
 import { Route as AppAboutRouteImport } from './routes/app.about'
+import { Route as AppMachinesIndexRouteImport } from './routes/app.machines.index'
 import { Route as AppWorkersAttendanceRouteImport } from './routes/app.workers.attendance'
 import { Route as AppWorkersIdRouteImport } from './routes/app.workers.$id'
 import { Route as AppStaffingDailyRouteImport } from './routes/app.staffing.daily'
@@ -184,11 +184,6 @@ const AppManufacturingRoute = AppManufacturingRouteImport.update({
   path: '/manufacturing',
   getParentRoute: () => AppRoute,
 } as any)
-const AppMachinesRoute = AppMachinesRouteImport.update({
-  id: '/machines',
-  path: '/machines',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppInventoryRoute = AppInventoryRouteImport.update({
   id: '/inventory',
   path: '/inventory',
@@ -249,6 +244,11 @@ const AppAboutRoute = AppAboutRouteImport.update({
   path: '/about',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMachinesIndexRoute = AppMachinesIndexRouteImport.update({
+  id: '/machines/',
+  path: '/machines/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppWorkersAttendanceRoute = AppWorkersAttendanceRouteImport.update({
   id: '/attendance',
   path: '/attendance',
@@ -275,9 +275,9 @@ const AppManufacturingMoIdRoute = AppManufacturingMoIdRouteImport.update({
   getParentRoute: () => AppManufacturingRoute,
 } as any)
 const AppMachinesIdRoute = AppMachinesIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AppMachinesRoute,
+  id: '/machines/$id',
+  path: '/machines/$id',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppAdminSystemRoute = AppAdminSystemRouteImport.update({
   id: '/system',
@@ -322,7 +322,6 @@ export interface FileRoutesByFullPath {
   '/app/goods-returns': typeof AppGoodsReturnsRoute
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
-  '/app/machines': typeof AppMachinesRouteWithChildren
   '/app/manufacturing': typeof AppManufacturingRouteWithChildren
   '/app/moulds': typeof AppMouldsRoute
   '/app/movements': typeof AppMovementsRoute
@@ -356,6 +355,7 @@ export interface FileRoutesByFullPath {
   '/app/staffing/daily': typeof AppStaffingDailyRoute
   '/app/workers/$id': typeof AppWorkersIdRoute
   '/app/workers/attendance': typeof AppWorkersAttendanceRoute
+  '/app/machines/': typeof AppMachinesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -372,7 +372,6 @@ export interface FileRoutesByTo {
   '/app/goods-returns': typeof AppGoodsReturnsRoute
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
-  '/app/machines': typeof AppMachinesRouteWithChildren
   '/app/manufacturing': typeof AppManufacturingRouteWithChildren
   '/app/moulds': typeof AppMouldsRoute
   '/app/movements': typeof AppMovementsRoute
@@ -406,6 +405,7 @@ export interface FileRoutesByTo {
   '/app/staffing/daily': typeof AppStaffingDailyRoute
   '/app/workers/$id': typeof AppWorkersIdRoute
   '/app/workers/attendance': typeof AppWorkersAttendanceRoute
+  '/app/machines': typeof AppMachinesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -424,7 +424,6 @@ export interface FileRoutesById {
   '/app/goods-returns': typeof AppGoodsReturnsRoute
   '/app/help': typeof AppHelpRoute
   '/app/inventory': typeof AppInventoryRoute
-  '/app/machines': typeof AppMachinesRouteWithChildren
   '/app/manufacturing': typeof AppManufacturingRouteWithChildren
   '/app/moulds': typeof AppMouldsRoute
   '/app/movements': typeof AppMovementsRoute
@@ -458,6 +457,7 @@ export interface FileRoutesById {
   '/app/staffing/daily': typeof AppStaffingDailyRoute
   '/app/workers/$id': typeof AppWorkersIdRoute
   '/app/workers/attendance': typeof AppWorkersAttendanceRoute
+  '/app/machines/': typeof AppMachinesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -477,7 +477,6 @@ export interface FileRouteTypes {
     | '/app/goods-returns'
     | '/app/help'
     | '/app/inventory'
-    | '/app/machines'
     | '/app/manufacturing'
     | '/app/moulds'
     | '/app/movements'
@@ -511,6 +510,7 @@ export interface FileRouteTypes {
     | '/app/staffing/daily'
     | '/app/workers/$id'
     | '/app/workers/attendance'
+    | '/app/machines/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -527,7 +527,6 @@ export interface FileRouteTypes {
     | '/app/goods-returns'
     | '/app/help'
     | '/app/inventory'
-    | '/app/machines'
     | '/app/manufacturing'
     | '/app/moulds'
     | '/app/movements'
@@ -561,6 +560,7 @@ export interface FileRouteTypes {
     | '/app/staffing/daily'
     | '/app/workers/$id'
     | '/app/workers/attendance'
+    | '/app/machines'
   id:
     | '__root__'
     | '/'
@@ -578,7 +578,6 @@ export interface FileRouteTypes {
     | '/app/goods-returns'
     | '/app/help'
     | '/app/inventory'
-    | '/app/machines'
     | '/app/manufacturing'
     | '/app/moulds'
     | '/app/movements'
@@ -612,6 +611,7 @@ export interface FileRouteTypes {
     | '/app/staffing/daily'
     | '/app/workers/$id'
     | '/app/workers/attendance'
+    | '/app/machines/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -797,13 +797,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppManufacturingRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/machines': {
-      id: '/app/machines'
-      path: '/machines'
-      fullPath: '/app/machines'
-      preLoaderRoute: typeof AppMachinesRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/inventory': {
       id: '/app/inventory'
       path: '/inventory'
@@ -888,6 +881,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAboutRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/machines/': {
+      id: '/app/machines/'
+      path: '/machines'
+      fullPath: '/app/machines/'
+      preLoaderRoute: typeof AppMachinesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/workers/attendance': {
       id: '/app/workers/attendance'
       path: '/attendance'
@@ -925,10 +925,10 @@ declare module '@tanstack/react-router' {
     }
     '/app/machines/$id': {
       id: '/app/machines/$id'
-      path: '/$id'
+      path: '/machines/$id'
       fullPath: '/app/machines/$id'
       preLoaderRoute: typeof AppMachinesIdRouteImport
-      parentRoute: typeof AppMachinesRoute
+      parentRoute: typeof AppRoute
     }
     '/app/admin/system': {
       id: '/app/admin/system'
@@ -988,18 +988,6 @@ const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
   AppAdminRouteChildren,
 )
 
-interface AppMachinesRouteChildren {
-  AppMachinesIdRoute: typeof AppMachinesIdRoute
-}
-
-const AppMachinesRouteChildren: AppMachinesRouteChildren = {
-  AppMachinesIdRoute: AppMachinesIdRoute,
-}
-
-const AppMachinesRouteWithChildren = AppMachinesRoute._addFileChildren(
-  AppMachinesRouteChildren,
-)
-
 interface AppManufacturingRouteChildren {
   AppManufacturingMoIdRoute: typeof AppManufacturingMoIdRoute
 }
@@ -1038,7 +1026,6 @@ interface AppRouteChildren {
   AppGoodsReturnsRoute: typeof AppGoodsReturnsRoute
   AppHelpRoute: typeof AppHelpRoute
   AppInventoryRoute: typeof AppInventoryRoute
-  AppMachinesRoute: typeof AppMachinesRouteWithChildren
   AppManufacturingRoute: typeof AppManufacturingRouteWithChildren
   AppMouldsRoute: typeof AppMouldsRoute
   AppMovementsRoute: typeof AppMovementsRoute
@@ -1061,8 +1048,10 @@ interface AppRouteChildren {
   AppWorkLogsRoute: typeof AppWorkLogsRoute
   AppWorkersRoute: typeof AppWorkersRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
+  AppMachinesIdRoute: typeof AppMachinesIdRoute
   AppSettingsUsersRoute: typeof AppSettingsUsersRoute
   AppStaffingDailyRoute: typeof AppStaffingDailyRoute
+  AppMachinesIndexRoute: typeof AppMachinesIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -1078,7 +1067,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppGoodsReturnsRoute: AppGoodsReturnsRoute,
   AppHelpRoute: AppHelpRoute,
   AppInventoryRoute: AppInventoryRoute,
-  AppMachinesRoute: AppMachinesRouteWithChildren,
   AppManufacturingRoute: AppManufacturingRouteWithChildren,
   AppMouldsRoute: AppMouldsRoute,
   AppMovementsRoute: AppMovementsRoute,
@@ -1101,8 +1089,10 @@ const AppRouteChildren: AppRouteChildren = {
   AppWorkLogsRoute: AppWorkLogsRoute,
   AppWorkersRoute: AppWorkersRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
+  AppMachinesIdRoute: AppMachinesIdRoute,
   AppSettingsUsersRoute: AppSettingsUsersRoute,
   AppStaffingDailyRoute: AppStaffingDailyRoute,
+  AppMachinesIndexRoute: AppMachinesIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
