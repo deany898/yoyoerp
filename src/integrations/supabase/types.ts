@@ -1349,6 +1349,42 @@ export type Database = {
           },
         ]
       }
+      mould_compatible_variants: {
+        Row: {
+          created_at: string
+          id: string
+          mould_id: string
+          variant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mould_id: string
+          variant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mould_id?: string
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mould_compatible_variants_mould_id_fkey"
+            columns: ["mould_id"]
+            isOneToOne: false
+            referencedRelation: "moulds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mould_compatible_variants_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mould_machine_compat: {
         Row: {
           created_at: string
@@ -1392,37 +1428,46 @@ export type Database = {
       moulds: {
         Row: {
           cavity_count: number
+          cavity_weight_g: number | null
           code: string
           created_at: string
+          est_shots_per_day: number | null
           id: string
           is_active: boolean
           life_cycles: number
           name: string
           notes: string | null
+          runner_weight_g: number | null
           updated_at: string
           used_cycles: number
         }
         Insert: {
           cavity_count?: number
+          cavity_weight_g?: number | null
           code: string
           created_at?: string
+          est_shots_per_day?: number | null
           id?: string
           is_active?: boolean
           life_cycles?: number
           name: string
           notes?: string | null
+          runner_weight_g?: number | null
           updated_at?: string
           used_cycles?: number
         }
         Update: {
           cavity_count?: number
+          cavity_weight_g?: number | null
           code?: string
           created_at?: string
+          est_shots_per_day?: number | null
           id?: string
           is_active?: boolean
           life_cycles?: number
           name?: string
           notes?: string | null
+          runner_weight_g?: number | null
           updated_at?: string
           used_cycles?: number
         }
