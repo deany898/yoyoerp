@@ -22,8 +22,8 @@ export const Route = createFileRoute("/app/machines/")({
 });
 
 const STATUS_TONE: Record<string, string> = {
-  online: "bg-emerald-100 text-emerald-900",
-  offline: "bg-red-100 text-red-900",
+  live: "bg-emerald-100 text-emerald-900 animate-pulse",
+  off: "bg-slate-100 text-slate-700",
 };
 
 function MachinesPage() {
@@ -33,19 +33,24 @@ function MachinesPage() {
   const canAssign = role === "admin" || role === "manager";
   const [assignFor, setAssignFor] = useState<{ id: string; name: string } | null>(null);
   const [todayMoulds, setTodayMoulds] = useState<Record<string, { id: string; name: string }>>({});
+  const [liveMachines, setLiveMachines] = useState<Set<string>>(new Set());
 
   const todayStr = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
     .toISOString().slice(0, 10);
 
   const loadTodayMoulds = async () => {
     const { data } = await supabase.from("machine_daily_log")
-      .select("machine_id, mould:moulds(id, name)").eq("log_date", todayStr);
+      .select("machine_id, status, mould:moulds(id, name)").eq("log_date", todayStr);
     const map: Record<string, { id: string; name: string }> = {};
+    const live = new Set<string>();
     (data ?? []).forEach((r) => {
-      const m = (r as { mould: { id: string; name: string } | null }).mould;
+      const row = r as { machine_id: string; status: string; mould: { id: string; name: string } | null };
+      const m = row.mould;
       if (m) map[r.machine_id] = m;
+      if (row.status === "running") live.add(row.machine_id);
     });
     setTodayMoulds(map);
+    setLiveMachines(live);
   };
   useEffect(() => { loadTodayMoulds(); }, [machines.length, todayStr]);
 
@@ -63,32 +68,7 @@ function MachinesPage() {
     return Array.from(set).sort();
   }, [machines]);
 
-  // Live status: machine is "online" if any open work_log references its station_id today.
-  const [liveOnline, setLiveOnline] = useState<Set<string>>(new Set());
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const { data } = await supabase
-        .from("work_logs")
-        .select("station_id, log_in_at, log_out_at")
-        .is("log_out_at", null)
-        .gte("log_in_at", today.toISOString());
-      if (cancelled) return;
-      const stationIds = new Set<string>();
-      (data ?? []).forEach((r) => { if (r.station_id) stationIds.add(r.station_id); });
-      // Map station -> machine via shared station_id field on machines
-      const onMach = new Set<string>();
-      machines.forEach((m) => {
-        if (m.station_id && stationIds.has(m.station_id)) onMach.add(m.id);
-      });
-      setLiveOnline(onMach);
-    })();
-    return () => { cancelled = true; };
-  }, [machines]);
-
-  const liveStatus = (id: string) => (liveOnline.has(id) ? "online" : "offline");
+  const liveStatus = (id: string) => (liveMachines.has(id) ? "live" : "off");
 
   // Hourly ₹/h derived from warehouse utilities (last 30d) apportioned by usage_volume.
   const [hourly, setHourly] = useState<Record<string, number>>({});
