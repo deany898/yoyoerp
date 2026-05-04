@@ -7,6 +7,8 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { notify } from "@/lib/notify";
 import type { Database } from "@/integrations/supabase/types";
+import { useAuth } from "@/hooks/useAuth";
+import { useRole } from "@/hooks/useRole";
 
 export const Route = createFileRoute("/app/production-logs")({
   head: () => ({
@@ -42,6 +44,8 @@ function fmt(d: string | null) {
 }
 
 function ProductionLogsPage() {
+  const { user } = useAuth();
+  const { role } = useRole();
   const [rows, setRows] = useState<LogRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -49,7 +53,7 @@ function ProductionLogsPage() {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const { data, error } = await supabase
+      let q = supabase
         .from("machine_daily_log")
         .select(`*,
           machine:machines!machine_daily_log_machine_id_fkey(id, name, code),
@@ -60,6 +64,10 @@ function ProductionLogsPage() {
         .order("log_date", { ascending: false })
         .order("started_at", { ascending: false })
         .limit(200);
+      if (role === "supervisor" && user?.id) {
+        q = q.eq("supervisor_id", user.id);
+      }
+      const { data, error } = await q;
       if (error) notify.error("Failed to load logs", { description: error.message });
       const base = (data as unknown as LogRow[]) ?? [];
 
@@ -89,7 +97,7 @@ function ProductionLogsPage() {
       setRows(enriched);
       setLoading(false);
     })();
-  }, []);
+  }, [role, user?.id]);
 
   const filtered = useMemo(
     () => (statusFilter === "all" ? rows : rows.filter((r) => r.status === statusFilter)),
