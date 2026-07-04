@@ -65,7 +65,7 @@ export const Route = createFileRoute("/app/settings/users")({
 });
 
 function SettingsUsersPage() {
-  const { role } = useRole();
+  const { role, rolesLoading } = useRole();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -80,11 +80,12 @@ function SettingsUsersPage() {
   const updateFn = useServerFn(adminUpdateUser);
 
   useEffect(() => {
-    if (role && role !== "admin") {
+    if (rolesLoading) return;
+    if (role !== "admin") {
       toast.error("Admins only");
       navigate({ to: "/app/dashboard" });
     }
-  }, [role, navigate]);
+  }, [role, rolesLoading, navigate]);
 
   useEffect(() => {
     if (role === "admin") void load();
@@ -144,7 +145,7 @@ function SettingsUsersPage() {
     [rows],
   );
 
-  if (role !== "admin") return null;
+  if (rolesLoading || role !== "admin") return null;
 
   return (
     <ErrorBoundary>
