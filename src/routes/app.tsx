@@ -92,20 +92,6 @@ function AppLayout() {
     }
   }, [authLoading, user, rolesLoading, realRole, roles.length, location.pathname]);
 
-  // Initial-page-load default: non-customer users who reload directly onto
-  // /app/quick-order should land on the dashboard instead. Only fires once
-  // on the very first auth resolution, so client-side navigation to
-  // quick-order during the session is preserved.
-  const initialRedirectDoneRef = useRef(false);
-  useEffect(() => {
-    if (authLoading || !user || rolesLoading) return;
-    if (roles.length === 0) return;
-    if (initialRedirectDoneRef.current) return;
-    initialRedirectDoneRef.current = true;
-    if (role !== "customer" && location.pathname === "/app/quick-order") {
-      navigate({ to: "/app/dashboard", replace: true });
-    }
-  }, [authLoading, user, rolesLoading, role, roles.length, location.pathname, navigate]);
 
   // Access guard — must be signed in. Use replace so back button doesn't
   // re-enter the (now unauthenticated) app shell.
