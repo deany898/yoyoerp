@@ -145,7 +145,7 @@ function SettingsUsersPage() {
     [rows],
   );
 
-  if (role !== "admin") return null;
+  if (rolesLoading || role !== "admin") return null;
 
   return (
     <ErrorBoundary>
