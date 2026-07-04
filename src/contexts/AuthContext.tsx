@@ -51,15 +51,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRolesError(null);
       return;
     }
+    // Wait for session token before calling server functions.
+    // Without this, the fetch fires before serverFnAuth attaches a Bearer token.
+    if (!session?.access_token) {
+      return;
+    }
     let cancelled = false;
     setRolesLoading(true);
     setRolesError(null);
     (async () => {
       try {
-        const [profileRes, rolesRes] = await Promise.all([
-          supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle(),
-          getUserRole({ data: { userId: user.id } }),
-        ]);
+        // Retry once on failure — covers transient network/timing issues
+        let profileRes, rolesRes;
+        try {
+          [profileRes, rolesRes] = await Promise.all([
+            supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle(),
+            getUserRole({ data: { userId: user.id } }),
+          ]);
+        } catch (firstErr) {
+          await new Promise((r) => setTimeout(r, 1000));
+          [profileRes, rolesRes] = await Promise.all([
+            supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle(),
+            getUserRole({ data: { userId: user.id } }),
+          ]);
+        }
         if (cancelled) return;
         setDisplayName(profileRes.data?.display_name ?? user.email ?? null);
         setRoles((rolesRes ?? []).map((r) => r.role as AppRole));
@@ -74,12 +89,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     })();
     return () => { cancelled = true; };
-    // Only re-run when the user *id* changes. Supabase emits multiple
-    // auth events (INITIAL_SESSION, SIGNED_IN, TOKEN_REFRESHED) that each
-    // produce a new `user` object reference for the same person, which
-    // would otherwise re-fetch profile + roles 3× on every reload.
+    // Re-run when user id or the session token becomes available.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.id, session?.access_token]);
 
   // ─── Subscribe to auth state ─────────────────────────
   useEffect(() => {
