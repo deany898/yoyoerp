@@ -77,6 +77,8 @@ function AppLayout() {
   useEffect(() => {
     if (authLoading || !user || rolesLoading) return;
     if (roles.length === 0) return;
+    // Don't enforce route guard until role is actually resolved from roles array
+    if (role === "customer" && roles.some((r) => r === "admin" || r === "manager")) return;
     if (!canAccessRoute(location.pathname, role)) {
       toast.error("You don't have permission to access that page.");
       navigate({ to: role === "customer" ? "/app/quick-order" : "/app/dashboard", replace: true });
